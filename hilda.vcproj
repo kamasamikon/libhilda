@@ -44,7 +44,7 @@
 				Optimization="0"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="$(SolutionDir)\hilda\inc;$(SolutionDir)\encoder\module\inc;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\inc&quot;"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_WINDOWS;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
