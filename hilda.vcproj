@@ -44,7 +44,7 @@
 				Optimization="0"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\inc&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)\inc"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_WINDOWS;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -66,6 +66,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="Ws2_32.lib"
+				OutputFile="$(SolutionDir)\lib\$(ProjectName)D.dll"
 				ModuleDefinitionFile="hilda.def"
 				GenerateDebugInformation="true"
 			/>
@@ -197,7 +198,7 @@
 				Optimization="2"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="$(SolutionDir)\hilda\inc;$(SolutionDir)\encoder\module\inc;"
+				AdditionalIncludeDirectories="$(SolutionDir)\inc"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="0"
@@ -221,6 +222,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="Ws2_32.lib"
 				ShowProgress="0"
+				OutputFile="$(SolutionDir)\lib\$(ProjectName).dll"
 				ModuleDefinitionFile="hilda.def"
 				GenerateDebugInformation="true"
 				GenerateMapFile="true"
