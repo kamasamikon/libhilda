@@ -569,11 +569,10 @@ static int process_connect(int new_fd)
 	int ret, try_cnt, ofsarr[80], argc;
 	rpc_client_t *client;
 
-	try_cnt = 3;
+	try_cnt = 10;
 	while (try_cnt--) {
 
 		buf[0] = '\0';
-		ret = recv(new_fd, buf, sizeof(buf), 0);
 		ret = recv(new_fd, buf, sizeof(buf), 0);
 		if (0 == ret) {
 			kerror(("error! f:%s, l:%d, c:%s, e:%s\n", "process_connect", __LINE__, "recv", strerror(errno)));
