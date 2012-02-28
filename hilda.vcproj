@@ -288,6 +288,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\kmodu.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\kmque.c"
 				>
 			</File>
