@@ -548,6 +548,7 @@ unsigned long spl_get_ticks(void)
 	static LARGE_INTEGER freq;
 	static LARGE_INTEGER start;
 	static int first = 1;
+	static unsigned int base_tick;
 
 	LARGE_INTEGER counter;
 
@@ -555,9 +556,11 @@ unsigned long spl_get_ticks(void)
 		first = 0;
 		QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
 		QueryPerformanceCounter((LARGE_INTEGER*)&start);
+
+		base_tick = GetTickCount();
 	}
 	QueryPerformanceCounter((LARGE_INTEGER*)&counter);
-	return (unsigned long)(1000 * (double) (counter.QuadPart - start.QuadPart) / freq.QuadPart);
+	return base_tick + (unsigned long)(1000 * (double) (counter.QuadPart - start.QuadPart) / freq.QuadPart);
 }
 
 /**
@@ -630,16 +633,16 @@ kchar *kvfs_getcwd(kchar *buf, kint size)
 
 int wlogx(const char *fmt, ...)
 {
-        int ret;
-        va_list ap;
+	int ret;
+	va_list ap;
 	char buffer[8192];
 
-        va_start(ap, fmt);
+	va_start(ap, fmt);
 	ret = vsnprintf(buffer, sizeof(buffer), fmt, ap);
-        va_end(ap);
+	va_end(ap);
 
 	OutputDebugString(buffer);
-        return ret;
+	return ret;
 }
 
 int wlogf(const char *fmt, ...)
