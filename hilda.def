@@ -190,3 +190,8 @@ data_queue_pop_back                             @188
 data_queue_is_empty                             @189
 mentry_dpc_add                                  @190
 mentry_dpc_kill                                 @191
+kmodu_init                                      @192
+kmodu_final                                     @193
+kmodu_load                                      @194
+kmodu_unload                                    @195
+kmodu_layout                                    @196
