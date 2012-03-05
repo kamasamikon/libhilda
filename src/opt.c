@@ -643,7 +643,7 @@ static kinline opt_entry_t *entry_find(const char *path)
 	K_dlist_entry *entry;
 	opt_entry_t *oe;
 
-	if (!path)
+	if (!path || !__g_optcc)
 		return NULL;
 
 	entry = __g_optcc->oehdr.next;
