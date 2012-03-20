@@ -259,9 +259,26 @@ static int os_cnode_cmd(int ses, void *opt, const char *path,
 {
 	char *name = opt_get_new_str(opt);
 	char type = (char)(int)opt_ua(opt);
-	cnode_t *node = cnode_find(name);
+	cnode_t *node;
 	int ret;
 
+	if (name && !strcmp(name, "*")) {
+		if (type == 'S')
+			ret = cnode_foreach_start();
+		else if (type == 's')
+			ret = cnode_foreach_stop();
+		else if (type == 'p')
+			ret = cnode_foreach_pause();
+		else if (type == 'r')
+			ret = cnode_foreach_resume();
+		else if (type == 'l')
+			ret = cnode_link(NULL);
+		else
+			return EC_OK;
+		return ret;
+	}
+
+	node = cnode_find(name);
 	if (!node)
 		return EC_NG;
 

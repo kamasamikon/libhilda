@@ -673,3 +673,12 @@ int wlog(const char *msg)
 	return ret;
 }
 
+int spl_socket_close(void *s)
+{
+	return close((int)s);
+}
+int spl_socket_errno()
+{
+	return errno;
+}
+

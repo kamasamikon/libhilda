@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include <kmem.h>
+#include <xtcool.h>
 
 #ifdef MEM_STAT
 static kuint __g_memusage = 0;
@@ -129,7 +130,7 @@ kvoid kmem_rel(kvoid *usrptr)
 	}
 
 	if (!(__g_free_cnt % __g_dump_loop))
-		printf("\n\n#### MEMORY ####: ac:%d, fc:%d, now:%d\n\n\n",
+		wlogf("\n\n#### MEMORY ####: ac:%d, fc:%d, now:%d\n\n\n",
 				__g_alloc_cnt, __g_free_cnt, __g_memusage);
 
 	free(old_rawptr);
@@ -165,29 +166,29 @@ back:
 
 void kmem_dump(const char *banner, char *dat, int len, int width)
 {
-	char *p = dat;
+	unsigned char *p = dat;
 	int i, line, offset = 0;
 
-	printf("\n%s\n", banner);
-	printf("Data:%p, Length:%d\n", dat, len);
+	wlogf("\n%s\n", banner);
+	wlogf("Data:%p, Length:%d\n", dat, len);
 
 	while (offset < len) {
-		printf("%04x ", offset);
+		wlogf("%04x ", offset);
 		line = len - offset;
 
 		if (line > width)
 			line = width;
 
 		for (i = 0; i < line; i++)
-			printf("%02x ", p[i]);
+			wlogf("%02x ", p[i]);
 		for (; i < width; i++)
-			printf("   ");
+			wlogf("   ");
 		for (i = 0; i < line; i++)
 			if (p[i] >= 0x20 && p[i] < 0x7f)
-				printf("%c",  p[i]);
+				wlogf("%c",  p[i]);
 			else
-				printf(".");
-		printf("\n");
+				wlogf(".");
+		wlogf("\n");
 
 		offset += line;
 		p += line;

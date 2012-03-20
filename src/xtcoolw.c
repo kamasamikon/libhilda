@@ -214,10 +214,6 @@ int spl_sema_rel(SPL_HANDLE h)
 	return ret;
 }
 
-
-
-
-
 typedef struct _win_tsk_p win_tsk_p;
 struct _win_tsk_p {
 	void * pThreadHandle;
@@ -725,3 +721,13 @@ void spl_exedir(char *argv[], kchar *exedir)
 	if (pspos)
 		*pspos = '\0';
 }
+
+int spl_socket_close(void *s)
+{
+	return CloseHandle((HANDLE)s);
+}
+int spl_socket_errno()
+{
+	return WSAGetLastError();
+}
+
