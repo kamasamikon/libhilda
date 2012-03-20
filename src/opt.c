@@ -873,7 +873,7 @@ int opt_add(const char *path, const char *desc, unsigned int attr,
 
 	oe = entry_find(path);
 	if (oe) {
-		kerror(("!!!Duplicate opt added, abort adding\n"));
+		kerror(("!!!Duplicate opt added (%s), abort adding\n", path));
 		/* spl_lck_rel(__g_optcc->lck); */
 		return EC_NOTFOUND;
 	}
