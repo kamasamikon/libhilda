@@ -459,10 +459,22 @@ static void *worker_thread_or_server(void *userdata)
 	return NULL;
 }
 
-int opt_rpc_server_init()
+int opt_rpc_server_init(int argc, char *argv[])
 {
+	kushort port = OPT_PORT;
+	int i;
+
+	i = arg_find(argc, argv, "--or-port=", 0);
+	if (i > 0) {
+		int tmp;
+		if (!kstr_toint(argv[i] + 10, &tmp))
+			port = tmp;
+	}
+
+	klog(("opt_rpc_server_init: port: %d\n", port));
+
 	ignore_pipe();
-	spl_thread_create(worker_thread_or_server, (void *) OPT_PORT, 0);
+	spl_thread_create(worker_thread_or_server, (void *)port, 0);
 	return 0;
 }
 
