@@ -166,7 +166,7 @@ back:
 
 void kmem_dump(const char *banner, char *dat, int len, int width)
 {
-	unsigned char *p = dat;
+	unsigned char *p = (unsigned char*)dat;
 	int i, line, offset = 0;
 
 	wlogf("\n%s\n", banner);

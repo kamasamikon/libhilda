@@ -501,7 +501,7 @@ int opt_rpc_server_init(int argc, char *argv[])
 	if (i > 0) {
 		int tmp;
 		if (!kstr_toint(argv[i] + 10, &tmp))
-			port = tmp;
+			port = (kushort)tmp;
 	}
 
 	opt_add_s("b:/sys/admin/telnet/enable", OA_GET, NULL, NULL);
@@ -511,7 +511,7 @@ int opt_rpc_server_init(int argc, char *argv[])
 
 	select_init();
 	ignore_pipe();
-	spl_thread_create(worker_thread_or_server, (void *)port, 0);
+	spl_thread_create(worker_thread_or_server, (void *)(int)port, 0);
 	return 0;
 }
 

@@ -675,23 +675,24 @@ int wlog(const char *msg)
 void *spl_lib_load(const char *path, int flags)
 {
 	void *handle;
-	wchar_t wpath[4096];
-	mbstowcs(wpath, path, 4096);
 
-	handle = (void*)LoadLibraryW(wpath);
+	handle = (void*)LoadLibrary(path);
 	if (!handle)
-		printf("LoadLibrary(%s) failure, errno:%d\n", path, GetLastError());
-
+		printf("LoadLibrary(%s) failure, errno:%d\n", path,
+				GetLastError());
 	return handle;
 }
 
 
 void *spl_lib_getsym(void *lib, const char *name)
 {
-	wchar_t wname[4096];
-	mbstowcs(wname, name, 4096);
+	void *sym;
 
-	return (void*)GetProcAddress(lib, name);
+	sym = (void*)GetProcAddress(lib, name);
+	if (!sym)
+		printf("GetProcAddress(%s) failure, errno:%d\n", name,
+				GetLastError());
+	return sym;
 }
 
 int spl_lib_unload(void *handle)
