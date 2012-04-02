@@ -76,9 +76,7 @@ unsigned long crc32_calc(unsigned char *buf, unsigned int len)
     p = buf;
 
     while (len--)
-    {
         crc = (crc << 8) ^ crctab[((crc >> 24) ^ *(p++))];
-    }
 
     return crc;
 }

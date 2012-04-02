@@ -142,10 +142,9 @@ kcfg_target_t *kcfg_target_add(const char *name, KCFG_SAVE dosave,
 				(tct->del == dodelete) &&
 				(tct->ua == ua) && (tct->ub == ub))
 			return tct;
-		else {
-			kerror(("Target named '%s' already exists!\n", name));
-			return NULL;
-		}
+
+		kerror(("Target named '%s' already exists!\n", name));
+		return NULL;
 	}
 
 	nct = (kcfg_target_t*)kmem_alloz(1, kcfg_target_t);

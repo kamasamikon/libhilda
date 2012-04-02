@@ -168,10 +168,8 @@ static int module_load(kmoducc_t *cc, const char *path)
 {
 	kmodu_t *mod = NULL;
 	FILE *fp;
-	char tmp[1024], ps = kvfs_path_sep();
-	int enable;
-	unsigned int version;
-	char cwd[1024], name[256];
+	char tmp[1024], cwd[1024], name[256], ps = kvfs_path_sep();
+	unsigned int enable, version;
 
 	klog(("loading module: %s\n", path));
 
@@ -184,7 +182,6 @@ static int module_load(kmoducc_t *cc, const char *path)
 
 	if (read_manifest(fp, name, &enable, &version))
 		return -1;
-
 	if (!enable) {
 		klog(("module disabled: %s\n", path));
 		return -1;
