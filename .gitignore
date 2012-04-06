@@ -40,3 +40,4 @@ Debug
 *.bak
 *.map
 *.pyc
+*.ncb
