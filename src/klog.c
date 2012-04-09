@@ -263,6 +263,7 @@ int kprintf(const char *fmt, ...)
 	va_list ap;
 	char buffer[4096], path[1024], *bufptr = buffer;
 	int ret, bufsize = sizeof(buffer);
+	FILE *to_fp;
 
 	if (!cc->to_wlog && !cc->to_file)
 		return 0;
@@ -282,26 +283,28 @@ int kprintf(const char *fmt, ...)
 		wlog(bufptr);
 
 	if (cc->to_file && cc->get_path && (cc->to_file_size != 0)) {
-		if (!cc->to_fp) {
+		to_fp = cc->to_fp;
+
+		if (!to_fp) {
 			if (cc->get_path(path))
 				goto quit;
 
-			cc->to_fp = fopen(path, "wt");
-			cc->to_file_size_cur = 0;
-
-			if (!cc->to_fp) {
-				wlogf("kprintf: error open: <%s>.\n", path);
+			to_fp = fopen(path, "wt");
+			if (!to_fp) {
+				wlogf("kprintf: error fopen: <%s>.\n", path);
 				goto quit;
 			}
+			cc->to_file_size_cur = 0;
+			cc->to_fp = to_fp;
 		}
 
-		fwrite(bufptr, sizeof(char), ret, cc->to_fp);
+		fwrite(bufptr, sizeof(char), ret, to_fp);
 		cc->to_file_size_cur += ret;
 
 		if (cc->to_file_size > 0 &&
 				cc->to_file_size < cc->to_file_size_cur) {
-			fclose(cc->to_fp);
 			cc->to_fp = NULL;
+			fclose(to_fp);
 		}
 	}
 
