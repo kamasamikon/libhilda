@@ -671,7 +671,6 @@ int wlog(const char *msg)
 	return 1;
 }
 
-
 void *spl_lib_load(const char *path, int flags)
 {
 	void *handle;
