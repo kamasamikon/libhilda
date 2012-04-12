@@ -172,8 +172,8 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 	if (width <= 0)
 		width = 16;
 
-	/* 5 => "%04x "; 3 => "%02x", 1 => "%c", 1 => "\n" */
-	blen = 5 + (3 + 1) * width + 1;
+	/* 6 => "%04x  "; 3 => "%02x ", 1 => "%c", 2 => " |", 2 => "|\n" */
+	blen = 6 + (3 + 1) * width + 2 + 2;
 	if (blen > sizeof(cache))
 		pbuf = (kuchar*)kmem_alloc(blen, char);
 	else
@@ -185,7 +185,7 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 	while (offset < len) {
 		p = pbuf;
 
-		p += sprintf(p, "%04x ", offset);
+		p += sprintf(p, "%04x  ", offset);
 		line = len - offset;
 
 		if (line > width)
@@ -195,16 +195,17 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 			p += sprintf(p, "%02x ", (kuchar)dat[i]);
 		for (; i < width; i++)
 			p += sprintf(p, "   ");
+
+		p += sprintf(p, " |");
 		for (i = 0; i < line; i++)
 			if ((kuchar)dat[i] >= 0x20 && (kuchar)dat[i] < 0x7f)
 				p += sprintf(p, "%c",  (kuchar)dat[i]);
 			else
 				p += sprintf(p, ".");
-		p += sprintf(p, "\n");
+		p += sprintf(p, "|\n");
 		wlog(pbuf);
 
 		offset += line;
-		p += line;
 	}
 
 	if (pbuf != cache)
