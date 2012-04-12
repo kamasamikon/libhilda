@@ -184,8 +184,8 @@ int wlog(const char *msg);
  */
 void spl_exedir(char *argv[], kchar *exedir);
 
-int spl_socket_close(void *s);
-int spl_socket_errno();
+int spl_sock_close(void *s);
+int spl_sock_err();
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -722,11 +722,11 @@ void spl_exedir(char *argv[], kchar *exedir)
 		*pspos = '\0';
 }
 
-int spl_socket_close(void *s)
+int spl_sock_close(void *s)
 {
 	return CloseHandle((HANDLE)s);
 }
-int spl_socket_errno()
+int spl_sock_err()
 {
 	return WSAGetLastError();
 }
