@@ -7,6 +7,7 @@
 #include <xtcool.h>
 
 #ifdef MEM_STAT
+static kuint __g_mempeak = 0;
 static kuint __g_memusage = 0;
 static kuint __g_alloc_cnt = 0;
 static kuint __g_free_cnt = 0;
@@ -68,6 +69,9 @@ kvoid *kmem_get(kuint size)
 
 	__g_memusage += size;
 	__g_alloc_cnt++;
+
+	if (__g_memusage > __g_mempeak)
+		__g_mempeak = __g_memusage;
 #else
 	kvoid *usrptr = malloc(size);
 #endif
@@ -139,6 +143,31 @@ kvoid kmem_rel(kvoid *usrptr)
 #endif
 }
 
+kint kmem_rpt(kint *alloc_cnt, kint *free_cnt, kint *memusage, kint *mempeak)
+{
+#ifdef MEM_STAT
+	if (alloc_cnt)
+		*alloc_cnt = __g_alloc_cnt;
+	if (free_cnt)
+		*free_cnt = __g_free_cnt;
+	if (memusage)
+		*memusage = __g_memusage;
+	if (mempeak)
+		*mempeak = __g_mempeak;
+	return 0;
+#else
+	if (alloc_cnt)
+		*alloc_cnt = -1;
+	if (free_cnt)
+		*free_cnt = -1;
+	if (memusage)
+		*memusage = -1;
+	if (mempeak)
+		*mempeak = -1;
+	return -1;
+#endif
+}
+
 kvoid* kmem_move(kvoid *to, kvoid *fr, kuint num)
 {
 	kchar *s1, *s2;
@@ -206,6 +235,7 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 		wlog(pbuf);
 
 		offset += line;
+		dat += width;
 	}
 
 	if (pbuf != cache)

@@ -198,4 +198,4 @@ kmodu_layout                                    @196
 kmem_dump                                       @197
 spl_sock_close                                  @198
 spl_sock_err                                    @199
-
+kmem_rpt                                        @200

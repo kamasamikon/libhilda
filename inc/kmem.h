@@ -14,6 +14,7 @@ extern "C" {
 
 kint kmem_init(kuint a_flg);
 kint kmem_final(kvoid);
+kint kmem_rpt(kint *alloc_cnt, kint *free_cnt, kint *memusage, kint *mempeak);
 
 kvoid *kmem_get(kuint size);
 kvoid *kmem_get_z(kuint size);
