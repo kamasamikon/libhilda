@@ -4,7 +4,9 @@
 
 import os
 import sys
+import time
 import socket
+import hashlib
 import re
 import subprocess
 try:
@@ -243,7 +245,9 @@ def bytes_to_str(input):
 
 def say_hey(heystr = None):
     if not heystr:
-        heystr = "hey o telnet auv auv auv"
+        seed = "%.9f" % time.time()
+        hash = hashlib.md5(seed.encode("utf-8")).hexdigest()
+        heystr = "hey o telnet %s auv auv" % hash
     sock.send(str_to_bytes(heystr))
     data = bytes_to_str(sock.recv(1024 * 512))
 
