@@ -2,7 +2,7 @@
 
 import os, sys
 import socket
-import time
+import time, hashlib
 
 def help():
     s = "USAGE:\torbatch -a server -p port -lo loop-outer -li loop-inner -cmd cmd-file -out out-file\n\n"
@@ -27,6 +27,8 @@ def help():
     s += "        -msg message           # Direct print to out-file.\n"
     s += "        OR\n"
     s += "        -time                  # Print a timestamp to out-file\n"
+    s += "        OR\n"
+    s += "        -check                 # -check <opt> <wanted>\n"
     sys.stdout.write(s)
 
 def help_and_die():
@@ -76,6 +78,16 @@ def get_opt(name):
         return None
     return sys.argv[index + 1]
 
+def hack_hey_command(line):
+    segs = line.split()
+
+    if segs[0] == 'hey' and segs[1] == 'o' and segs[2] == 'telnet':
+        seed = "%.9f" % time.time()
+        hash = hashlib.md5(seed.encode("utf-8")).hexdigest()
+        return "hey o telnet %s %s %s" % (hash, segs[4], segs[5])
+    else:
+        return line
+
 def load_cmds(cmdfile, rootfiles = None):
     cmds = []
 
@@ -98,9 +110,10 @@ def load_cmds(cmdfile, rootfiles = None):
                         rootfiles.pop()
                         cmds.extend(inc_cmds)
                     else:
+                        line = hack_hey_command(line)
                         cmds.append(line)
     except:
-        sys.stdout.write("Error: Open cmdfile:%s failed." % cmdfile)
+        sys.stdout.write("Error: Open cmdfile:%s failed.\r\n" % cmdfile)
         return []
     return cmds
 
@@ -135,6 +148,25 @@ def do_cmds(cmds, sock = None):
             line_ofs += 1
         elif line.startswith("-msg "):
             out.write("<MSG>: " + line[5:] + "\r\n")
+            line_ofs += 1
+        elif line.startswith("-check "):
+            out.write("<CHECK>: " + line[7:].strip() + "\r\n")
+            opt, value = line[7:].split()
+            if sock:
+                sock.send(str_to_bytes("og %s" % opt))
+                data = sock.recv(1024 * 512)
+                result = data.decode("utf-8").strip().split("\r\n")
+
+                if result[0] != "0 OK":
+                    out.write("<CHECK ERR>: OPT<%s>, VAL<%s>, ERROR<%s>\r\n" % (opt, value, result[0]))
+                else:
+                    if opt[0] in 'ibe':
+                        if int(result[1]) != int(value):
+                            out.write("<CHECK ERR>: OPT<%s>, VAL<%d>, RET<%d>\r\n" % (opt, int(value), int(result[1])))
+                    else:
+                        if result[1] != value:
+                            out.write("<CHECK ERR>: OPT<%s>, VAL<%s>, RET<%s>\r\n" % (opt, value, result[1]))
+
             line_ofs += 1
         elif line.startswith("-time"):
             out.write(time.strftime("<TIME>: %Y-%m-%d %H-%M-%S"))
