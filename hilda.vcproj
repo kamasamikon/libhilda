@@ -171,7 +171,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Free|Win32"
+			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
