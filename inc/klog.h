@@ -22,6 +22,9 @@ extern "C" {
 #define LOG_FAT         0x00000004
 #define LOG_TIME        0x00000080
 
+/* content ends with NUL, len should be equal to strlen(content) */
+typedef int (*KLOGGER)(const char *content, int len);
+
 #if defined(CFG_KLOG_DO_NOTHING)
 #define klog_init(deflev, argc, argv) do {} while (0)
 #define klog_attach(logcc) do {} while (0)
@@ -37,21 +40,13 @@ void *klog_init(kuint deflev, int argc, char **argv);
 void *klog_cc(void);
 void *klog_attach(void *logcc);
 
-/**
- * \brief Save log to a file.
- * \param yesno Yes => save, No => Don't save.
- * \param max_size Max size of output file, if equal -1, no limit.
- * \param get_path A callback to get log path name.
- *
- * \return Old yesno setting.
- */
-int klog_to_file(int yesno, int max_size, int (*get_path)(char path[1024]));
-int klog_to_wlog(int yesno);
+int klog_add_logger(KLOGGER logger);
+int klog_del_logger(KLOGGER logger);
 
 kuint klog_getlevel(const kchar *a_file);
 kinline int klog_touches(void);
 void klog_set_level(const char *cmd);
-int kprintf(const char *fmt, ...);
+int klogf(const char *fmt, ...);
 
 static kint VAR_UNUSED __g_klog_touches = -1;
 static kuint VAR_UNUSED __gc_klog_level;
@@ -73,11 +68,11 @@ static kuint VAR_UNUSED __gc_klog_level;
 	GET_LOG_LEVEL(); \
 	if (__gc_klog_level & LOG_LOG) { \
 		if (__gc_klog_level & LOG_TIME) { \
-			kprintf("[klog:%lu]-", spl_get_ticks()); \
+			klogf("[klog:%lu]-", spl_get_ticks()); \
 		} else { \
-			kprintf("[klog]-"); \
+			klogf("[klog]-"); \
 		} \
-		kprintf x ; \
+		klogf x ; \
 	} \
 } while (0)
 #endif
@@ -89,11 +84,11 @@ static kuint VAR_UNUSED __gc_klog_level;
 	GET_LOG_LEVEL(); \
 	if (__gc_klog_level & LOG_ERR) { \
 		if (__gc_klog_level & LOG_TIME) { \
-			kprintf("[kerr:%lu]-", spl_get_ticks()); \
+			klogf("[kerr:%lu]-", spl_get_ticks()); \
 		} else { \
-			kprintf("[kerr]-"); \
+			klogf("[kerr]-"); \
 		} \
-		kprintf x ; \
+		klogf x ; \
 	} \
 } while (0)
 #endif
@@ -105,11 +100,11 @@ static kuint VAR_UNUSED __gc_klog_level;
 	GET_LOG_LEVEL(); \
 	if (__gc_klog_level & LOG_FAT) { \
 		if (__gc_klog_level & LOG_TIME) { \
-			kprintf("[kfat:%lu]-", spl_get_ticks()); \
+			klogf("[kfat:%lu]-", spl_get_ticks()); \
 		} else { \
-			kprintf("[kfat]-"); \
+			klogf("[kfat]-"); \
 		} \
-		kprintf x ; \
+		klogf x ; \
 	} \
 } while (0)
 #endif
@@ -120,14 +115,14 @@ static kuint VAR_UNUSED __gc_klog_level;
 #define kassert(_x_) \
 	do { \
 		if (!(_x_)) { \
-			kprintf("\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d\n\n", #_x_, __FILE__, __LINE__); \
+			klogf("\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d\n\n", #_x_, __FILE__, __LINE__); \
 		} \
 	} while (0)
 #else
 #define kassert(_x_) \
 	do { \
 		if (!(_x_)) { \
-			kprintf("\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d\n\n", #_x_, __FILE__, __LINE__); \
+			klogf("\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d\n\n", #_x_, __FILE__, __LINE__); \
 			/* klogbrk(); kbacktrace(); */ \
 		} \
 	} while (0)

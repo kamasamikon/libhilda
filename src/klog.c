@@ -10,6 +10,8 @@
 
 #ifndef CFG_KLOG_DO_NOTHING
 
+#define MAX_LOGGER 4
+
 /* Control Center for klog */
 typedef struct _klogcc_t klogcc_t;
 struct _klogcc_t {
@@ -22,19 +24,7 @@ struct _klogcc_t {
 	/** touches is a ref count user change klog arg */
 	kint touches;
 
-	/** output to wlog */
-	int to_wlog;
-
-	/** output to file */
-	int to_file;
-	/** output file max size, -1 means no limit */
-	kllint to_file_size;
-	/** output file current size */
-	kllint to_file_size_cur;
-	/** callback to get output file path */
-	int (*get_path)(char path[1024]);
-	/** FILE* for output file */
-	FILE *to_fp;
+	KLOGGER loggers[MAX_LOGGER];
 };
 
 static klogcc_t *__g_klogcc = NULL;
@@ -42,26 +32,43 @@ static klogcc_t *__g_klogcc = NULL;
 static void set_la_arg(int argc, char **argv);
 static void set_lf_arg(int argc, char **argv);
 
-int klog_to_file(int yesno, int max_size, int (*get_path)(char path[4096]))
+int klog_add_logger(KLOGGER logger)
 {
 	klogcc_t *cc = __g_klogcc;
-	int old = cc->to_file;
+	int i;
 
-	cc->to_file = yesno;
-	cc->to_file_size = max_size;
-	cc->get_path = get_path;
+	if (!logger)
+		return -1;
 
-	return old;
+	for (i = 0; i < MAX_LOGGER; i++)
+		if (cc->loggers[i] == logger)
+			return 0;
+
+	for (i = 0; i < MAX_LOGGER; i++)
+		if (!cc->loggers[i]) {
+			cc->loggers[i] = logger;
+			return 0;
+		}
+
+	klogf("klog_add_logger: Only up to %d logger supported.\n", MAX_LOGGER);
+	return -1;
 }
 
-int klog_to_wlog(int yesno)
+int klog_del_logger(KLOGGER logger)
 {
 	klogcc_t *cc = __g_klogcc;
-	int old = cc->to_wlog;
+	int i;
 
-	cc->to_wlog = yesno;
+	if (!logger)
+		return -1;
 
-	return old;
+	for (i = 0; i < MAX_LOGGER; i++)
+		if (cc->loggers[i] == logger) {
+			cc->loggers[i] = NULL;
+			return 0;
+		}
+
+	return -1;
 }
 
 /**
@@ -181,7 +188,6 @@ void *klog_init(kuint deflev, int argc, char **argv)
 	__g_klogcc = cc;
 
 	cc->lv = deflev;
-	cc->to_wlog = 1;
 
 	set_la_arg(argc, argv);
 	set_lf_arg(argc, argv);
@@ -257,15 +263,23 @@ kuint klog_getlevel(const kchar *fn)
 	return cur_level;
 }
 
-int kprintf(const char *fmt, ...)
+int klogf(const char *fmt, ...)
 {
 	klogcc_t *cc = __g_klogcc;
 	va_list ap;
-	char buffer[4096], path[1024], *bufptr = buffer;
-	int ret, bufsize = sizeof(buffer);
-	FILE *to_fp;
+	char buffer[4096], *bufptr = buffer;
+	int i, j, used_logger = 0, ret, bufsize = sizeof(buffer);
 
-	if (!cc->to_wlog && !cc->to_file)
+	KLOGGER loggers[MAX_LOGGER];
+
+	for (i = 0, j = 0; i < MAX_LOGGER; i++)
+		if (cc->loggers[i]) {
+			loggers[j] = cc->loggers[i];
+			j++;
+			used_logger++;
+		}
+
+	if (used_logger == 0)
 		return 0;
 
 	va_start(ap, fmt);
@@ -279,36 +293,9 @@ int kprintf(const char *fmt, ...)
 	}
 	va_end(ap);
 
-	if (cc->to_wlog)
-		wlog(bufptr);
+	for (i = 0; i < used_logger; i++)
+		loggers[i](bufptr, ret);
 
-	if (cc->to_file && cc->get_path && (cc->to_file_size != 0)) {
-		to_fp = cc->to_fp;
-
-		if (!to_fp) {
-			if (cc->get_path(path))
-				goto quit;
-
-			to_fp = fopen(path, "wt");
-			if (!to_fp) {
-				wlogf("kprintf: error fopen: <%s>.\n", path);
-				goto quit;
-			}
-			cc->to_file_size_cur = 0;
-			cc->to_fp = to_fp;
-		}
-
-		fwrite(bufptr, sizeof(char), ret, to_fp);
-		cc->to_file_size_cur += ret;
-
-		if (cc->to_file_size > 0 &&
-				cc->to_file_size < cc->to_file_size_cur) {
-			cc->to_fp = NULL;
-			fclose(to_fp);
-		}
-	}
-
-quit:
 	if (bufptr != buffer)
 		kmem_free(bufptr);
 	return ret;
