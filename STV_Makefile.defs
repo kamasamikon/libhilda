@@ -1,0 +1,61 @@
+RM=rm
+OS=linux
+
+include $(CLOUD_PRJ_ROOT)/.configure
+
+OCTEON_CPPFLAGS_GLOBAL_ADD_1:=$(subst '"','',$(OCTEON_CPPFLAGS_GLOBAL_ADD))
+export OCTEON_CPPFLAGS_GLOBAL_ADD:=$(OCTEON_CPPFLAGS_GLOBAL_ADD_1)
+
+DBG_CFLAGS := 
+ifeq ($(FAINT_DEBUG),yes)
+	DBG_CFLAGS += -g3
+else
+	DBG_CFLAGS += -O3
+endif
+
+ifneq ($(GCC_INCDIR),"")
+SYS_INC_DIRS += -I $(subst :, -I, ${GCC_INCDIR})
+endif
+ifneq ($(GCC_LIBDIR),"")
+SYS_LIB_DIRS := -L $(subst :, -L , ${GCC_LIBDIR})
+endif
+
+#WFLAGS := -Werror
+
+ifeq ($(FAINT_PLATFORM),x86)
+	export LOCAL_CFLAGS := $(DBG_CFLAGS) $(WFLAGS) -fno-strict-aliasing -DPLATFORM_X86
+	export SYS_LIB_LDFLAGS :=
+	CC=gcc
+	AR=ar
+	LD=ld
+else ifeq ($(FAINT_PLATFORM),5602)
+	CROSS_COMPILE:=arm-linux-
+	CC:=$(CROSS_COMPILE)gcc
+	AR:=$(CROSS_COMPILE)ar
+	LD:=$(CROSS_COMPILE)ld
+	export CC AR LD
+	export LOCAL_CFLAGS := $(DBG_CFLAGS) $(WFLAGS) -fno-strict-aliasing -DPLATFORM_5602
+	export SYS_LIB_LDFLAGS :=
+	export SYS_LIB_DIRS += -L $(LINUX_KERNEL)/../../embedded_rootfs/build/readline-5.1
+else ifeq ($(FAINT_PLATFORM),marvell)
+	CROSS_COMPILE:=arm-marvell-linux-gnueabi-
+	CC:=$(CROSS_COMPILE)gcc
+	AR:=$(CROSS_COMPILE)ar
+	LD:=$(CROSS_COMPILE)ld
+	export CC AR LD
+	export LOCAL_CFLAGS := $(DBG_CFLAGS) $(WFLAGS) -fno-strict-aliasing -DPLATFORM_MARVELL -D__LINUX__ -D_REENTRANT -D_LARGEFILE64_SOURCE
+	export SYS_LIB_LDFLAGS :=
+	export SYS_LIB_DIRS +=
+else ifeq ($(FAINT_PLATFORM),3602)
+	CROSS_COMPILE:=mips64-octeon-linux-gnu-
+	CC:=$(CROSS_COMPILE)gcc -mabi=n32
+	AR:=$(CROSS_COMPILE)ar
+	LD:=$(CROSS_COMPILE)ld -mabi=n32
+	export CC AR LD
+	export LOCAL_CFLAGS := $(DBG_CFLAGS) $(WFLAGS) -fno-strict-aliasing -DPLATFORM_3602
+	export SYS_LIB_LDFLAGS :=
+	export SYS_LIB_DIRS += -L $(LINUX_KERNEL)/../../embedded_rootfs/build/readline-5.1
+endif
+
+MAKE += CC="$(CC)" AR="$(AR)" LD="$(LD)"
+
