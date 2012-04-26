@@ -15,11 +15,11 @@
 /* Control Center for klog */
 typedef struct _klogcc_t klogcc_t;
 struct _klogcc_t {
-	/** Global level, set by klog_init, default is no message */
-	kuint lv;
+	/** Global flags, set by klog_init, default is no message */
+	kuint flg;
 
 	/** command line for application, seperate by '\0' */
-	kchar lf[2048];
+	kchar ff[2048];
 
 	/** touches is a ref count user change klog arg */
 	kint touches;
@@ -29,8 +29,8 @@ struct _klogcc_t {
 
 static klogcc_t *__g_klogcc = NULL;
 
-static void set_la_arg(int argc, char **argv);
-static void set_lf_arg(int argc, char **argv);
+static void set_fa_arg(int argc, char **argv);
+static void set_ff_arg(int argc, char **argv);
 
 int klog_add_logger(KLOGGER logger)
 {
@@ -96,26 +96,26 @@ kinline int klog_touches(void)
 	return __g_klogcc->touches;
 }
 
-void klog_set_level(const char *cmd)
+/* opt setting should has the same format as argv */
+/* just like a raw command line */
+/* --klog-la=left --klog-lf=left=:werw:wer: */
+/* --klog-fa=left --klog-ff=left=:werw:wer: */
+void klog_setflg(const char *cmd)
 {
-	/* opt setting should has the same format as argv */
-	/* just like a raw command line */
-	/* --klog-la=left --klog-lf=left=:werw:wer: */
-
 	int argc;
 	char **argv;
 
 	if ((argv = build_argv(cmd, &argc, &argv)) == NULL)
 		return;
 
-	set_la_arg(argc, argv);
-	set_lf_arg(argc, argv);
+	set_fa_arg(argc, argv);
+	set_ff_arg(argc, argv);
 	klog_touch();
 
 	free_argv(argv);
 }
 
-static void set_la_str(const char *arg)
+static void set_fa_str(const char *arg)
 {
 	klogcc_t *cc = __g_klogcc;
 	char c;
@@ -125,46 +125,52 @@ static void set_la_str(const char *arg)
 		if (c == '-') {
 			c = *p++;
 			if (c == 'l')
-				kflg_clr(cc->lv, LOG_LOG);
+				kflg_clr(cc->flg, LOG_LOG);
 			else if (c == 'e')
-				kflg_clr(cc->lv, LOG_ERR);
+				kflg_clr(cc->flg, LOG_ERR);
 			else if (c == 'f')
-				kflg_clr(cc->lv, LOG_FAT);
+				kflg_clr(cc->flg, LOG_FAT);
 			else if (c == 't')
-				kflg_clr(cc->lv, LOG_TIME);
+				kflg_clr(cc->flg, LOG_TM_REL);
+			else if (c == 'T')
+				kflg_clr(cc->flg, LOG_TM_ABS);
 		} else if (c == 'l')
-			kflg_set(cc->lv, LOG_LOG);
+			kflg_set(cc->flg, LOG_LOG);
 		else if (c == 'e')
-			kflg_set(cc->lv, LOG_ERR);
+			kflg_set(cc->flg, LOG_ERR);
 		else if (c == 'f')
-			kflg_set(cc->lv, LOG_FAT);
+			kflg_set(cc->flg, LOG_FAT);
 		else if (c == 't')
-			kflg_set(cc->lv, LOG_TIME);
+			kflg_set(cc->flg, LOG_TM_REL);
+		else if (c == 'T')
+			kflg_set(cc->flg, LOG_TM_ABS);
 	}
 }
 
-/* Level for All files */
-static void set_la_arg(int argc, char **argv)
+/* Flag for All files */
+static void set_fa_arg(int argc, char **argv)
 {
 	int i;
 
 	for (i = 0; i < argc && argv[i]; i++)
-		if (!strncmp(argv[i], "--klog-la=", 10))
-			set_la_str(argv[i] + 10);
+		if ((!strncmp(argv[i], "--klog-la=", 10)) ||
+				(!strncmp(argv[i], "--klog-fa=", 10)))
+			set_fa_str(argv[i] + 10);
 }
 
-/* Level for Files */
-static void set_lf_arg(int argc, char **argv)
+/* Flag for Files */
+static void set_ff_arg(int argc, char **argv)
 {
 	klogcc_t *cc = __g_klogcc;
 	int i;
-	char *p = cc->lf;
+	char *p = cc->ff;
 
 	/* XXX: tricky */
 	strcat(p, " = ");
 
 	for (i = 0; i < argc && argv[i]; i++)
-		if (!strncmp(argv[i], "--klog-lf=", 10)) {
+		if ((!strncmp(argv[i], "--klog-lf=", 10)) ||
+				(!strncmp(argv[i], "--klog-ff=", 10))) {
 			p = strcat(p, argv[i] + 10);
 			p = strcat(p, " ");
 		}
@@ -173,11 +179,12 @@ static void set_lf_arg(int argc, char **argv)
 /**
  * \brief Set parameters for debug message, should be called once in main
  * --klog-la=lef-t --klog-lf=<left>=:file1:file2:
+ * --klog-fa=lef-t --klog-ff=<left>=:file1:file2:
  *
- * \param a_level ored of LOG_LOG, LOG_ERR and LOG_FAT
- * \return Debug message level after set.
+ * \param flg ored of LOG_LOG, LOG_ERR and LOG_FAT
+ * \return Debug message flag after set.
  */
-void *klog_init(kuint deflev, int argc, char **argv)
+void *klog_init(kuint flg, int argc, char **argv)
 {
 	klogcc_t *cc;
 
@@ -187,33 +194,33 @@ void *klog_init(kuint deflev, int argc, char **argv)
 	cc = (klogcc_t*)kmem_alloz(1, klogcc_t);
 	__g_klogcc = cc;
 
-	cc->lv = deflev;
+	cc->flg = flg;
 
-	set_la_arg(argc, argv);
-	set_lf_arg(argc, argv);
+	set_fa_arg(argc, argv);
+	set_ff_arg(argc, argv);
 	klog_touch();
 
 	return (void*)__g_klogcc;
 }
 
 /**
- * \brief Current debug message level.
+ * \brief Current debug message flag.
  *
  * This will check the command line to do more on each file.
  *
- * The command line format is --klog-lf=<left> :file1.ext:file2.ext:file:
- *      file.ext is the file name. If exist dup name file, the level set to all.
+ * The command line format is --klog-ff=<left> :file1.ext:file2.ext:file:
+ *      file.ext is the file name. If exist dup name file, the flag set to all.
  */
-kuint klog_getlevel(const kchar *fn)
+kuint klog_getflg(const kchar *fn)
 {
 	klogcc_t *cc = __g_klogcc;
 	kchar pattern[256], *start;
 	kbool set;
-	kuint cur_level = cc->lv;
+	kuint flg = cc->flg;
 
 	sprintf(pattern, ":%s:", fn);
 
-	start = strstr(cc->lf, pattern);
+	start = strstr(cc->ff, pattern);
 	if (start) {
 		while (*start-- != '=')
 			;
@@ -227,27 +234,27 @@ kuint klog_getlevel(const kchar *fn)
 			switch(*start) {
 			case 'l':
 				if (set)
-					kflg_set(cur_level, LOG_LOG);
+					kflg_set(flg, LOG_LOG);
 				else
-					kflg_clr(cur_level, LOG_LOG);
+					kflg_clr(flg, LOG_LOG);
 				break;
 			case 'e':
 				if (set)
-					kflg_set(cur_level, LOG_ERR);
+					kflg_set(flg, LOG_ERR);
 				else
-					kflg_clr(cur_level, LOG_ERR);
+					kflg_clr(flg, LOG_ERR);
 				break;
 			case 'f':
 				if (set)
-					kflg_set(cur_level, LOG_FAT);
+					kflg_set(flg, LOG_FAT);
 				else
-					kflg_clr(cur_level, LOG_FAT);
+					kflg_clr(flg, LOG_FAT);
 				break;
 			case 't':
 				if (set)
-					kflg_set(cur_level, LOG_TIME);
+					kflg_set(flg, LOG_TM_REL);
 				else
-					kflg_clr(cur_level, LOG_TIME);
+					kflg_clr(flg, LOG_TM_REL);
 				break;
 			default:
 				break;
@@ -260,14 +267,16 @@ kuint klog_getlevel(const kchar *fn)
 		}
 	}
 
-	return cur_level;
+	return flg;
 }
 
+/* flag => [ 'l', 'e', 'f', 't' ] */
+/* int klogf(const char *prefix, kuint flg, const char *fmt, ...) */
 int klogf(const char *fmt, ...)
 {
 	klogcc_t *cc = __g_klogcc;
 	va_list ap;
-	char buffer[4096], *bufptr = buffer;
+	char buffer[2048], *bufptr = buffer;
 	int i, j, used_logger = 0, ret, bufsize = sizeof(buffer);
 
 	KLOGGER loggers[MAX_LOGGER];

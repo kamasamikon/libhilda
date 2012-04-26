@@ -31,9 +31,9 @@ kcfg_load                                       @29
 klog_init                                       @30
 klog_cc                                         @31
 klog_attach                                     @32
-klog_getlevel                                   @33
+klog_getflg                                     @33
 klog_touches                                    @34
-klog_set_level                                  @35
+klog_setflg                                     @35
 kmem_init                                       @36
 kmem_final                                      @37
 kmem_get                                        @38
