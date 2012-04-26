@@ -20,12 +20,16 @@ extern "C" {
 #define LOG_LOG         0x00000001
 #define LOG_ERR         0x00000002
 #define LOG_FAT         0x00000004
-#define LOG_TIME        0x00000080
+#define LOG_TM_REL      0x00000010
+#define LOG_TM_ABS      0x00000020
+
+/* content ends with NUL, len should be equal to strlen(content) */
+typedef int (*KLOGGER)(const char *content, int len);
 
 #if defined(CFG_KLOG_DO_NOTHING)
 #define klog_init(deflev, argc, argv) do {} while (0)
 #define klog_attach(logcc) do {} while (0)
-#define klog_getlevel(a_file) 0
+#define klog_getflg(a_file) 0
 
 #define LOG_HIDE_LOG    1
 #define LOG_HIDE_ERR    1
@@ -37,21 +41,13 @@ void *klog_init(kuint deflev, int argc, char **argv);
 void *klog_cc(void);
 void *klog_attach(void *logcc);
 
-/**
- * \brief Save log to a file.
- * \param yesno Yes => save, No => Don't save.
- * \param max_size Max size of output file, if equal -1, no limit.
- * \param get_path A callback to get log path name.
- *
- * \return Old yesno setting.
- */
-int klog_to_file(int yesno, int max_size, int (*get_path)(char path[1024]));
-int klog_to_wlog(int yesno);
+int klog_add_logger(KLOGGER logger);
+int klog_del_logger(KLOGGER logger);
 
-kuint klog_getlevel(const kchar *a_file);
+kuint klog_getflg(const kchar *fn);
+void klog_setflg(const char *cmd);
 kinline int klog_touches(void);
-void klog_set_level(const char *cmd);
-int kprintf(const char *fmt, ...);
+int klogf(const char *fmt, ...);
 
 static kint VAR_UNUSED __g_klog_touches = -1;
 static kuint VAR_UNUSED __gc_klog_level;
@@ -62,7 +58,7 @@ static kuint VAR_UNUSED __gc_klog_level;
 	int touches = klog_touches(); \
 	if (__g_klog_touches < touches) { \
 		__g_klog_touches = touches; \
-		__gc_klog_level = klog_getlevel((const kchar*)__FILE__); \
+		__gc_klog_level = klog_getflg((const kchar*)__FILE__); \
 	} \
 } while (0)
 
@@ -72,12 +68,12 @@ static kuint VAR_UNUSED __gc_klog_level;
 #define klog(x) do { \
 	GET_LOG_LEVEL(); \
 	if (__gc_klog_level & LOG_LOG) { \
-		if (__gc_klog_level & LOG_TIME) { \
-			kprintf("[klog:%lu]-", spl_get_ticks()); \
+		if (__gc_klog_level & LOG_TM_REL) { \
+			klogf("[klog:%lu]-", spl_get_ticks()); \
 		} else { \
-			kprintf("[klog]-"); \
+			klogf("[klog]-"); \
 		} \
-		kprintf x ; \
+		klogf x ; \
 	} \
 } while (0)
 #endif
@@ -88,12 +84,12 @@ static kuint VAR_UNUSED __gc_klog_level;
 #define kerror(x) do { \
 	GET_LOG_LEVEL(); \
 	if (__gc_klog_level & LOG_ERR) { \
-		if (__gc_klog_level & LOG_TIME) { \
-			kprintf("[kerr:%lu]-", spl_get_ticks()); \
+		if (__gc_klog_level & LOG_TM_REL) { \
+			klogf("[kerr:%lu]-", spl_get_ticks()); \
 		} else { \
-			kprintf("[kerr]-"); \
+			klogf("[kerr]-"); \
 		} \
-		kprintf x ; \
+		klogf x ; \
 	} \
 } while (0)
 #endif
@@ -104,12 +100,12 @@ static kuint VAR_UNUSED __gc_klog_level;
 #define kfatal(x) do { \
 	GET_LOG_LEVEL(); \
 	if (__gc_klog_level & LOG_FAT) { \
-		if (__gc_klog_level & LOG_TIME) { \
-			kprintf("[kfat:%lu]-", spl_get_ticks()); \
+		if (__gc_klog_level & LOG_TM_REL) { \
+			klogf("[kfat:%lu]-", spl_get_ticks()); \
 		} else { \
-			kprintf("[kfat]-"); \
+			klogf("[kfat]-"); \
 		} \
-		kprintf x ; \
+		klogf x ; \
 	} \
 } while (0)
 #endif
@@ -120,14 +116,14 @@ static kuint VAR_UNUSED __gc_klog_level;
 #define kassert(_x_) \
 	do { \
 		if (!(_x_)) { \
-			kprintf("\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d\n\n", #_x_, __FILE__, __LINE__); \
+			klogf("\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d\n\n", #_x_, __FILE__, __LINE__); \
 		} \
 	} while (0)
 #else
 #define kassert(_x_) \
 	do { \
 		if (!(_x_)) { \
-			kprintf("\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d\n\n", #_x_, __FILE__, __LINE__); \
+			klogf("\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d\n\n", #_x_, __FILE__, __LINE__); \
 			/* klogbrk(); kbacktrace(); */ \
 		} \
 	} while (0)

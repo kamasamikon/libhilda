@@ -31,9 +31,9 @@ kcfg_load                                       @29
 klog_init                                       @30
 klog_cc                                         @31
 klog_attach                                     @32
-klog_getlevel                                   @33
+klog_getflg                                     @33
 klog_touches                                    @34
-klog_set_level                                  @35
+klog_setflg                                     @35
 kmem_init                                       @36
 kmem_final                                      @37
 kmem_get                                        @38
@@ -172,9 +172,9 @@ spl_lib_getsym                                  @170
 wlogf                                           @171
 opt_rpc_server_init                             @172
 opt_rpc_server_final                            @173
-klog_to_file                                    @174
-klog_to_wlog                                    @175
-kprintf                                         @176
+klog_add_logger                                 @174
+klog_del_logger                                 @175
+klogf                                           @176
 spl_exedir                                      @177
 cnode_foreach_start                             @178
 cnode_foreach_stop                              @179
