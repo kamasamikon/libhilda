@@ -9,6 +9,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <dirent.h>
+#include <unistd.h>
 
 #include <klog.h>
 #include <kmem.h>
@@ -652,6 +653,18 @@ int spl_lib_unload(void *handle)
 void *spl_lib_getsym(void *lib, const char *name)
 {
 	return (void*)dlsym(lib, name);
+}
+
+void spl_exedir(char *argv[], kchar *exedir)
+{
+	char *p, buf[1024];
+
+	readlink("/proc/self/exe", buf, sizeof(buf));
+
+	strcpy(exedir, buf);
+	p = strrchr(exedir, '/');
+	if (p)
+		*p = '\0';
 }
 
 int wlogf(const char *fmt, ...)
