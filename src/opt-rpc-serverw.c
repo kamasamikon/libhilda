@@ -504,11 +504,6 @@ int opt_rpc_server_init(int argc, char *argv[])
 			port = (kushort)tmp;
 	}
 
-	opt_add_s("b:/sys/admin/telnet/enable", OA_GET, NULL, NULL);
-	opt_setint("b:/sys/admin/telnet/enable", 1);
-	opt_add_s("s:/sys/usr/auv/passwd", OA_GET, NULL, NULL);
-	opt_setstr("s:/sys/usr/auv/passwd", "auv");
-
 	select_init();
 	ignore_pipe();
 	spl_thread_create(worker_thread_or_server, (void *)(int)port, 0);
