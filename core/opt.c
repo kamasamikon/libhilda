@@ -654,7 +654,7 @@ static kinline opt_entry_t *entry_find(const char *path)
 		if (0 == strcmp(path, oe->path))
 			return oe;
 	}
-	kerror(("entry_find: not found: <%s>\n", path));
+	/* kerror(("entry_find: not found: <%s>\n", path)); */
 	opt_set_err(EC_NOTFOUND, "OPT not exist");
 	return NULL;
 }
@@ -1735,8 +1735,8 @@ static opt_watch_t *watch_new(const char *path, OPT_WATCH wch,
 	queue_watch(oe, ow, awch);
 
 	/* spl_lck_rel(__g_optcc->lck); */
-	klog(("watch_new:%s:%s: <%s> successfully\n",
-				awch ? "a" : "b", oe ? "OK" : "NY", path));
+	/* klog(("watch_new:%s:%s: <%s> successfully\n",
+				awch ? "a" : "b", oe ? "OK" : "NY", path)); */
 	return ow;
 }
 

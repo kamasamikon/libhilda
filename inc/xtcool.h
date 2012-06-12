@@ -183,6 +183,7 @@ int wlog(const char *msg);
  * This must be called before any chdir()
  */
 void spl_exedir(char *argv[], kchar *exedir);
+int spl_mkdir(const char *path, unsigned int mode);
 
 int spl_sock_close(void *s);
 int spl_sock_err();
