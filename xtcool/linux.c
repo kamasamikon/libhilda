@@ -667,6 +667,11 @@ void spl_exedir(char *argv[], kchar *exedir)
 		*p = '\0';
 }
 
+int spl_mkdir(const char *path, unsigned int mode)
+{
+	return mkdir(path, mode);
+}
+
 int wlogf(const char *fmt, ...)
 {
 	int ret;

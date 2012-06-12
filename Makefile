@@ -76,9 +76,9 @@ debug.no: clean
 #
 .PHONY: hilda
 hilda: amust
-	make -C ${CLOUD_PRJ_ROOT}/src
+	make -C ${CLOUD_PRJ_ROOT}/build/linux
 
 .PHONY: hilda.clean
 hilda.clean: amust
-	make -C ${CLOUD_PRJ_ROOT}/src clean
+	make -C ${CLOUD_PRJ_ROOT}/build/linux clean
 

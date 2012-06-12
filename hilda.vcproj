@@ -192,7 +192,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\cnode.c"
+				RelativePath=".\core\cnode.c"
 				>
 			</File>
 			<File
@@ -204,55 +204,55 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\karg.c"
+				RelativePath=".\core\karg.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\kcfg.c"
+				RelativePath=".\core\kcfg.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\klog.c"
+				RelativePath=".\core\klog.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\kmem.c"
+				RelativePath=".\core\kmem.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\kmodu.c"
+				RelativePath=".\core\kmodu.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\kmque.c"
+				RelativePath=".\core\kmque.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\kstr.c"
+				RelativePath=".\core\kstr.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\md5sum.c"
+				RelativePath=".\core\md5sum.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\opt-rpc-common.c"
+				RelativePath=".\core\opt-rpc-common.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\opt-rpc-serverw.c"
+				RelativePath=".\core\opt-rpc-serverw.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\opt.c"
+				RelativePath=".\core\opt.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\sdlist.c"
+				RelativePath=".\core\sdlist.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\xtcoolw.c"
+				RelativePath=".\core\xtcoolw.c"
 				>
 			</File>
 		</Filter>

@@ -722,6 +722,11 @@ void spl_exedir(char *argv[], kchar *exedir)
 		*pspos = '\0';
 }
 
+int spl_mkdir(const char *path, unsigned int mode)
+{
+	return _mkdir(path);
+}
+
 int spl_sock_close(void *s)
 {
 	return CloseHandle((HANDLE)s);
