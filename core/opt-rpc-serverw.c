@@ -326,7 +326,7 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 		else {
 			void *wch = NULL;
 			if ((c->wch_socket != -1))
-				wch = opt_awch_u(para, rpc_watch, (void *) c, NULL);
+				wch = opt_awch_u(para, rpc_watch, (void*)c, NULL);
 			else
 				kerror(("wchadd while on wfunc set in c side\n"));
 			if (!wch)
@@ -418,7 +418,7 @@ static void *worker_thread_or_server(void *userdata)
 
 	unsigned short port = (unsigned short)(int)userdata;
 
-	int s_listen, new_fd;
+	int s_listen, s_new;
 	struct sockaddr_in their_addr;
 	struct sockaddr_in my_addr;
 	int sin_size;
@@ -437,7 +437,7 @@ static void *worker_thread_or_server(void *userdata)
 	my_addr.sin_port = htons(port);
 	my_addr.sin_addr.s_addr = INADDR_ANY;
 	memset(my_addr.sin_zero, '\0', sizeof(my_addr.sin_zero));
-	if (bind(s_listen, (struct sockaddr *) &my_addr, sizeof(my_addr)) == -1) {
+	if (bind(s_listen, (struct sockaddr*)&my_addr, sizeof(my_addr)) == -1) {
 		kerror(("error! f:%s, l:%d, c:%s, e:%s\n",
 					"worker_thread_or_server", __LINE__, "bind", strerror(errno)));
 		return NULL;
@@ -468,11 +468,11 @@ static void *worker_thread_or_server(void *userdata)
 			if (fd == s_listen) {
 
 				sin_size = sizeof(their_addr);
-				if ((new_fd = accept(s_listen, (struct sockaddr *) &their_addr, &sin_size)) == -1) {
+				if ((s_new = accept(s_listen, (struct sockaddr*)&their_addr, &sin_size)) == -1) {
 					kerror(("error! f:%s, l:%d, c:%s, e:%s\n",
 								"worker_thread_or_server", __LINE__, "accept", strerror(errno)));
-				} else if (process_connect(new_fd)) /* XXX: new_fd can be o or w */
-					close_connect(new_fd);
+				} else if (process_connect(s_new)) /* XXX: s_new can be o or w */
+					close_connect(s_new);
 				continue;
 			}
 
@@ -661,7 +661,7 @@ static void config_socket(int s)
 
 	lin.l_onoff = 0;
 	lin.l_linger = 0;
-	setsockopt(s, SOL_SOCKET, SO_LINGER, (const char *) &lin, sizeof(lin));
+	setsockopt(s, SOL_SOCKET, SO_LINGER, (const char*)&lin, sizeof(lin));
 	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 #endif
 }

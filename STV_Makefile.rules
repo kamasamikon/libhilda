@@ -5,10 +5,10 @@ $(LOCAL_OUT_LIB): $(LOCAL_OUT_OBJS) $(LOCAL_LIBS)
 	$(AR) crus $@ $(LOCAL_OUT_OBJS)
 
 $(LOCAL_SHARE_LIB): $(LOCAL_OUT_OBJS) $(LOCAL_LIBS)
-	$(CC) -shared -fPCI $^  -o $@ -lpthread $(SYS_LIB_DIRS)
+	$(CC) -shared -fPIC $^  -o $@ -lpthread $(SYS_LIB_DIRS)
 
 %.o: %.c
-	$(CC) $(LOCAL_CFLAGS) $(LOCAL_INCDIRS) $(SYS_INC_DIRS) -c $< -o $@
+	$(CC) $(LOCAL_CFLAGS) -fPIC $(LOCAL_INCDIRS) $(SYS_INC_DIRS) -c $< -o $@
 
 BUILD_SUB_DIRS: 
 	@$(foreach dir, $(MAKEDIRS),                         \
