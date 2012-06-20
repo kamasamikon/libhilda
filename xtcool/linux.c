@@ -3,6 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 #include <dlfcn.h>
 #include <semaphore.h>
@@ -457,15 +458,75 @@ kbool kvfs_exist(const kchar *a_path)
 	return kfalse;
 }
 
+/* Only fill d_type and d_name */
+static int follow_link(const char *basedir, const char *name, struct dirent *ret_dirp)
+{
+	DIR *dir;
+	struct stat buf;
+	char fullpath[1024];
+	int ret = 0;
+
+	sprintf(fullpath, "%s/%s", basedir, name);
+	if (stat(fullpath, &buf))
+		return -1;
+
+	if (S_ISREG(buf.st_mode))
+		ret_dirp->d_type = KVFS_A_REG;
+	else if (S_ISDIR(buf.st_mode))
+		ret_dirp->d_type = KVFS_A_DIR;
+	else if (S_ISCHR(buf.st_mode))
+		ret_dirp->d_type = KVFS_A_DEV;
+	else if (S_ISBLK(buf.st_mode))
+		ret_dirp->d_type = KVFS_A_DEV;
+	else if (S_ISFIFO(buf.st_mode))
+		ret_dirp->d_type = KVFS_A_FIFO;
+	else if (S_ISLNK(buf.st_mode))
+		ret_dirp->d_type = KVFS_A_LNK;
+	else
+		ret_dirp->d_type = KVFS_A_UNK;
+
+	strncpy(ret_dirp->d_name, name, sizeof(ret_dirp->d_name));
+	return 0;
+}
+
+typedef struct _findbean_t findbean_t;
+struct _findbean_t {
+	char basedir[1024];
+	DIR *dir;
+};
+
+static kuint get_file_attr(kuint d_type)
+{
+	switch (d_type) {
+	case DT_DIR:
+		return KVFS_A_DIR;
+	case DT_LNK:
+		return KVFS_A_LNK;
+	case DT_FIFO:
+		return KVFS_A_FIFO;
+	case DT_CHR:
+	case DT_BLK:
+		return KVFS_A_DEV;
+	case DT_REG:
+		return KVFS_A_REG;
+	case DT_SOCK:
+		return KVFS_A_SKT;
+	case DT_UNKNOWN:
+	case DT_WHT:
+	default:
+		return KVFS_A_UNK;
+	}
+}
+
 kbean kvfs_findfirst(const kchar *a_fspec, KVFS_FINDDATA *a_finfo)
 {
 	DIR *dir;
-	struct dirent *dirp;
+	struct dirent *dirp, lnk_dirp;
+	findbean_t *fb;
 
 	dir = opendir(a_fspec);
-	if (!dir) {
+	if (!dir)
 		return knil;
-	}
 
 	dirp = readdir(dir);
 	if (!dirp) {
@@ -473,37 +534,66 @@ kbean kvfs_findfirst(const kchar *a_fspec, KVFS_FINDDATA *a_finfo)
 		return knil;
 	}
 
-	a_finfo->attrib = (DT_DIR & dirp->d_type) ? KVFS_A_SUBDIR : 0;
+	if (DT_LNK & dirp->d_type) {
+		if (follow_link(a_fspec, dirp->d_name, &lnk_dirp)) {
+			closedir(dir);
+			return knil;
+		}
+		dirp = &lnk_dirp;
+	}
+
+	a_finfo->attrib = get_file_attr(dirp->d_type);
 	strncpy(a_finfo->name, dirp->d_name, sizeof(a_finfo->name) - 1);
 	a_finfo->name[sizeof(a_finfo->name) - 1] = '\0';
-	a_finfo->size = 0;
 
-	return (kbean) dir;
+	fb = (findbean_t*)malloc(sizeof(findbean_t));
+	if (!fb) {
+		closedir(dir);
+		return knil;
+	}
+
+	strncpy(fb->basedir, a_fspec, sizeof(fb->basedir));
+	fb->dir = dir;
+
+	return (kbean)fb;
 }
 
 kint kvfs_findnext(kbean a_find, KVFS_FINDDATA *a_finfo)
 {
-	DIR *dir = (DIR *) a_find;
-	struct dirent *dirp;
+	findbean_t *fb = (findbean_t*)a_find;
+	DIR *dir;
+	struct dirent *dirp, lnk_dirp;
 
-	dirp = readdir(dir);
-	if (!dirp) {
+	if (!fb)
 		return -1;
+
+	dir = fb->dir;
+	dirp = readdir(dir);
+	if (!dirp)
+		return -1;
+
+	if (DT_LNK & dirp->d_type) {
+		if (follow_link(fb->basedir, dirp->d_name, &lnk_dirp)) {
+			closedir(dir);
+			return -1;
+		}
+		dirp = &lnk_dirp;
 	}
 
-	a_finfo->attrib = (DT_DIR & dirp->d_type) ? KVFS_A_SUBDIR : 0;
+	a_finfo->attrib = get_file_attr(dirp->d_type);
 	strncpy(a_finfo->name, dirp->d_name, sizeof(a_finfo->name) - 1);
 	a_finfo->name[sizeof(a_finfo->name) - 1] = '\0';
-	a_finfo->size = 0;
 
 	return 0;
 }
 
 kint kvfs_findclose(kbean a_find)
 {
-	DIR *dir = (DIR *) a_find;
-	if (dir) {
-		closedir(dir);
+	findbean_t *fb = (findbean_t*)a_find;
+	if (fb) {
+		if (fb->dir)
+			closedir(fb->dir);
+		free(fb);
 		return 0;
 	}
 	return -1;
