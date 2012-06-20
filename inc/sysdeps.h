@@ -11,6 +11,7 @@ extern "C" {
 #define kinline
 #define kexport __declspec(dllexport)
 #define VAR_UNUSED
+typedef long long int int64_t;
 #endif
 
 #ifdef __GNUC__
