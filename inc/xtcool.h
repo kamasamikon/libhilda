@@ -2,7 +2,7 @@
 
 
 #ifndef __SYS_PORT_LIB_H__
-#define	__SYS_PORT_LIB_H__
+#define __SYS_PORT_LIB_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -126,17 +126,17 @@ unsigned long spl_get_ticks();
 kchar kvfs_path_sep(kvoid);
 kbool kvfs_exist(const kchar *a_path);
 
-#define KVFS_A_NORMAL 0x00		    /**< Normal file - No read/write restrictions */
-#define KVFS_A_RDONLY 0x01		    /**< Read only file */
-#define KVFS_A_HIDDEN 0x02		    /**< Hidden file */
-#define KVFS_A_SYSTEM 0x04		    /**< System file */
-#define KVFS_A_SUBDIR 0x10		    /**< Subdirectory */
-#define KVFS_A_ARCH   0x20		    /**< Archive file */
+#define KVFS_A_REG      0x01        /**< regular file */
+#define KVFS_A_DEV      0x02        /**< device file */
+#define KVFS_A_DIR      0x04        /**< directory */
+#define KVFS_A_LNK      0x08        /**< symbol link */
+#define KVFS_A_SKT      0x10        /**< socket */
+#define KVFS_A_FIFO     0x20        /**< fifo or pipe */
+#define KVFS_A_UNK      0x80        /**< unknown */
 
 typedef struct _KVFS_FINDDATA_ {
-	kuchar attrib;			    /**< OR-ed of KVFS_A_XXX */
-	kint size;			    /**< file size in bytes */
-	kchar name[2048];		    /**< Null-terminated name of matched file/directory, without the path */
+	kuint attrib;               /**< OR-ed of KVFS_A_XXX */
+	kchar name[2048];           /**< Null-terminated name */
 } KVFS_FINDDATA;
 
 /**

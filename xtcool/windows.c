@@ -578,6 +578,20 @@ kbool kvfs_exist(const kchar *a_path)
 	return kfalse;
 }
 
+static kuint get_file_attr(kuint d_type)
+{
+	kuint attr = 0;
+
+	if (d_type & _A_SUBDIR)
+		attr |= KVFS_A_DIR;
+	else if (d_type & _A_NORMAL)
+		attr |= KVFS_A_REG;
+	else
+		attr |= KVFS_A_UNK;
+
+	return attr;
+}
+
 kbean kvfs_findfirst(const kchar *a_fspec, KVFS_FINDDATA *a_finfo)
 {
 	kchar fspec[300];
@@ -588,10 +602,9 @@ kbean kvfs_findfirst(const kchar *a_fspec, KVFS_FINDDATA *a_finfo)
 
 	hfile = _findfirst(fspec, &fileinfo);
 	if (hfile != -1) {
-		a_finfo->attrib = (unsigned char)fileinfo.attrib;
+		a_finfo->attrib = get_file_attr(fileinfo.attrib);
 		strncpy(a_finfo->name, fileinfo.name, sizeof(a_finfo->name) - 1);
 		a_finfo->name[sizeof(a_finfo->name) - 1] = '\0';
-		a_finfo->size = fileinfo.size;
 		return (kbean) hfile;
 	} else {
 		return (kbean) 0;
@@ -602,10 +615,9 @@ kint kvfs_findnext(kbean a_find, KVFS_FINDDATA *a_finfo)
 {
 	struct _finddata_t fileinfo;
 	if (!_findnext((intptr_t)a_find, &fileinfo)) {
-		a_finfo->attrib = (unsigned char)fileinfo.attrib;
+		a_finfo->attrib = get_file_attr(fileinfo.attrib);
 		strncpy(a_finfo->name, fileinfo.name, sizeof(a_finfo->name) - 1);
 		a_finfo->name[sizeof(a_finfo->name) - 1] = '\0';
-		a_finfo->size = fileinfo.size;
 		return 0;
 	} else {
 		return -1;

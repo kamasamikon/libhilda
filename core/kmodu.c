@@ -230,7 +230,7 @@ int kmodu_load()
 	do {
 		if (!strcmp(fdat.name, ".") || !strcmp(fdat.name, ".."))
 			continue;
-		if (!kflg_chk(fdat.attrib, KVFS_A_SUBDIR))
+		if (!kflg_chk(fdat.attrib, KVFS_A_DIR))
 			continue;
 		sprintf(path, "%s%c%s", cc->path.root, ps, fdat.name);
 		module_load(cc, path);
