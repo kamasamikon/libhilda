@@ -164,7 +164,7 @@ int opt_getarr_p(const char *path, void **pa, void **pb, void **arr, int *len);
 #define opt_setdat_s(s, p, v, l) opt_setdat_sp((s), (p), NULL, NULL, (v), (l))
 #define opt_setdat_p(p, pa, pb, v, l) opt_setdat_sp(0, (p), (void**)(pa), (void**)(pb), (v), (l))
 int opt_setdat_sp(int ses, const char *path, void **pa, void **pb, const char *val, int len);
-#define opt_getdat(p, v, l) opt_getdat_p((p), (pa), NULL, NULL, (v))
+#define opt_getdat(p, v, l) opt_getdat_p((p), NULL, NULL, (v), (l))
 int opt_getdat_p(const char *path, void **pa, void **pb, char **arr, int *len);
 
 int opt_foreach(const char *pattern, OPT_FOREACH foreach, void *userdata);

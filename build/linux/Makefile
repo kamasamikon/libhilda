@@ -26,6 +26,8 @@ SUB_OBJS_hilda = \
 ../../core/trace.o \
 ../../xtcool/linux.o 
 
+LOCAL_CFLAGS += -DMEM_STAT
+
 LOCAL_INCDIRS = -I ../../inc
 LOCAL_OUT_OBJS = $(SUB_OBJS_hilda)
 LOCAL_OUT_LIB = hilda.a

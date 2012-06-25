@@ -1589,7 +1589,7 @@ static int setdat(int ses, opt_entry_t *oe,
 			kerror(("opt: set fail: %s\n", oe->path));
 	} else {
 		kmem_free_sz(oe->v.cur.d.v);
-		oe->v.cur.d.v = (char**)kmem_alloz(len, char);
+		oe->v.cur.d.v = (char*)kmem_alloc(len, char);
 		memcpy(oe->v.cur.d.v, val, len);
 		oe->v.cur.d.l = len;
 	}
