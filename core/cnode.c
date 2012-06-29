@@ -29,14 +29,19 @@ void cnode_data_ready(cnode_t *node, void *dat, int len)
 {
 	int i;
 	dstr_node_t *tmp;
+	cnode_t *tnode;
 
 	for (i = 0; i < node->dstr.cnt; i++) {
 		tmp = &node->dstr.arr[i];
-		if (tmp->node && tmp->node->write &&
-				(!kflg_chk(tmp->node->flg, FLG_MARK_PAUSE)) &&
-				(!kflg_chk(tmp->node->flg, FLG_MARK_STOP)))
-			tmp->node->write(tmp->node, node, dat, len,
-					tmp->link_dat);
+		tnode = tmp->node;
+
+		if (!tnode || !tnode->write)
+			continue;
+
+		if (kflg_chk_any(tnode->flg, CNFL_PAUSE | CNFL_STOP))
+			continue;
+
+		tnode->write(tnode, node, dat, len, tmp->link_dat);
 	}
 }
 
@@ -114,7 +119,7 @@ int cnode_reg(cnode_t *node)
 
 	node->dstr.arr = 0;
 	node->dstr.cnt = 0;
-	node->flg = FLG_MARK_STOP;
+	node->flg = CNFL_STOP;
 	node->attr &= 0xffff;
 
 	for (i = 0; i < cc->cnt; i++) {
@@ -166,7 +171,7 @@ int cnode_link(cnode_t *node)
 	for (i = 0; i < cc->cnt; i++) {
 		dstr = cc->arr[i];
 		if (dstr && node && (dstr != node) && dstr->link_query)
-			if (kflg_chk(dstr->attr, CNAT_INPUT))
+			if (kflg_chk_bit(dstr->attr, CNAT_INPUT))
 				if (!dstr->link_query(node, dstr, &link_dat))
 					cnode_link_add(node, dstr, link_dat);
 
@@ -356,8 +361,8 @@ int cnode_call_start(cnode_t *node)
 		ret = node->start(node);
 
 	if (!ret) {
-		kflg_clr(node->flg, FLG_MARK_STOP);
-		kflg_clr(node->flg, FLG_MARK_PAUSE);
+		kflg_clr(node->flg, CNFL_STOP);
+		kflg_clr(node->flg, CNFL_PAUSE);
 	}
 	return ret;
 }
@@ -379,8 +384,8 @@ int cnode_call_stop(cnode_t *node)
 		ret = node->stop(node);
 
 	if (!ret) {
-		kflg_set(node->flg, FLG_MARK_STOP);
-		kflg_clr(node->flg, FLG_MARK_PAUSE);
+		kflg_set(node->flg, CNFL_STOP);
+		kflg_clr(node->flg, CNFL_PAUSE);
 	}
 	return ret;
 }
@@ -402,8 +407,8 @@ int cnode_call_pause(cnode_t *node)
 		ret = node->pause(node);
 
 	if (!ret) {
-		kflg_clr(node->flg, FLG_MARK_STOP);
-		kflg_set(node->flg, FLG_MARK_PAUSE);
+		kflg_clr(node->flg, CNFL_STOP);
+		kflg_set(node->flg, CNFL_PAUSE);
 	}
 	return ret;
 }
@@ -425,8 +430,8 @@ int cnode_call_resume(cnode_t *node)
 		ret = node->resume(node);
 
 	if (!ret) {
-		kflg_clr(node->flg, FLG_MARK_STOP);
-		kflg_clr(node->flg, FLG_MARK_PAUSE);
+		kflg_clr(node->flg, CNFL_STOP);
+		kflg_clr(node->flg, CNFL_PAUSE);
 	}
 	return ret;
 }
