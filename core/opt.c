@@ -247,7 +247,7 @@ struct _optcc_t {
 } while (0)
 
 #define RET_IF_RECURSIVE() do { \
-	if (kflg_chk(oe->attr, OA_IN_SET)) { \
+	if (kflg_chk_bit(oe->attr, OA_IN_SET)) { \
 		printf("Recursive: %s\n", oe->path); \
 		kassert(!"Recursive set is not allowed"); \
 		return EC_RECUR; \
@@ -255,7 +255,7 @@ struct _optcc_t {
 } while (0)
 
 #define RET_IF_FORBIDEN() do { \
-	if (!kflg_chk(oe->attr, OA_SET) && oe->set_called > 0) \
+	if (!kflg_chk_bit(oe->attr, OA_SET) && oe->set_called > 0) \
 		return EC_FORBIDEN; \
 } while (0)
 
@@ -311,7 +311,6 @@ kinline void *opt_ua(void *oe)
 {
 	return ((opt_entry_t*)(oe))->ua;
 }
-
 kinline void *opt_ub(void *oe)
 {
 	return ((opt_entry_t*)(oe))->ub;
@@ -319,22 +318,19 @@ kinline void *opt_ub(void *oe)
 
 kinline int opt_set_pa(void *oe, void **pa)
 {
-	if (!kflg_chk(((opt_entry_t*)oe)->attr, OA_IN_AWCH) &&
-			!kflg_chk(((opt_entry_t*)oe)->attr, OA_IN_BWCH))
-		return -1;
-
-	*pa = ((opt_entry_t*)oe)->set_pa;
-	return 0;
+	if (kflg_chk_any(((opt_entry_t*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH)) {
+		*pa = ((opt_entry_t*)oe)->set_pa;
+		return 0;
+	}
+	return -1;
 }
-
 kinline int opt_set_pb(void *oe, void **pb)
 {
-	if (!kflg_chk(((opt_entry_t*)oe)->attr, OA_IN_AWCH) &&
-			!kflg_chk(((opt_entry_t*)oe)->attr, OA_IN_BWCH))
-		return -1;
-
-	*pb = ((opt_entry_t*)oe)->set_pb;
-	return 0;
+	if (kflg_chk_any(((opt_entry_t*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH)) {
+		*pb = ((opt_entry_t*)oe)->set_pb;
+		return 0;
+	}
+	return -1;
 }
 
 kinline char **opt_get_cur_arr(void *oe)
@@ -1736,7 +1732,7 @@ static opt_watch_t *watch_new(const char *path, OPT_WATCH wch,
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	/* klog(("watch_new:%s:%s: <%s> successfully\n",
-				awch ? "a" : "b", oe ? "OK" : "NY", path)); */
+	   awch ? "a" : "b", oe ? "OK" : "NY", path)); */
 	return ow;
 }
 

@@ -230,7 +230,7 @@ int kmodu_load()
 	do {
 		if (!strcmp(fdat.name, ".") || !strcmp(fdat.name, ".."))
 			continue;
-		if (!kflg_chk(fdat.attrib, KVFS_A_DIR))
+		if (!kflg_chk_bit(fdat.attrib, KVFS_A_DIR))
 			continue;
 		sprintf(path, "%s%c%s", cc->path.root, ps, fdat.name);
 		module_load(cc, path);
@@ -307,7 +307,7 @@ static int manual_layout()
 		dnode = cnode_find(dname);
 
 		if (dnode && unode && (dnode != unode) && dnode->link_query)
-			if (kflg_chk(dnode->attr, CNAT_INPUT))
+			if (kflg_chk_bit(dnode->attr, CNAT_INPUT))
 				if (!dnode->link_query(unode, dnode, &link_dat))
 					cnode_link_add(unode, dnode, link_dat);
 	}

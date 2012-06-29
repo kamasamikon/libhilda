@@ -23,14 +23,13 @@ struct _dstr_node_t {
 
 typedef int (*CNODE_FOREACH)(cnode_t *node, void *ua, void *ub);
 
-#define FLG_MARK_STOP	  0x00000001
-#define FLG_MARK_PAUSE	  0x00000002
-
-#define CNAT_LINKING	0x00010000
+/* Core Node FLags */
+#define CNFL_STOP       0x00000001
+#define CNFL_PAUSE      0x00000002
 
 /* Core Node ATtribute */
-#define CNAT_INPUT	0x00000001
-#define CNAT_OUTPUT	0x00000002
+#define CNAT_INPUT      0x00000001
+#define CNAT_OUTPUT     0x00000002
 
 struct _cnode_t {
 	char *name;
