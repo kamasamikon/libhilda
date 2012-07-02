@@ -213,42 +213,42 @@ struct _optcc_t {
 
 #define RET_IF_NOT_INT() do { \
 	if ('i' != oe->type && 'b' != oe->type && 'e' != oe->type) { \
-		printf("bad type, should be 'ibe'. >> %s\n", oe->path); \
+		wlogf("bad type, should be 'ibe'. >> %s\n", oe->path); \
 		return EC_BAD_TYPE; \
 	} \
 } while (0)
 
 #define RET_IF_NOT_PTR() do { \
 	if ('p' != oe->type) { \
-		printf("bad type, should be 'p'. >> %s\n", oe->path); \
+		wlogf("bad type, should be 'p'. >> %s\n", oe->path); \
 		return EC_BAD_TYPE; \
 	} \
 } while (0)
 
 #define RET_IF_NOT_STR() do { \
 	if ('s' != oe->type) { \
-		printf("bad type, should be 's'. >> %s\n", oe->path); \
+		wlogf("bad type, should be 's'. >> %s\n", oe->path); \
 		return EC_BAD_TYPE; \
 	} \
 } while (0)
 
 #define RET_IF_NOT_ARR() do { \
 	if ('a' != oe->type) { \
-		printf("bad type, should be 'a'. >> %s\n", oe->path); \
+		wlogf("bad type, should be 'a'. >> %s\n", oe->path); \
 		return EC_BAD_TYPE; \
 	} \
 } while (0)
 
 #define RET_IF_NOT_DAT() do { \
 	if ('d' != oe->type) { \
-		printf("bad type, should be 'd'. >> %s\n", oe->path); \
+		wlogf("bad type, should be 'd'. >> %s\n", oe->path); \
 		return EC_BAD_TYPE; \
 	} \
 } while (0)
 
 #define RET_IF_RECURSIVE() do { \
 	if (kflg_chk_bit(oe->attr, OA_IN_SET)) { \
-		printf("Recursive: %s\n", oe->path); \
+		wlogf("Recursive: %s\n", oe->path); \
 		kassert(!"Recursive set is not allowed"); \
 		return EC_RECUR; \
 	} \
@@ -548,7 +548,7 @@ int opt_make_kv(const char *buffer, int blen, char ***okv, int *ocnt)
 
 	km = 1;
 	vm = 0;
-	for (i = 0; (c = buffer[i]) && (i < blen); i++) {
+	for (i = 0; (i < blen) && (c = buffer[i]); i++) {
 		if (km) {
 			if (c == '=') {
 				kbuf[ki] = '\0';
@@ -567,7 +567,7 @@ int opt_make_kv(const char *buffer, int blen, char ***okv, int *ocnt)
 					tmpkv[(kvcnt << 1) + 0] = kbuf[0] ? kstr_dup(kbuf) : NULL;
 					tmpkv[(kvcnt << 1) + 1] = vbuf[0] ? kstr_dup(vbuf) : kstr_dup("");
 					kvcnt++;
-					printf("'%s'='%s'\n", kbuf, vbuf);
+					/* printf("'%s'='%s'\n", kbuf, vbuf); */
 				}
 
 				km = 1;
@@ -584,7 +584,7 @@ int opt_make_kv(const char *buffer, int blen, char ***okv, int *ocnt)
 		tmpkv[(kvcnt << 1) + 0] = kbuf[0] ? kstr_dup(kbuf) : NULL;
 		tmpkv[(kvcnt << 1) + 1] = vbuf[0] ? kstr_dup(vbuf) : kstr_dup("");
 		kvcnt++;
-		printf("'%s'='%s'\n", kbuf, vbuf);
+		/* printf("'%s'='%s'\n", kbuf, vbuf); */
 	}
 
 	if (kvcnt > 0) {

@@ -311,7 +311,7 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 	/* XXX: some client won't append NUL to end of input */
 	buf[cmdlen] = '\0';
 	kstr_trim(buf);
-	printf(">> opt-rpc >>%s\n", buf);
+	wlogf(">> opt-rpc >>%s\n", buf);
 
 	c = rpc_client_by_socket(s);
 	if (!c) {
@@ -606,15 +606,15 @@ static int process_connect(int new_fd)
 			char *user = buf + ofsarr[4];
 			char *pass = buf + ofsarr[5];
 
-			printf("---------------------------\n");
-			printf("\tSupported client: webserver, cloud, snmp, telnet\n");
-			printf("\tsocket: %d\n", new_fd);
-			printf("\tclient_mode: %s\n", mode == 'o' ? "Opt" : "Wch");
-			printf("\tclient_name: %s\n", rpc_client);
-			printf("\tconn_hash: %s\n", connhash);
-			printf("\tuser_name: %s\n", user);
-			printf("\tuser_pass: %s\n", pass);
-			printf("---------------------------\n");
+			wlogf("---------------------------\n");
+			wlogf("\tSupported client: webserver, cloud, snmp, telnet\n");
+			wlogf("\tsocket: %d\n", new_fd);
+			wlogf("\tclient_mode: %s\n", mode == 'o' ? "Opt" : "Wch");
+			wlogf("\tclient_name: %s\n", rpc_client);
+			wlogf("\tconn_hash: %s\n", connhash);
+			wlogf("\tuser_name: %s\n", user);
+			wlogf("\tuser_pass: %s\n", pass);
+			wlogf("---------------------------\n");
 
 			if (check_authority(mode, rpc_client, connhash, user, pass))
 				return -1;
