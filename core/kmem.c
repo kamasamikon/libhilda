@@ -12,7 +12,7 @@ static kuint __g_memusage = 0;
 static kuint __g_alloc_cnt = 0;
 static kuint __g_free_cnt = 0;
 
-static kuint __g_dump_loop = 0;
+static kuint __g_dump_loop = (kuint)-1;
 #endif
 
 #ifdef MEM_STAT
@@ -122,15 +122,15 @@ kvoid kmem_rel(kvoid *usrptr)
 	__g_free_cnt++;
 	__g_memusage -= old_size;
 
-	if (__g_dump_loop == 0) {
-		char *env = getenv("MEM_DUMP_LOOP");
+	if (__g_dump_loop == (kuint)-1) {
+		char *env = getenv("KMEM_DUMP_LOOP");
 		if (env)
 			__g_dump_loop = strtoul(env, NULL, 10);
 
 		if (__g_dump_loop == 0)
-			__g_dump_loop = 20;
-		else if (__g_dump_loop > 2000)
-			__g_dump_loop = 2000;
+			__g_dump_loop = 1;
+		else if (__g_dump_loop == (kuint)-1)
+			__g_dump_loop = (kuint)-2;
 	}
 
 	if (!(__g_free_cnt % __g_dump_loop))
