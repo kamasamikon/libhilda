@@ -383,7 +383,7 @@ int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const ch
 		if (flg & LOG_FUNC)
 			ofs += sprintf(bufptr + ofs, "%s|", fn);
 		if (flg & LOG_LINE)
-			ofs += sprintf(bufptr + ofs, "%d|", ln);
+			ofs += sprintf(bufptr + ofs, "%d| ", ln);
 
 		ret = vsnprintf(bufptr + ofs, bufsize - ofs, fmt, ap);
 	}

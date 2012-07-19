@@ -200,3 +200,5 @@ spl_sock_close                                  @198
 spl_sock_err                                    @199
 kmem_rpt                                        @200
 spl_mkdir                                       @201
+klog_add_rlogger                                @202
+klog_del_rlogger                                @203
