@@ -64,7 +64,7 @@ int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const ch
 
 /* KLOG Short */
 #define klogs(fmt, ...) do { \
-	klogf('L', 0, "", 0, fmt, ##__VA_ARGS__); \
+	klogf(0, 0, "", 0, fmt, ##__VA_ARGS__); \
 } while (0)
 
 #define GET_LOG_LEVEL() do { \
@@ -114,14 +114,14 @@ int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const ch
 #define kassert(_x_) \
 	do { \
 		if (!(_x_)) { \
-			klogf('F', 0, "", 0, "\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d, FUNC:%s\n\n", #_x_, __FILE__, __LINE__, __FUNCTION__); \
+			klogf(0, 0, "", 0, "\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d, FUNC:%s\n\n", #_x_, __FILE__, __LINE__, __FUNCTION__); \
 		} \
 	} while (0)
 #else
 #define kassert(_x_) \
 	do { \
 		if (!(_x_)) { \
-			klogf('F', 0, "", 0, "\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d, FUNC:%s\n\n", #_x_, __FILE__, __LINE__, __FUNCTION__); \
+			klogf(0, 0, "", 0, "\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d, FUNC:%s\n\n", #_x_, __FILE__, __LINE__, __FUNCTION__); \
 			/* klogbrk(); kbacktrace(); */ \
 		} \
 	} while (0)
