@@ -59,7 +59,13 @@ int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const ch
 static kint VAR_UNUSED __g_klog_touches = -1;
 static kuint VAR_UNUSED __gc_klog_level;
 
-#endif
+/* KLOG Full */
+int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const char *fmt, ...);
+
+/* KLOG Short */
+#define klogs(fmt, ...) do { \
+	klogf('L', 0, "", 0, fmt, ##__VA_ARGS__); \
+} while (0)
 
 #define GET_LOG_LEVEL() do { \
 	int touches = klog_touches(); \
@@ -108,17 +114,19 @@ static kuint VAR_UNUSED __gc_klog_level;
 #define kassert(_x_) \
 	do { \
 		if (!(_x_)) { \
-			wlogf("\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d\n\n", #_x_, __FILE__, __LINE__); \
+			klogf('F', 0, "", 0, "\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d, FUNC:%s\n\n", #_x_, __FILE__, __LINE__, __FUNCTION__); \
 		} \
 	} while (0)
 #else
 #define kassert(_x_) \
 	do { \
 		if (!(_x_)) { \
-			wlogf("\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d\n\n", #_x_, __FILE__, __LINE__); \
+			klogf('F', 0, "", 0, "\n\n\tkassert failed!!!\n\t[%s], \n\tFILE:%s, LINES:%d, FUNC:%s\n\n", #_x_, __FILE__, __LINE__, __FUNCTION__); \
 			/* klogbrk(); kbacktrace(); */ \
 		} \
 	} while (0)
+#endif
+
 #endif
 
 #ifdef __cplusplus

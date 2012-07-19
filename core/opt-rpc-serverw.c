@@ -427,7 +427,7 @@ static void *worker_thread_or_server(void *userdata)
 
 	if ((s_listen = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		kerror("error! f:%s, l:%d, c:%s, e:%s\n",
-					"worker_thread_or_server", __LINE__, "socket", strerror(errno)));
+					"worker_thread_or_server", __LINE__, "socket", strerror(errno));
 		return NULL;
 	}
 
@@ -439,13 +439,13 @@ static void *worker_thread_or_server(void *userdata)
 	memset(my_addr.sin_zero, '\0', sizeof(my_addr.sin_zero));
 	if (bind(s_listen, (struct sockaddr*)&my_addr, sizeof(my_addr)) == -1) {
 		kerror("error! f:%s, l:%d, c:%s, e:%s\n",
-					"worker_thread_or_server", __LINE__, "bind", strerror(errno)));
+					"worker_thread_or_server", __LINE__, "bind", strerror(errno));
 		return NULL;
 	}
 
 	if (listen(s_listen, BACKLOG) == -1) {
 		kerror("error! f:%s, l:%d, c:%s, e:%s\n",
-					"worker_thread_or_server", __LINE__, "listen", strerror(errno)));
+					"worker_thread_or_server", __LINE__, "listen", strerror(errno));
 		return NULL;
 	}
 
@@ -470,7 +470,7 @@ static void *worker_thread_or_server(void *userdata)
 				sin_size = sizeof(their_addr);
 				if ((s_new = accept(s_listen, (struct sockaddr*)&their_addr, &sin_size)) == -1) {
 					kerror("error! f:%s, l:%d, c:%s, e:%s\n",
-								"worker_thread_or_server", __LINE__, "accept", strerror(errno)));
+								"worker_thread_or_server", __LINE__, "accept", strerror(errno));
 				} else if (process_connect(s_new)) /* XXX: s_new can be o or w */
 					close_connect(s_new);
 				continue;
