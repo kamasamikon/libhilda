@@ -650,7 +650,7 @@ static kinline opt_entry_t *entry_find(const char *path)
 		if (0 == strcmp(path, oe->path))
 			return oe;
 	}
-	/* kerror(("entry_find: not found: <%s>\n", path)); */
+	/* kerror("entry_find: not found: <%s>\n", path); */
 	opt_set_err(EC_NOTFOUND, "OPT not exist");
 	return NULL;
 }
@@ -704,8 +704,8 @@ int opt_setbat(const char *inibuf, int errbrk)
 		if (opt_ret == EC_SKIP)
 			opt_ret = EC_OK;
 		if (opt_ret) {
-			kerror(("opt_setkv: ret:%d, k:<%s>, v:<%s>",
-						opt_ret, k, v));
+			kerror("opt_setkv: ret:%d, k:<%s>, v:<%s>",
+						opt_ret, k, v);
 			if (errbrk)
 				break;
 		}
@@ -714,8 +714,8 @@ int opt_setbat(const char *inibuf, int errbrk)
 	/* spl_lck_rel(__g_optcc->lck); */
 
 	opt_free_kv(kv, cnt);
-	klog(("opt_setbat: opt:%d, ses:%d, ret:%d\n",
-				opt_ret, ses_ret, reterr));
+	klog("opt_setbat: opt:%d, ses:%d, ret:%d\n",
+				opt_ret, ses_ret, reterr);
 	return opt_ret | ses_ret | reterr;
 }
 
@@ -862,14 +862,14 @@ int opt_add(const char *path, const char *desc, unsigned int attr,
 
 	if (!OPT_CHK_TYPE(path)) {
 		/* spl_lck_rel(__g_optcc->lck); */
-		kerror(("BadType: %s\n", path));
+		kerror("BadType: %s\n", path);
 		kassert(0 && "opt path should be '[a|i|d|s|b|e|p]:/Xxx'");
 		return EC_BAD_TYPE;
 	}
 
 	oe = entry_find(path);
 	if (oe) {
-		kerror(("!!!Duplicate opt added (%s), abort adding\n", path));
+		kerror("!!!Duplicate opt added (%s), abort adding\n", path);
 		/* spl_lck_rel(__g_optcc->lck); */
 		return EC_NOTFOUND;
 	}
@@ -977,7 +977,7 @@ int opt_del(const char *path)
 	if (oe) {
 		entry_del(oe);
 
-		klog(("opt_del: %s\n", path));
+		klog("opt_del: %s\n", path);
 		/* spl_lck_rel(__g_optcc->lck); */
 		return EC_OK;
 	}
@@ -1114,7 +1114,7 @@ int opt_setkv(int ses, const char *k, const char *v)
 	/* spl_lck_get(__g_optcc->lck); */
 
 	if (!k) {
-		kerror(("opt_setkv: NULL key\n"));
+		kerror("opt_setkv: NULL key\n");
 		opt_set_err(EC_NOTFOUND, "OPT not exist.");
 
 		/* spl_lck_rel(__g_optcc->lck); */
@@ -1122,7 +1122,7 @@ int opt_setkv(int ses, const char *k, const char *v)
 	}
 
 	if (!OPT_CHK_TYPE(k)) {
-		kerror(("BadType: %s\n", k));
+		kerror("BadType: %s\n", k);
 		kassert(0 && "opt path should be '[a|i|d|s|b|e|p]:/Xxx'");
 		opt_set_err(EC_BAD_TYPE, "Bad OPT Type.");
 		/* spl_lck_rel(__g_optcc->lck); */
@@ -1136,7 +1136,7 @@ int opt_setkv(int ses, const char *k, const char *v)
 		return EC_NOTFOUND;
 	}
 
-	klog(("opt_setkv '%s' = '%s'\n", k, v));
+	klog("opt_setkv '%s' = '%s'\n", k, v);
 	switch (OPT_TYPE(oe)) {
 	case 'a':
 		parse_arr(v, &a, &l);
@@ -1211,7 +1211,7 @@ static int setint(int ses, opt_entry_t *oe, void **pa, void **pb, int val)
 				kflg_clr(oe->attr, OA_IN_SET);
 				return ret;
 			} else if (ret != EC_OK)
-				kerror(("opt: set fail: %s, val:%d\n", oe->path, val));
+				kerror("opt: set fail: %s, val:%d\n", oe->path, val);
 		} else
 			oe->v.cur.i.v = val;
 
@@ -1317,7 +1317,7 @@ static int setptr(int ses, opt_entry_t *oe, void **pa, void **pb, void *val)
 			kflg_clr(oe->attr, OA_IN_SET);
 			return ret;
 		} else if (ret != EC_OK)
-			kerror(("opt: set fail: %s, val:%p\n", oe->path, val));
+			kerror("opt: set fail: %s, val:%p\n", oe->path, val);
 	} else
 		oe->v.cur.p.v = val;
 
@@ -1420,7 +1420,7 @@ static int setstr(int ses, opt_entry_t *oe, void **pa, void **pb, char *val)
 			kflg_clr(oe->attr, OA_IN_SET);
 			return ret;
 		} else if (ret != EC_OK)
-			kerror(("opt: set fail: %s, val:%s\n", oe->path, val));
+			kerror("opt: set fail: %s, val:%s\n", oe->path, val);
 	} else {
 		kmem_free_sz(oe->v.cur.s.v);
 		oe->v.cur.s.v = kstr_dup(val);
@@ -1519,7 +1519,7 @@ static int setarr(int ses, opt_entry_t *oe,
 			kflg_clr(oe->attr, OA_IN_SET);
 			return ret;
 		} else if (ret != EC_OK)
-			kerror(("opt: set fail: %s.\n", oe->path));
+			kerror("opt: set fail: %s.\n", oe->path);
 	} else {
 		kmem_free_sz(oe->v.cur.a.v);
 		oe->v.cur.a.v = (char**)kmem_alloz(len, char);
@@ -1582,7 +1582,7 @@ static int setdat(int ses, opt_entry_t *oe,
 			kflg_clr(oe->attr, OA_IN_SET);
 			return ret;
 		} else if (ret != EC_OK)
-			kerror(("opt: set fail: %s\n", oe->path));
+			kerror("opt: set fail: %s\n", oe->path);
 	} else {
 		kmem_free_sz(oe->v.cur.d.v);
 		oe->v.cur.d.v = (char*)kmem_alloc(len, char);
@@ -1716,7 +1716,7 @@ static opt_watch_t *watch_new(const char *path, OPT_WATCH wch,
 
 	if (!OPT_CHK_TYPE(path)) {
 		/* spl_lck_rel(__g_optcc->lck); */
-		kerror(("BadType: %s\n", path));
+		kerror("BadType: %s\n", path);
 		kassert(0 && "opt path should be '[a|i|d|s|b|e|p]:/Xxx'");
 		return NULL;
 	}
@@ -1731,7 +1731,7 @@ static opt_watch_t *watch_new(const char *path, OPT_WATCH wch,
 	queue_watch(oe, ow, awch);
 
 	/* spl_lck_rel(__g_optcc->lck); */
-	/* klog(("watch_new:%s:%s: <%s> successfully\n",
+	/* klog("watch_new:%s:%s: <%s> successfully\n",
 	   awch ? "a" : "b", oe ? "OK" : "NY", path)); */
 	return ow;
 }
@@ -1994,12 +1994,12 @@ void opt_session_set_err(void *opt, int error)
  */
 int os_opt_hook(int ses, void *opt, const char *path, void **pa, void **pb)
 {
-	klog(("os_opt_hook: ses:%d, path:%s\n", ses, path));
+	klog("os_opt_hook: ses:%d, path:%s\n", ses, path);
 	return EC_DEFAULT;
 }
 int og_opt_hook(void *opt, const char *path, void **pa, void **pb)
 {
-	klog(("og_opt_hook: path:%s\n", path));
+	klog("og_opt_hook: path:%s\n", path);
 	return EC_DEFAULT;
 }
 

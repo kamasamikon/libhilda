@@ -182,7 +182,7 @@ static int rpc_client_wch_add(rpc_client_t *c, char *path, void *wch)
 	for (i = 0; i < c->opts.cnt; i++) {
 		tmp = c->opts.arr[i].path;
 		if (tmp && (0 == strcmp(tmp, path))) {
-			kerror(("rpc_client_wch_add: %s already\n", path));
+			kerror("rpc_client_wch_add: %s already\n", path);
 			return -1;
 		}
 	}
@@ -212,12 +212,12 @@ static int rpc_client_wch_del(rpc_client_t *c, const char *path)
 			kmem_free_sz(c->opts.arr[i].path);
 			opt_wch_del(c->opts.arr[i].wch);
 			c->opts.arr[i].wch = NULL;
-			klog(("rpc_client_wch_del: %s deleted\n", path));
+			klog("rpc_client_wch_del: %s deleted\n", path);
 			return 0;
 		}
 	}
 
-	kerror(("rpc_client_wch_del: %s not exists.\n", path));
+	kerror("rpc_client_wch_del: %s not exists.\n", path);
 	return -1;
 }
 
@@ -243,7 +243,7 @@ static int rpc_watch(int ses, void *opt, const char *path, void *wch)
 	char msg[16384], *ini;
 	int bytes;
 
-	klog(("~rpc_watch:path:%s\n", path));
+	klog("~rpc_watch:path:%s\n", path);
 
 	if (opt_getini_by_opt(opt, &ini))
 		return -1;
@@ -272,7 +272,7 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 
 	c = rpc_client_by_socket(s);
 	if (!c) {
-		kerror(("do_opt_command: no client found for socket %d\n", s));
+		kerror("do_opt_command: no client found for socket %d\n", s);
 		return 1;
 	}
 
@@ -285,7 +285,7 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 			if ((c->wch_socket != -1))
 				wch = opt_awch_u(para, rpc_watch, (void *) c, NULL);
 			else
-				kerror(("wchadd while on wfunc set in c side\n"));
+				kerror("wchadd while on wfunc set in c side\n");
 			if (!wch)
 				sprintf(buf, "%s%s", mk_errline(EC_NG, ebuf), c->prompt);
 			else {
@@ -304,7 +304,7 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 			sprintf(buf, "%x %s%s%s", errnum, errmsg, CRLF, c->prompt);
 		else
 			sprintf(buf, "%s%s", mk_errline(ret, ebuf), c->prompt);
-		klog(("opt-rpc: optset: ret:%d, buf:%s\n", ret, buf));
+		klog("opt-rpc: optset: ret:%d, buf:%s\n", ret, buf);
 	} else if (!strncmp("og ", buf, 3)) {
 		para = buf + 3;
 		char *iniret = NULL;
@@ -314,7 +314,7 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 		else
 			sprintf(buf, "%s%s%s", mk_errline(ret, ebuf), iniret ? iniret : "", c->prompt);
 		kmem_free_s(iniret);
-		klog(("opt-rpc: optget: ret:%d, buf:%s\n", ret, buf));
+		klog("opt-rpc: optget: ret:%d, buf:%s\n", ret, buf);
 	} else if (!strncmp("bye", buf, 3)) {
 		return 1;
 	} else if (!strncmp("help", buf, 4)) {
@@ -326,10 +326,10 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 
 	ret = send(c->opt_socket, buf, strlen(buf) + 1, 0);
 	if (ret < 0) {
-		klog(("do_opt_command: send resp: s: %d, err %s\n", s, strerror(errno)));
+		klog("do_opt_command: send resp: s: %d, err %s\n", s, strerror(errno));
 		return 1;
 	} else if (ret == 0) {
-		klog(("do_opt_command: send resp: Remote close socket: %d\n", s));
+		klog("do_opt_command: send resp: Remote close socket: %d\n", s);
 		return 1;
 	}
 
@@ -388,7 +388,7 @@ static void *worker_thread_or_server(void *userdata)
 	ignore_pipe();
 
 	if ((s_listen = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		kerror(("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "socket", strerror(errno)));
+		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "socket", strerror(errno));
 		return NULL;
 	}
 
@@ -399,12 +399,12 @@ static void *worker_thread_or_server(void *userdata)
 	my_addr.sin_addr.s_addr = INADDR_ANY;
 	memset(my_addr.sin_zero, '\0', sizeof(my_addr.sin_zero));
 	if (bind(s_listen, (struct sockaddr *) &my_addr, sizeof(my_addr)) == -1) {
-		kerror(("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "bind", strerror(errno)));
+		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "bind", strerror(errno));
 		return NULL;
 	}
 
 	if (listen(s_listen, BACKLOG) == -1) {
-		kerror(("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "listen", strerror(errno)));
+		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "listen", strerror(errno));
 		return NULL;
 	}
 
@@ -426,7 +426,7 @@ static void *worker_thread_or_server(void *userdata)
 			if (e->data.fd == s_listen) {
 				sin_size = sizeof(their_addr);
 				if ((new_fd = accept(s_listen, (struct sockaddr *) &their_addr, &sin_size)) == -1) {
-					kerror(("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "accept", strerror(errno)));
+					kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "accept", strerror(errno));
 					continue;
 				}
 
@@ -439,7 +439,7 @@ static void *worker_thread_or_server(void *userdata)
 
 				continue;
 			} else if (!(e->events & EPOLLIN)) {
-				kerror(("!!! Not EPOLLIN: event is %08x, fd:%d\n", e->events, e->data.fd));
+				kerror("!!! Not EPOLLIN: event is %08x, fd:%d\n", e->events, e->data.fd);
 				continue;
 			}
 
@@ -447,7 +447,7 @@ static void *worker_thread_or_server(void *userdata)
 				if (do_opt_command(e->data.fd, buf, n))
 					close_connect(e->data.fd);
 			} else {
-				klog(("Remote close socket: %d\n", e->data.fd));
+				klog("Remote close socket: %d\n", e->data.fd);
 				close_connect(e->data.fd);
 			}
 		}
@@ -471,7 +471,7 @@ int opt_rpc_server_init(int argc, char *argv[])
 			port = tmp;
 	}
 
-	klog(("opt_rpc_server_init: port: %d\n", port));
+	klog("opt_rpc_server_init: port: %d\n", port);
 
 	ignore_pipe();
 	spl_thread_create(worker_thread_or_server, (void *)port, 0);
@@ -487,25 +487,25 @@ static int send_watch_message(rpc_client_t *c, const char *buf)
 {
 	int ret;
 
-	klog(("send_watch_message: s:<%d>, buf:<%s>\n", c->wch_socket, buf));
+	klog("send_watch_message: s:<%d>, buf:<%s>\n", c->wch_socket, buf);
 
 	ret = send(c->wch_socket, buf, strlen(buf) + 1, 0);
 	if (0 == ret || (-1 == c->wch_socket)) {
 		/* socket disconnected */
-		kerror(("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "send", strerror(errno)));
+		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "send", strerror(errno));
 		return -1;
 	} else if (-1 == ret) {
-		kerror(("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "send", strerror(errno)));
+		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "send", strerror(errno));
 		return -1;
 	}
 
 	ret = recv(c->wch_socket, (void*)buf, sizeof(buf), 0);
 	if (0 == ret) {
-		kerror(("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "recv", strerror(errno)));
+		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "recv", strerror(errno));
 		return -1;
 	}
 	if (-1 == ret) {
-		kerror(("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "recv", strerror(errno)));
+		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "recv", strerror(errno));
 		return -1;
 	}
 
@@ -520,17 +520,17 @@ static int check_authority(const char mode, const char *rpc_client,
 
 	sprintf(buffer, "b:/sys/admin/%s/enable", rpc_client);
 	if (opt_getint(buffer, &enable) || !enable) {
-		kerror(("Bad client <%s> or client disabled\n", rpc_client));
+		kerror("Bad client <%s> or client disabled\n", rpc_client);
 		return -1;
 	}
 
 	sprintf(buffer, "s:/sys/usr/%s/passwd", user);
-	klog(("\n\nFor remote administrator, must check user name and passwd\n"));
+	klog("\n\nFor remote administrator, must check user name and passwd\n");
 	if (!opt_getstr(buffer, &sv)) {
 		if (!strcmp(sv, pass))
 			return 0;
-		kerror(("Get password for user '%s' failed\n", user));
-		kerror(("Should be '%s', but input '%s'\n", sv, pass));
+		kerror("Get password for user '%s' failed\n", user);
+		kerror("Should be '%s', but input '%s'\n", sv, pass);
 	}
 
 	return -1;
@@ -548,11 +548,11 @@ static int process_connect(int new_fd)
 		buf[0] = '\0';
 		ret = recv(new_fd, buf, sizeof(buf), 0);
 		if (0 == ret) {
-			kerror(("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "recv", strerror(errno)));
+			kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "recv", strerror(errno));
 			break;
 		}
 		if (-1 == ret) {
-			kerror(("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "recv", strerror(errno)));
+			kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__, __LINE__, "recv", strerror(errno));
 			continue;
 		}
 
@@ -612,7 +612,7 @@ static int process_connect(int new_fd)
 
 				return 0;
 			} else
-				kerror(("rpc_client_get return NULL, increase the size of __g_clients\n"));
+				kerror("rpc_client_get return NULL, increase the size of __g_clients\n");
 		}
 
 		if (!strncmp("help", cmd, 4))

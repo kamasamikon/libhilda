@@ -78,13 +78,13 @@ int ftfs_unpack(void *pack, char **md5sum, char **dat, int *len)
 	if (fs->magic[0] != MAGIC[0] || fs->magic[1] != MAGIC[1] ||
 			fs->magic[2] != MAGIC[2] ||
 			fs->magic[3] != MAGIC[3]) {
-		kerror(("ftfs_unpack: Bad magic number.\n"));
+		kerror("ftfs_unpack: Bad magic number.\n");
 		return -1;
 	}
 
 	md5_calculate(newhash, (char*)&fs->len, sizeof(fs->len) + fs->len);
 	if (memcmp(newhash, fs->md5sum, 32)) {
-		kerror(("ftfs_unpack: Bad md5 checksum.\n"));
+		kerror("ftfs_unpack: Bad md5 checksum.\n");
 		return -2;
 	}
 
@@ -113,7 +113,7 @@ int ftfs_rest_length(void *pack, int len)
 	if (fs->magic[0] != MAGIC[0] || fs->magic[1] != MAGIC[1] ||
 			fs->magic[2] != MAGIC[2] ||
 			fs->magic[3] != MAGIC[3]) {
-		kerror(("ftfs_unpack: Bad magic number.\n"));
+		kerror("ftfs_unpack: Bad magic number.\n");
 		return -1;
 	}
 
