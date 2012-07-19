@@ -160,7 +160,7 @@ static int read_manifest(FILE *fp, char name[],
 
 	if (has_name && has_enable && has_version)
 		return 0;
-	kerror(("read_manifest ng\n"));
+	kerror("read_manifest ng\n");
 	return -1;
 }
 
@@ -171,19 +171,19 @@ static int module_load(kmoducc_t *cc, const char *path)
 	char tmp[1024], cwd[1024], name[256], ps = kvfs_path_sep();
 	unsigned int enable, version;
 
-	klog(("loading module: %s\n", path));
+	klog("loading module: %s\n", path);
 
 	sprintf(tmp, "%s%c%s", path, ps, cc->path.manifest);
 	fp = fopen(tmp, "rt");
 	if (!fp) {
-		kerror(("module_load: open error: %s\n", tmp));
+		kerror("module_load: open error: %s\n", tmp);
 		return -1;
 	}
 
 	if (read_manifest(fp, name, &enable, &version))
 		return -1;
 	if (!enable) {
-		klog(("module disabled: %s\n", path));
+		klog("module disabled: %s\n", path);
 		return -1;
 	}
 
@@ -193,7 +193,7 @@ static int module_load(kmoducc_t *cc, const char *path)
 	mod = lib_load(tmp);
 	kvfs_chdir(cwd);
 	if (!mod) {
-		kerror(("lib_load: NG: %s\n", tmp));
+		kerror("lib_load: NG: %s\n", tmp);
 		return -1;
 	}
 
@@ -202,7 +202,7 @@ static int module_load(kmoducc_t *cc, const char *path)
 
 	if (mod->hey(opt_cc())) {
 		kmem_free(mod);
-		kerror(("Error when say hey: <%s>\n", path));
+		kerror("Error when say hey: <%s>\n", path);
 		return -1;
 	}
 
@@ -224,7 +224,7 @@ int kmodu_load()
 
 	fd = kvfs_findfirst(cc->path.root, &fdat);
 	if (!fd) {
-		kerror(("Scan module dir failed. <%s>\n", cc->path.root));
+		kerror("Scan module dir failed. <%s>\n", cc->path.root);
 		return -1;
 	}
 	do {
@@ -253,7 +253,7 @@ static void module_unload()
 
 		remove_dlist_entry(&mod->entry);
 		if (mod->bye())
-			kerror(("bye: NG: %p:%s\n", mod->handle, mod->path));
+			kerror("bye: NG: %p:%s\n", mod->handle, mod->path);
 		lib_unload(mod);
 		kmem_free(mod);
 	}
@@ -279,13 +279,13 @@ static int manual_layout()
 
 	opt_getstr("s:/k/modu/layout/path", &sv);
 	if (!sv) {
-		kerror(("kmodu: Manual: Cannot get layout path.\n"));
+		kerror("kmodu: Manual: Cannot get layout path.\n");
 		return -1;
 	}
 
 	fp = fopen(sv, "r");
 	if (!fp) {
-		kerror(("kmodu: Manual: Open failed: %s.\n", sv));
+		kerror("kmodu: Manual: Open failed: %s.\n", sv);
 		return -1;
 	}
 
@@ -297,7 +297,7 @@ static int manual_layout()
 		if (!uname || !dname || !arrow || strcmp(arrow, ">>"))
 			continue;
 
-		klog(("LinkMap: {%s} >> {%s}\n", uname, dname));
+		klog("LinkMap: {%s} >> {%s}\n", uname, dname);
 		if (strcmp(uname, "NULL"))
 			continue;
 		unode = cnode_find(uname);
@@ -327,7 +327,7 @@ int kmodu_layout()
 	opt_getint("b:/k/modu/layout/manual", &iv);
 	ret = iv ? manual_layout() : auto_layout();
 	if (ret)
-		kerror(("kmodu: layout failed\n"));
+		kerror("kmodu: layout failed\n");
 	return ret;
 }
 
@@ -340,19 +340,19 @@ static kmodu_t *lib_load(const char *path)
 
 	handle = spl_lib_load(path, 0);
 	if (!handle) {
-		kerror(("lib_load: spl_lib_load ng: %s\n", path));
+		kerror("lib_load: spl_lib_load ng: %s\n", path);
 		goto error;
 	}
 
 	hey = (KMODU_HEY)spl_lib_getsym(handle, "hey");
 	if (!hey) {
-		kerror(("lib_load: get hey ng: %s\n", path));
+		kerror("lib_load: get hey ng: %s\n", path);
 		goto error;
 	}
 
 	bye = (KMODU_BYE)spl_lib_getsym(handle, "bye");
 	if (!bye) {
-		kerror(("lib_load: get bye ng: %s\n", path));
+		kerror("lib_load: get bye ng: %s\n", path);
 		goto error;
 	}
 
@@ -380,7 +380,7 @@ static int lib_unload(kmodu_t *mod)
 
 	ret = spl_lib_unload(mod->handle);
 	if (ret)
-		kerror(("spl_lib_unload: NG: %p:%s\n", mod->handle, mod->path));
+		kerror("spl_lib_unload: NG: %p:%s\n", mod->handle, mod->path);
 
 	mod->path[0] = '\0';
 	mod->handle = NULL;

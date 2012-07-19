@@ -10,7 +10,8 @@
 
 #ifndef CFG_KLOG_DO_NOTHING
 
-#define MAX_LOGGER 4
+#define MAX_NLOGGER 8
+#define MAX_RLOGGER 8
 
 /* Control Center for klog */
 typedef struct _klogcc_t klogcc_t;
@@ -24,7 +25,9 @@ struct _klogcc_t {
 	/** touches is a ref count user change klog arg */
 	kint touches;
 
-	KLOGGER loggers[MAX_LOGGER];
+	kuchar nlogger_cnt, rlogger_cnt;
+	KNLOGGER nloggers[MAX_NLOGGER];
+	KRLOGGER rloggers[MAX_RLOGGER];
 };
 
 static klogcc_t *__g_klogcc = NULL;
@@ -32,7 +35,7 @@ static klogcc_t *__g_klogcc = NULL;
 static void set_fa_arg(int argc, char **argv);
 static void set_ff_arg(int argc, char **argv);
 
-int klog_add_logger(KLOGGER logger)
+int klog_add_logger(KNLOGGER logger)
 {
 	klogcc_t *cc = __g_klogcc;
 	int i;
@@ -40,21 +43,22 @@ int klog_add_logger(KLOGGER logger)
 	if (!logger)
 		return -1;
 
-	for (i = 0; i < MAX_LOGGER; i++)
-		if (cc->loggers[i] == logger)
+	for (i = 0; i < MAX_NLOGGER; i++)
+		if (cc->nloggers[i] == logger)
 			return 0;
 
-	for (i = 0; i < MAX_LOGGER; i++)
-		if (!cc->loggers[i]) {
-			cc->loggers[i] = logger;
+	for (i = 0; i < MAX_NLOGGER; i++)
+		if (!cc->nloggers[i]) {
+			cc->nloggers[i] = logger;
+			cc->nlogger_cnt++;
 			return 0;
 		}
 
-	klogf("klog_add_logger: Only up to %d logger supported.\n", MAX_LOGGER);
+	wlogf("klog_add_logger: Only up to %d logger supported.\n", MAX_NLOGGER);
 	return -1;
 }
 
-int klog_del_logger(KLOGGER logger)
+int klog_del_logger(KNLOGGER logger)
 {
 	klogcc_t *cc = __g_klogcc;
 	int i;
@@ -62,14 +66,59 @@ int klog_del_logger(KLOGGER logger)
 	if (!logger)
 		return -1;
 
-	for (i = 0; i < MAX_LOGGER; i++)
-		if (cc->loggers[i] == logger) {
-			cc->loggers[i] = NULL;
+	for (i = 0; i < cc->nlogger_cnt; i++)
+		if (cc->nloggers[i] == logger) {
+			cc->nlogger_cnt--;
+			cc->nloggers[i] = cc->nloggers[cc->nlogger_cnt];
+			cc->nloggers[cc->nlogger_cnt] = NULL;
 			return 0;
 		}
 
 	return -1;
 }
+
+int klog_add_rlogger(KRLOGGER logger)
+{
+	klogcc_t *cc = __g_klogcc;
+	int i;
+
+	if (!logger)
+		return -1;
+
+	for (i = 0; i < MAX_RLOGGER; i++)
+		if (cc->rloggers[i] == logger)
+			return 0;
+
+	for (i = 0; i < MAX_RLOGGER; i++)
+		if (!cc->rloggers[i]) {
+			cc->rloggers[i] = logger;
+			cc->rlogger_cnt++;
+			return 0;
+		}
+
+	wlogf("klog_add_logger: Only up to %d logger supported.\n", MAX_RLOGGER);
+	return -1;
+}
+
+int klog_del_rlogger(KRLOGGER logger)
+{
+	klogcc_t *cc = __g_klogcc;
+	int i;
+
+	if (!logger)
+		return -1;
+
+	for (i = 0; i < cc->rlogger_cnt; i++)
+		if (cc->rloggers[i] == logger) {
+			cc->rlogger_cnt--;
+			cc->rloggers[i] = cc->rloggers[cc->rlogger_cnt];
+			cc->rloggers[cc->rlogger_cnt] = NULL;
+			return 0;
+		}
+
+	return -1;
+}
+
 
 /**
  * \brief Other module call this to use already inited CC
@@ -134,6 +183,10 @@ static void set_fa_str(const char *arg)
 				kflg_clr(cc->flg, LOG_TM_REL);
 			else if (c == 'T')
 				kflg_clr(cc->flg, LOG_TM_ABS);
+			else if (c == 'F')
+				kflg_clr(cc->flg, LOG_FUNC);
+			else if (c == 'L')
+				kflg_clr(cc->flg, LOG_LINE);
 		} else if (c == 'l')
 			kflg_set(cc->flg, LOG_LOG);
 		else if (c == 'e')
@@ -144,6 +197,10 @@ static void set_fa_str(const char *arg)
 			kflg_set(cc->flg, LOG_TM_REL);
 		else if (c == 'T')
 			kflg_set(cc->flg, LOG_TM_ABS);
+		else if (c == 'T')
+			kflg_set(cc->flg, LOG_FUNC);
+		else if (c == 'T')
+			kflg_set(cc->flg, LOG_LINE);
 	}
 }
 
@@ -256,6 +313,24 @@ kuint klog_getflg(const kchar *fn)
 				else
 					kflg_clr(flg, LOG_TM_REL);
 				break;
+			case 'T':
+				if (set)
+					kflg_set(flg, LOG_TM_ABS);
+				else
+					kflg_clr(flg, LOG_TM_ABS);
+				break;
+			case 'F':
+				if (set)
+					kflg_set(flg, LOG_FUNC);
+				else
+					kflg_clr(flg, LOG_FUNC);
+				break;
+			case 'N':
+				if (set)
+					kflg_set(flg, LOG_LINE);
+				else
+					kflg_clr(flg, LOG_LINE);
+				break;
 			default:
 				break;
 			}
@@ -270,40 +345,53 @@ kuint klog_getflg(const kchar *fn)
 	return flg;
 }
 
-/* flag => [ 'l', 'e', 'f', 't' ] */
-/* int klogf(const char *prefix, kuint flg, const char *fmt, ...) */
-int klogf(const char *fmt, ...)
+int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const char *fmt, ...)
 {
 	klogcc_t *cc = __g_klogcc;
 	va_list ap;
 	char buffer[2048], *bufptr = buffer;
-	int i, j, used_logger = 0, ret, bufsize = sizeof(buffer);
-
-	KLOGGER loggers[MAX_LOGGER];
-
-	for (i = 0, j = 0; i < MAX_LOGGER; i++)
-		if (cc->loggers[i]) {
-			loggers[j] = cc->loggers[i];
-			j++;
-			used_logger++;
-		}
-
-	if (used_logger == 0)
-		return 0;
+	int i, ret, ofs, bufsize = sizeof(buffer);
 
 	va_start(ap, fmt);
-	ret = vsnprintf(bufptr, bufsize, fmt, ap);
+
+	for (i = 0; i < cc->rlogger_cnt; i++)
+		if (cc->rloggers[i])
+			cc->rloggers[i](type, flg, fn, ln, fmt, ap);
+
+	ofs = sprintf(bufptr, "|%c|", type);
+	if (flg & LOG_TM_REL)
+		ofs += sprintf(bufptr + ofs, "%lu|", spl_get_ticks());
+	if (flg & LOG_TM_ABS)
+		ofs += sprintf(bufptr + ofs, "%lu|", spl_get_ticks());
+	if (flg & LOG_FUNC)
+		ofs += sprintf(bufptr + ofs, "%s|", fn);
+	if (flg & LOG_LINE)
+		ofs += sprintf(bufptr + ofs, "%d| ", ln);
+
+	ret = vsnprintf(bufptr + ofs, bufsize - ofs, fmt, ap);
 	while (ret < 0) {
 		bufsize <<= 1;
 		if (bufptr != buffer)
 			kmem_free(bufptr);
 		bufptr = kmem_get(bufsize);
-		ret = vsnprintf(bufptr, bufsize, fmt, ap);
+
+		ofs = sprintf(bufptr, "|%c|", type);
+		if (flg & LOG_TM_REL)
+			ofs += sprintf(bufptr + ofs, "%lu|", spl_get_ticks());
+		if (flg & LOG_TM_ABS)
+			ofs += sprintf(bufptr + ofs, "%lu|", spl_get_ticks());
+		if (flg & LOG_FUNC)
+			ofs += sprintf(bufptr + ofs, "%s|", fn);
+		if (flg & LOG_LINE)
+			ofs += sprintf(bufptr + ofs, "%d|", ln);
+
+		ret = vsnprintf(bufptr + ofs, bufsize - ofs, fmt, ap);
 	}
 	va_end(ap);
 
-	for (i = 0; i < used_logger; i++)
-		loggers[i](bufptr, ret);
+	for (i = 0; i < cc->nlogger_cnt; i++)
+		if (cc->nloggers[i])
+			cc->nloggers[i](bufptr, ret);
 
 	if (bufptr != buffer)
 		kmem_free(bufptr);
