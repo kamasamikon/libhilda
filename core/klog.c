@@ -358,7 +358,9 @@ int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const ch
 		if (cc->rloggers[i])
 			cc->rloggers[i](type, flg, fn, ln, fmt, ap);
 
-	ofs = sprintf(bufptr, "|%c|", type);
+	ofs = 0;
+	if (type)
+		ofs += sprintf(bufptr, "|%c|", type);
 	if (flg & LOG_TM_REL)
 		ofs += sprintf(bufptr + ofs, "%lu|", spl_get_ticks());
 	if (flg & LOG_TM_ABS)
@@ -375,7 +377,9 @@ int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const ch
 			kmem_free(bufptr);
 		bufptr = kmem_get(bufsize);
 
-		ofs = sprintf(bufptr, "|%c|", type);
+		ofs = 0;
+		if (type)
+			ofs += sprintf(bufptr, "|%c|", type);
 		if (flg & LOG_TM_REL)
 			ofs += sprintf(bufptr + ofs, "%lu|", spl_get_ticks());
 		if (flg & LOG_TM_ABS)

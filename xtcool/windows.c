@@ -639,20 +639,6 @@ kchar *kvfs_getcwd(kchar *buf, kint size)
 	return _getcwd(buf, size);
 }
 
-int wlogx(const char *fmt, ...)
-{
-	int ret;
-	va_list ap;
-	char buffer[8192];
-
-	va_start(ap, fmt);
-	ret = vsnprintf(buffer, sizeof(buffer), fmt, ap);
-	va_end(ap);
-
-	OutputDebugString(buffer);
-	return ret;
-}
-
 int wlogf(const char *fmt, ...)
 {
 	va_list ap;
