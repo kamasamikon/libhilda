@@ -225,7 +225,7 @@ static int rpc_client_wch_add(rpc_client_t *c, char *path, void *wch)
 	for (i = 0; i < c->opts.cnt; i++) {
 		tmp = c->opts.arr[i].path;
 		if (tmp && (0 == strcmp(tmp, path))) {
-			kerror("rpc_client_wch_add: %s already\n", path);
+			kerror("%s already\n", path);
 			return -1;
 		}
 	}
@@ -260,7 +260,7 @@ static int rpc_client_wch_del(rpc_client_t *c, const char *path)
 		}
 	}
 
-	kerror("rpc_client_wch_del: %s not exists.\n", path);
+	kerror("%s not exists.\n", path);
 	return -1;
 }
 
@@ -315,7 +315,7 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 
 	c = rpc_client_by_socket(s);
 	if (!c) {
-		kerror("do_opt_command: no client found for socket %d\n", s);
+		kerror("no client found for socket %d\n", s);
 		return 1;
 	}
 
@@ -426,8 +426,7 @@ static void *worker_thread_or_server(void *userdata)
 	ignore_pipe();
 
 	if ((s_listen = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n",
-					"worker_thread_or_server", __LINE__, "socket", strerror(errno));
+		kerror("c:%s, e:%s\n", "socket", strerror(errno));
 		return NULL;
 	}
 
@@ -438,14 +437,12 @@ static void *worker_thread_or_server(void *userdata)
 	my_addr.sin_addr.s_addr = INADDR_ANY;
 	memset(my_addr.sin_zero, '\0', sizeof(my_addr.sin_zero));
 	if (bind(s_listen, (struct sockaddr*)&my_addr, sizeof(my_addr)) == -1) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n",
-					"worker_thread_or_server", __LINE__, "bind", strerror(errno));
+		kerror("c:%s, e:%s\n", "bind", strerror(errno));
 		return NULL;
 	}
 
 	if (listen(s_listen, BACKLOG) == -1) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n",
-					"worker_thread_or_server", __LINE__, "listen", strerror(errno));
+		kerror("c:%s, e:%s\n", "listen", strerror(errno));
 		return NULL;
 	}
 
@@ -469,8 +466,7 @@ static void *worker_thread_or_server(void *userdata)
 
 				sin_size = sizeof(their_addr);
 				if ((s_new = accept(s_listen, (struct sockaddr*)&their_addr, &sin_size)) == -1) {
-					kerror("error! f:%s, l:%d, c:%s, e:%s\n",
-								"worker_thread_or_server", __LINE__, "accept", strerror(errno));
+					kerror("c:%s, e:%s\n", "accept", strerror(errno));
 				} else if (process_connect(s_new)) /* XXX: s_new can be o or w */
 					close_connect(s_new);
 				continue;
@@ -524,20 +520,20 @@ static int send_watch_message(rpc_client_t *c, const char *buf)
 	ret = send(c->wch_socket, buf, strlen(buf) + 1, 0);
 	if (0 == ret || (-1 == c->wch_socket)) {
 		/* socket disconnected */
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", "send_watch_message", __LINE__, "send", strerror(errno));
+		kerror("c:%s, e:%s\n", "send", strerror(errno));
 		return -1;
 	} else if (-1 == ret) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", "send_watch_message", __LINE__, "send", strerror(errno));
+		kerror("c:%s, e:%s\n", "send", strerror(errno));
 		return -1;
 	}
 
 	ret = recv(c->wch_socket, (void*)buf, sizeof(buf), 0);
 	if (0 == ret) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", "send_watch_message", __LINE__, "recv", strerror(errno));
+		kerror("c:%s, e:%s\n", "recv", strerror(errno));
 		return -1;
 	}
 	if (-1 == ret) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", "send_watch_message", __LINE__, "recv", strerror(errno));
+		kerror("c:%s, e:%s\n", "recv", strerror(errno));
 		return -1;
 	}
 
@@ -580,11 +576,11 @@ static int process_connect(int new_fd)
 		buf[0] = '\0';
 		ret = recv(new_fd, buf, sizeof(buf), 0);
 		if (0 == ret) {
-			kerror("error! f:%s, l:%d, c:%s, e:%s\n", "process_connect", __LINE__, "recv", strerror(errno));
+			kerror("c:%s, e:%s\n", "recv", strerror(errno));
 			break;
 		}
 		if (-1 == ret) {
-			kerror("error! f:%s, l:%d, c:%s, e:%s\n", "process_connect", __LINE__, "recv", strerror(errno));
+			kerror("c:%s, e:%s\n", "recv", strerror(errno));
 			continue;
 		}
 

@@ -127,14 +127,11 @@ static void *watch_thread_or_client(void *userdata)
 
 			n = recv(e->data.fd, buf, buf_size, 0);
 			if (n < 0) {
-				kerror("error! f:%s, l:%d, c:%s, e:%s\n",
-							__func__, __LINE__,
-							"recv",
-							strerror(errno));
+				kerror("c:%s, e:%s\n", "recv", strerror(errno));
 				break;
 			}
 			if (n == 0) {
-				kerror("watch_thread: recv: remote close.\n");
+				kerror("recv: remote close.\n");
 				or->quit = 1;
 				break;
 			}
@@ -143,7 +140,7 @@ static void *watch_thread_or_client(void *userdata)
 				or->wch_func(or, buf + 10);
 				sprintf(buf, "0 OK\r\n");
 			} else if (!strncmp("bye", buf, 3)) {
-				kerror("watch_thread: remote say bye.\n");
+				kerror("remote say bye.\n");
 				or->quit = 1;
 				break;
 			} else
@@ -151,14 +148,11 @@ static void *watch_thread_or_client(void *userdata)
 
 			n = send(e->data.fd, "ACK", 4, 0);
 			if (n < 0) {
-				kerror("error! f:%s, l:%d, c:%s, e:%s\n",
-							__func__, __LINE__,
-							"send",
-							strerror(errno));
+				kerror("c:%s, e:%s\n", "send", strerror(errno));
 				break;
 			}
 			if (n == 0) {
-				kerror("watch_thread: send: remote close.\n");
+				kerror("send: remote close.\n");
 				or->quit = 1;
 				break;
 			}
@@ -191,15 +185,13 @@ static int shake_hand(int socket, const char *connhash,
 
 	/* send hey */
 	if (-1 == send(socket, iodat, strlen(iodat) + 1, 0)) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__,
-					__LINE__, "send", strerror(errno));
+		kerror("c:%s, e:%s\n", "send", strerror(errno));
 		return -1;
 	}
 
 	/* first datagram in do_xxx_real */
 	if ((ret = recv(socket, respbuf, rblen, 0)) <= 0) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__,
-					__LINE__, "recv", strerror(errno));
+		kerror("c:%s, e:%s\n", "recv", strerror(errno));
 		return -1;
 	}
 
@@ -228,8 +220,7 @@ static int rpc_connect(const char *server, unsigned short port, int *retfd)
 	memset(their_addr.sin_zero, '\0', sizeof their_addr.sin_zero);
 	if (connect(sockfd, (struct sockaddr *)&their_addr,
 				sizeof their_addr) == -1) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__,
-					__LINE__, "connect", strerror(errno));
+		kerror("c:%s, e:%s\n", "connect", strerror(errno));
 		close(sockfd);
 		return -1;
 	}
@@ -248,16 +239,14 @@ static int rpc_disconnect(int sockfd, kbool opt)
 	klog("rpc_disconnect: %d\n", sockfd);
 	sprintf(buf, "bye\r\n");
 	if (-1 == send(sockfd, buf, strlen(buf) + 1, 0)) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__,
-					__LINE__, "send", strerror(errno));
+		kerror("c:%s, e:%s\n", "send", strerror(errno));
 	}
 
 	err = recv(sockfd, buf, sizeof(buf), 0);
 	assert(err == 0 || err == -1);
 	err = close(sockfd);
 	if (err)
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__,
-					__LINE__, "close", strerror(errno));
+		kerror("c:%s, e:%s\n", "close", strerror(errno));
 
 	return err;
 }
@@ -302,8 +291,7 @@ int opt_rpc_watch(void *conn, const char *path, char *ebuf, int eblen)
 	send(or->opt_socket, iodat, strlen(iodat) + 1, 0);
 
 	if (recv(or->opt_socket, iodat, sizeof(iodat), 0) <= 0) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__,
-					__LINE__, "recv", strerror(errno));
+		kerror("c:%s, e:%s\n", "recv", strerror(errno));
 		return EC_CONNECT;
 	}
 
@@ -329,8 +317,7 @@ int opt_rpc_unwatch(void *conn, const char *path, char *ebuf, int eblen)
 	send(or->opt_socket, iodat, strlen(iodat) + 1, 0);
 
 	if (recv(or->opt_socket, iodat, sizeof(iodat), 0) <= 0) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__,
-					__LINE__, "recv", strerror(errno));
+		kerror("c:%s, e:%s\n", "recv", strerror(errno));
 		return EC_CONNECT;
 	}
 
@@ -356,8 +343,7 @@ int opt_rpc_setini(void *conn, const char *inibuf, char *ebuf, int eblen)
 	send(or->opt_socket, iodat, strlen(iodat) + 1, 0);
 
 	if (recv(or->opt_socket, iodat, eblen + 1024, 0) <= 0) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__,
-					__LINE__, "recv", strerror(errno));
+		kerror("c:%s, e:%s\n", "recv", strerror(errno));
 		return EC_CONNECT;
 	}
 
@@ -404,8 +390,7 @@ int opt_rpc_getini(void *conn, const char *path,
 	send(or->opt_socket, iodat, strlen(iodat) + 1, 0);
 
 	if (recv(or->opt_socket, iodat, rblen + 8192, 0) <= 0) {
-		kerror("error! f:%s, l:%d, c:%s, e:%s\n", __func__,
-					__LINE__, "recv", strerror(errno));
+		kerror("c:%s, e:%s\n", "recv", strerror(errno));
 		kmem_free(iodat);
 		return EC_CONNECT;
 	}
@@ -569,7 +554,7 @@ void *opt_rpc_connect(const char *server, unsigned short port,
 	if (!connect_opt(or) && !connect_wch(or))
 		return (void*)or;
 
-	kerror("opt_rpc_connect: error\n");
+	kerror("opt_rpc_connect\n");
 	opt_rpc_disconnect(or);
 	return NULL;
 }

@@ -341,19 +341,19 @@ int kmque_run(kmque_t *mque)
 		ret = kmque_peek(mque, &me, -1);
 		switch (ret) {
 		case -3:
-			kerror("kmque_peek: Kuiting detected\n");
+			kerror("Kuiting detected\n");
 			return 0;
 		case 0:
 			mentry_do_all(me);
 			break;
 		case -1:
-			kfatal("kmque_peek: Null return\n");
+			kfatal("Null return\n");
 			break;
 		case -2:
-			kerror("kmque_peek: Null mque para\n");
+			kerror("Null mque para\n");
 			break;
 		default:
-			kerror("kmque_peek: Other error\n");
+			kerror("Other error\n");
 			break;
 		}
 	}
