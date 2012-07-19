@@ -1,6 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
 #include <stdio.h>
+#include <time.h>
 #include <string.h>
 
 #include <klog.h>
@@ -352,19 +353,36 @@ int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const ch
 	char buffer[2048], *bufptr = buffer;
 	int i, ret, ofs, bufsize = sizeof(buffer);
 
+	char tmbuf[128];
+	time_t t;
+	struct tm *tmp;
+
+	unsigned long tick;
+
+	t = time(NULL);
+	tmp = localtime(&t);
+	strftime(tmbuf, sizeof(tmbuf), "%Y/%m/%d %H:%M:%S", tmp);
+
 	va_start(ap, fmt);
 
 	for (i = 0; i < cc->rlogger_cnt; i++)
 		if (cc->rloggers[i])
 			cc->rloggers[i](type, flg, fn, ln, fmt, ap);
 
+	if (flg & (LOG_TM_REL | LOG_TM_ABS))
+		tick = spl_get_ticks();
+
 	ofs = 0;
 	if (type)
 		ofs += sprintf(bufptr, "|%c|", type);
 	if (flg & LOG_TM_REL)
-		ofs += sprintf(bufptr + ofs, "%lu|", spl_get_ticks());
-	if (flg & LOG_TM_ABS)
-		ofs += sprintf(bufptr + ofs, "%lu|", spl_get_ticks());
+		ofs += sprintf(bufptr + ofs, "%lu|", tick);
+	if (flg & LOG_TM_ABS) {
+		t = time(NULL);
+		tmp = localtime(&t);
+		strftime(tmbuf, sizeof(tmbuf), "%Y/%m/%d %H:%M:%S", tmp);
+		ofs += sprintf(bufptr + ofs, "%s.%03d|", tmbuf, (kuint)(tick % 1000));
+	}
 	if (flg & LOG_FUNC)
 		ofs += sprintf(bufptr + ofs, "%s|", fn);
 	if (flg & LOG_LINE)
@@ -381,9 +399,9 @@ int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const ch
 		if (type)
 			ofs += sprintf(bufptr, "|%c|", type);
 		if (flg & LOG_TM_REL)
-			ofs += sprintf(bufptr + ofs, "%lu|", spl_get_ticks());
+			ofs += sprintf(bufptr + ofs, "%lu|", tick);
 		if (flg & LOG_TM_ABS)
-			ofs += sprintf(bufptr + ofs, "%lu|", spl_get_ticks());
+			ofs += sprintf(bufptr + ofs, "%s.%03d|", tmbuf, (kuint)(tick % 1000));
 		if (flg & LOG_FUNC)
 			ofs += sprintf(bufptr + ofs, "%s|", fn);
 		if (flg & LOG_LINE)

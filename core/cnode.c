@@ -125,20 +125,20 @@ int cnode_reg(cnode_t *node)
 	for (i = 0; i < cc->cnt; i++) {
 		tmp = cc->arr[i];
 		if (tmp == node) {
-			kerror("cnode_reg: %s already\n", node->name);
+			kerror("%s already\n", node->name);
 			return 0;
 		}
 	}
 	for (i = 0; i < cc->cnt; i++)
 		if (!cc->arr[i]) {
 			cc->arr[i] = node;
-			klog("cnode_reg: %s success.\n", node->name);
+			klog("%s success.\n", node->name);
 			return 0;
 		}
 
 	ARR_INC(1, cc->arr, cc->cnt, cnode_t*);
 	cc->arr[i] = node;
-	klog("cnode_reg: %s success.\n", node->name);
+	klog("%s success.\n", node->name);
 	return 0;
 }
 
@@ -151,12 +151,12 @@ int cnode_unreg(cnode_t *node)
 	for (i = 0; i < cc->cnt; i++) {
 		tmp = cc->arr[i];
 		if (tmp && tmp == node) {
-			klog("cnode_unreg: %s OK.\n", node->name);
+			klog("%s OK.\n", node->name);
 			return 0;
 		}
 	}
 
-	kerror("cnode_unreg: %s not there.\n", node->name);
+	kerror("%s not there.\n", node->name);
 	return -1;
 }
 

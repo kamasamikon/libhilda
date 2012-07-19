@@ -207,7 +207,7 @@ static kinline int target_opt_find(kcfg_target_t *ct, const char *opt)
 	for (i = 0; i < ct->opts.cnt; i++) {
 		path = ct->opts.arr[i];
 		if (path && (0 == strcmp(path, opt))) {
-			klog("target_opt_find: %s, pos: %d\n", path, i);
+			klog("%s, pos: %d\n", path, i);
 			return i;
 		}
 	}
@@ -222,7 +222,7 @@ static int target_opt_add(kcfg_target_t *ct, const char *opt)
 
 	i = target_opt_find(ct, opt);
 	if (i >= 0) {
-		klog("target_opt_add: %s already there\n", opt);
+		klog("%s already there\n", opt);
 		return 0;
 	}
 	if (i == -2)
@@ -419,7 +419,7 @@ static int ow_session_done(int ses, void *opt, const char *path, void *wch)
 	int error = 0, cancel;
 	cancel = opt_get_new_int(opt);
 	if (cancel) {
-		klog("ow_session_done: Cancelled.\n");
+		klog("Cancelled.\n");
 		return EC_NG;
 	}
 	opt_session_set_err(opt, error);
@@ -488,7 +488,6 @@ static void cfg_save_dpc(void *ua, void *ub)
 	kcfg_t *c = __g_cfg;
 	kcfg_target_t *ct;
 
-	klog(">>> cfg_save_dpc\n");
 	for (i = 0; i < c->target.cnt; i++) {
 		ct = c->target.arr[i];
 		if ((!ct) || (!ct->save) || is_skipped_target(ct->name))
@@ -504,13 +503,12 @@ static void cfg_save_dpc(void *ua, void *ub)
 			if (!ct->save(ct, dat, len, ct->ua, ct->ub))
 				memcpy(ct->data_hash, hash, sizeof(hash));
 			else
-				kerror("cfg_save_dpc: fail: %s\n", ct->name);
+				kerror("fail: %s\n", ct->name);
 		} else
-			kerror("cfg_save_dpc:(%s): not touched\n", ct->name);
+			kerror("(%s): not touched\n", ct->name);
 
 		kmem_free_s(dat);
 	}
-	klog("<<< cfg_save_dpc\n");
 }
 
 static int tc_cfg_save(void *id, void *userdata)
