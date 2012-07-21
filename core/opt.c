@@ -1016,11 +1016,8 @@ static void call_watch(int ses, opt_entry_t *oe,
 
 		if (ow->wch) {
 			ow->wch(ses, (void*)oe, oe->path, (void*)ow);
-
-			if (awch)
-				oe->awch_called++;
-			else
-				oe->bwch_called++;
+			oe->awch_called += !!awch;
+			oe->awch_called += !awch;
 		}
 	}
 }
@@ -1706,7 +1703,7 @@ static void queue_watch(opt_entry_t *oe, opt_watch_t *ow, int awch)
  *
  * \return watch number, -1 for error
  */
-static opt_watch_t *watch_new(const char *path, OPT_WATCH wch,
+void *watch_new(const char *path, OPT_WATCH wch,
 		void *ua, void *ub, int awch)
 {
 	opt_entry_t *oe;
@@ -1731,17 +1728,7 @@ static opt_watch_t *watch_new(const char *path, OPT_WATCH wch,
 	queue_watch(oe, ow, awch);
 
 	/* spl_lck_rel(__g_optcc->lck); */
-	return ow;
-}
-
-void *opt_awch_u(const char *path, OPT_WATCH wch, void *ua, void *ub)
-{
-	return (void*)watch_new(path, wch, ua, ub, 1);
-}
-
-void *opt_bwch_u(const char *path, OPT_WATCH wch, void *ua, void *ub)
-{
-	return (void*)watch_new(path, wch, ua, ub, 0);
+	return (void*)ow;
 }
 
 int opt_wch_del(void *wch)
