@@ -249,11 +249,10 @@ static void target_opt_clr(kcfg_target_t *ct)
 		kmem_free_sz(ct->opts.arr[i]);
 }
 
-static int ow_opt_dirty(int ses, void *opt, const char *path, void *wch)
+static void ow_opt_dirty(int ses, void *opt, const char *path, void *wch)
 {
 	if (__g_cfg_loaded)
 		kcfg_save_delay(500);
-	return 0;
 }
 
 int kcfg_target_opt_add(const char *name, const char *opt)
@@ -375,7 +374,7 @@ static int og_target(void *opt, const char *path,
 	return 0;
 }
 
-static int ow_reset(int ses, void *opt, const char *path, void *wch)
+static void ow_reset(int ses, void *opt, const char *path, void *wch)
 {
 	int i;
 	kcfg_target_t *ct;
@@ -390,40 +389,32 @@ static int ow_reset(int ses, void *opt, const char *path, void *wch)
 
 	i = system("/stv/reset_net_set.sh");
 	cfg_save_dpc(NULL, NULL);
-
-	return 0;
 }
 
-static int ow_load(int ses, void *opt, const char *path, void *wch)
+static void ow_load(int ses, void *opt, const char *path, void *wch)
 {
 	kcfg_load();
-	return 0;
 }
-static int ow_save(int ses, void *opt, const char *path, void *wch)
+static void ow_save(int ses, void *opt, const char *path, void *wch)
 {
 	kcfg_save();
-	return 0;
 }
-static int ow_sync(int ses, void *opt, const char *path, void *wch)
+static void ow_sync(int ses, void *opt, const char *path, void *wch)
 {
 	cfg_save_dpc(NULL, NULL);
-	return 0;
 }
-static int ow_session_start(int ses, void *opt, const char *path, void *wch)
+static void ow_session_start(int ses, void *opt, const char *path, void *wch)
 {
-	return 0;
 }
-static int ow_session_done(int ses, void *opt, const char *path, void *wch)
+static void ow_session_done(int ses, void *opt, const char *path, void *wch)
 {
-	/* XXX: error when commit session */
 	int error = 0, cancel;
+
 	cancel = opt_get_new_int(opt);
-	if (cancel) {
+	if (cancel)
 		klog("Cancelled.\n");
-		return EC_NG;
-	}
-	opt_session_set_err(opt, error);
-	return 0;
+	else
+		opt_session_set_err(opt, error);
 }
 
 static void setup_opt()
