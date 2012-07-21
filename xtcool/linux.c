@@ -546,7 +546,7 @@ kbean kvfs_findfirst(const kchar *a_fspec, KVFS_FINDDATA *a_finfo)
 	strncpy(a_finfo->name, dirp->d_name, sizeof(a_finfo->name) - 1);
 	a_finfo->name[sizeof(a_finfo->name) - 1] = '\0';
 
-	fb = (findbean_t*)malloc(sizeof(findbean_t));
+	fb = (findbean_t*)kmem_alloc(1, findbean_t);
 	if (!fb) {
 		closedir(dir);
 		return knil;
@@ -593,7 +593,7 @@ kint kvfs_findclose(kbean a_find)
 	if (fb) {
 		if (fb->dir)
 			closedir(fb->dir);
-		free(fb);
+		kmem_free(fb);
 		return 0;
 	}
 	return -1;
