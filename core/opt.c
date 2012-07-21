@@ -852,7 +852,7 @@ static void sync_from_nylist(opt_entry_t *oe)
  * opt = the whole entry
  * path = id of entry
  */
-int opt_add(const char *path, const char *desc, unsigned int attr,
+int opt_new(const char *path, const char *desc, unsigned int attr,
 		OPT_SETTER setter, OPT_GETTER getter, OPT_DELTER delter,
 		void *ua, void *ub)
 {
