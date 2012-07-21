@@ -26,9 +26,9 @@ struct _spl_event_t {
  */
 SPL_HANDLE spl_event_create(int signaled)
 {
-	BOOL bSignaled = signaled?TRUE:FALSE;
+	BOOL bSignaled = signaled ? TRUE : FALSE;
 	SPL_HANDLE h = NULL;
-	h = (SPL_HANDLE)CreateEvent(NULL,FALSE,bSignaled,NULL);
+	h = (SPL_HANDLE) CreateEvent(NULL, FALSE, bSignaled, NULL);
 	return h;
 }
 
@@ -44,13 +44,13 @@ int spl_event_set(SPL_HANDLE h)
 {
 	int ret = SPL_EC_NG;
 
-	if (SetEvent((HANDLE)h))
-	{
+	if (SetEvent((HANDLE) h)) {
 		ret = SPL_EC_OK;
 	}
 
 	return ret;
 }
+
 /**
  * @brief Set the event to be non-signaled
  *
@@ -62,22 +62,23 @@ int spl_event_clear(SPL_HANDLE h)
 {
 	int ret = SPL_EC_NG;
 
-	if (ResetEvent((HANDLE)h))
-	{
+	if (ResetEvent((HANDLE) h)) {
 		ret = SPL_EC_OK;
 	}
 
 	return ret;
 }
+
 int spl_event_wait(SPL_HANDLE h, unsigned int ms)
 {
 	int ret = SPL_EC_NG;
-	ret = WaitForSingleObject((HANDLE)h,ms);
+	ret = WaitForSingleObject((HANDLE) h, ms);
 	return ret;
 }
+
 int spl_event_destroy(SPL_HANDLE h)
 {
-	CloseHandle((HANDLE)h);
+	CloseHandle((HANDLE) h);
 	return SPL_EC_OK;
 }
 
@@ -86,7 +87,7 @@ int spl_event_destroy(SPL_HANDLE h)
  */
 
 
-/*
+/*line
  * internal structure, should not public to caller
  */
 typedef struct _sync_lock {
@@ -103,11 +104,11 @@ typedef struct _sync_lock {
  */
 SPL_HANDLE spl_lck_new(void)
 {
-	sync_lock *lck = (sync_lock*)calloc(1, sizeof(sync_lock));
+	sync_lock *lck = (sync_lock*)kmem_alloz(1, sync_lock);
 	if (lck) {
 		lck->sema = spl_sema_new(1);
 	}
-	return (SPL_HANDLE)lck;
+	return (SPL_HANDLE) lck;
 
 }
 
@@ -117,9 +118,10 @@ int spl_lck_del(SPL_HANDLE a_lck)
 	if (lck && lck->sema) {
 		spl_sema_del(lck->sema);
 	}
-	free(lck);
+	kmem_free(lck);
 	return 0;
 }
+
 void spl_lck_get(SPL_HANDLE a_lck)
 {
 	sync_lock *lck = (sync_lock*)a_lck;
@@ -137,6 +139,7 @@ void spl_lck_get(SPL_HANDLE a_lck)
 		lck->owner.ref = 1;
 	}
 }
+
 void spl_lck_rel(SPL_HANDLE a_lck)
 {
 	sync_lock *lck = (sync_lock*)a_lck;
@@ -160,26 +163,29 @@ void spl_lck_rel(SPL_HANDLE a_lck)
  */
 SPL_HANDLE spl_mutex_create(void)
 {
-	CRITICAL_SECTION *mutex = (CRITICAL_SECTION *)calloc(1, sizeof(CRITICAL_SECTION));
+	CRITICAL_SECTION *mutex = (CRITICAL_SECTION*)kmem_alloz(1, CRITICAL_SECTION);
 	/* default = PTHREAD_MUTEX_FAST_NP */
 	InitializeCriticalSection(mutex);
 
-	return (SPL_HANDLE)mutex;
+	return (SPL_HANDLE) mutex;
 }
+
 int spl_mutex_lock(SPL_HANDLE h)
 {
-	EnterCriticalSection((CRITICAL_SECTION *)h);
+	EnterCriticalSection((CRITICAL_SECTION*)h);
 	return SPL_EC_OK;
 }
+
 int spl_mutex_unlock(SPL_HANDLE h)
 {
-	LeaveCriticalSection((CRITICAL_SECTION *)h);
+	LeaveCriticalSection((CRITICAL_SECTION*)h);
 	return SPL_EC_OK;
 }
+
 int spl_mutex_destroy(SPL_HANDLE h)
 {
-	DeleteCriticalSection((CRITICAL_SECTION *)h);
-	free(h);
+	DeleteCriticalSection((CRITICAL_SECTION*)h);
+	kmem_free(h);
 	return SPL_EC_OK;
 }
 #endif
@@ -187,26 +193,30 @@ int spl_mutex_destroy(SPL_HANDLE h)
 /**
  * \brief semaphone
  */
-#define SEM_VALUE_MAX 1024*512
+#define SEM_VALUE_MAX 1024 * 512
 
 SPL_HANDLE spl_sema_new(int init_val)
 {
-	return (SPL_HANDLE) CreateSemaphore(NULL, init_val,SEM_VALUE_MAX, NULL);
+	return (SPL_HANDLE) CreateSemaphore(NULL, init_val, SEM_VALUE_MAX, NULL);
 
 }
+
 int spl_sema_del(SPL_HANDLE h)
 {
 	CloseHandle(h);
 	return SPL_EC_OK;
 }
+
 int spl_sema_val(SPL_HANDLE h, int *val)
 {
 	return SPL_EC_NG;
 }
+
 int spl_sema_get(SPL_HANDLE h, int timeout)
 {
 	return WaitForSingleObject(h, timeout);
 }
+
 int spl_sema_rel(SPL_HANDLE h)
 {
 	int ret;
@@ -216,46 +226,45 @@ int spl_sema_rel(SPL_HANDLE h)
 
 typedef struct _win_tsk_p win_tsk_p;
 struct _win_tsk_p {
-	void * pThreadHandle;
+	void *pThreadHandle;
 	DWORD ThreadId;
 };
 
 /**
  * \brief Thread
  */
-SPL_HANDLE spl_thread_create(void *(*entry)(void *), void *param, int prio)
+SPL_HANDLE spl_thread_create(void *(*entry) (void *), void *param, int prio)
 {
 
-	win_tsk_p *pTsk = (win_tsk_p*)kmem_alloz(1,win_tsk_p);
-	pTsk->pThreadHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) entry, param, 0 , &pTsk->ThreadId);
-	spl_thread_set_priority(pTsk,prio);
-	return (SPL_HANDLE)pTsk;
+	win_tsk_p *pTsk = (win_tsk_p*)kmem_alloz(1, win_tsk_p);
+	pTsk->pThreadHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) entry, param, 0, &pTsk->ThreadId);
+	spl_thread_set_priority(pTsk, prio);
+	return (SPL_HANDLE) pTsk;
 }
 
 SPL_HANDLE spl_thread_current()
 {
-	return (SPL_HANDLE)GetCurrentThreadId();
+	return (SPL_HANDLE) GetCurrentThreadId();
 }
 
 int spl_thread_suspend(SPL_HANDLE h)
 {
 	int ret = SPL_EC_NG;
-	win_tsk_p * pTsk = (win_tsk_p *)h;
+	win_tsk_p *pTsk = (win_tsk_p*)h;
 
-	if (pTsk->pThreadHandle != NULL && SuspendThread((HANDLE)pTsk->pThreadHandle) != 0xFFFFFFFF)
-	{
+	if (pTsk->pThreadHandle != NULL && SuspendThread((HANDLE) pTsk->pThreadHandle) != 0xFFFFFFFF) {
 		ret = SPL_EC_OK;
 	}
 
 	return ret;
 }
+
 int spl_thread_resume(SPL_HANDLE h)
 {
 	int ret = SPL_EC_NG;
-	win_tsk_p * pTsk = (win_tsk_p *)h;
+	win_tsk_p *pTsk = (win_tsk_p*)h;
 
-	if (pTsk->pThreadHandle != NULL && ResumeThread((HANDLE)pTsk->pThreadHandle) != 0xFFFFFFFF)
-	{
+	if (pTsk->pThreadHandle != NULL && ResumeThread((HANDLE) pTsk->pThreadHandle) != 0xFFFFFFFF) {
 		ret = SPL_EC_OK;
 	}
 
@@ -265,60 +274,46 @@ int spl_thread_resume(SPL_HANDLE h)
 int spl_thread_set_priority(SPL_HANDLE h, int prio)
 {
 	int ret = SPL_EC_NG;
-	win_tsk_p * pTsk = (win_tsk_p *)h;
+	win_tsk_p *pTsk = (win_tsk_p*)h;
 	int iPriorty = THREAD_PRIORITY_NORMAL;
 
-	if (pTsk->pThreadHandle != NULL)
-	{
-		if (prio<-10)
-		{
+	if (pTsk->pThreadHandle != NULL) {
+		if (prio < -10) {
 			iPriorty = THREAD_PRIORITY_IDLE;
-		}
-		else if (prio<0)
-		{
+		} else if (prio < 0) {
 			iPriorty = THREAD_PRIORITY_BELOW_NORMAL;
-		}
-		else if (prio < 10)
-		{
+		} else if (prio < 10) {
 			iPriorty = THREAD_PRIORITY_NORMAL;
-		}
-		else if (prio < 20)
-		{
+		} else if (prio < 20) {
 			iPriorty = THREAD_PRIORITY_ABOVE_NORMAL;
-		}
-		else if (prio < 50)
-		{
+		} else if (prio < 50) {
 			iPriorty = THREAD_PRIORITY_HIGHEST;
-		}
-		else
-		{
+		} else {
 			iPriorty = THREAD_PRIORITY_TIME_CRITICAL;
 		}
 
-		if (!SetThreadPriority((HANDLE)pTsk->pThreadHandle,iPriorty))
-		{
+		if (!SetThreadPriority((HANDLE) pTsk->pThreadHandle, iPriorty)) {
 			ret = SPL_EC_OK;
 		}
 	}
 
 
-	return ret ;
+	return ret;
 }
+
 int spl_thread_wait(SPL_HANDLE h)
 {
 	int ret = SPL_EC_NG;
-	win_tsk_p * pTsk = (win_tsk_p *)h;
+	win_tsk_p *pTsk = (win_tsk_p*)h;
 
-	if (pTsk->pThreadHandle == NULL)
-	{
+	if (pTsk->pThreadHandle == NULL) {
 		return SPL_EC_PARAM;
 	}
 
-	ret = WaitForSingleObject((HANDLE)pTsk->pThreadHandle,INFINITE);
+	ret = WaitForSingleObject((HANDLE) pTsk->pThreadHandle, INFINITE);
 
-	if (WAIT_OBJECT_0 == ret)
-	{
-		ret = SPL_EC_OK ; // sucess
+	if (WAIT_OBJECT_0 == ret) {
+		ret = SPL_EC_OK;        // sucess
 	}
 
 	return ret;
@@ -328,27 +323,27 @@ void spl_thread_exit(void)
 {
 	DWORD dwExticode = 0;
 
-	if (GetExitCodeThread((HANDLE)GetCurrentThread(),&dwExticode))
-	{
+	if (GetExitCodeThread((HANDLE) GetCurrentThread(), &dwExticode)) {
 		ExitThread(dwExticode);
 	}
 }
+
 int spl_thread_kill(SPL_HANDLE h, int signo)
 {
 	DWORD dwExticode = 0;
-	win_tsk_p * pTsk = (win_tsk_p *)h;
+	win_tsk_p *pTsk = (win_tsk_p*)h;
 
-	if (GetExitCodeThread((HANDLE)pTsk->pThreadHandle,&dwExticode))
-	{
-		TerminateThread((HANDLE)pTsk->pThreadHandle,dwExticode);
+	if (GetExitCodeThread((HANDLE) pTsk->pThreadHandle, &dwExticode)) {
+		TerminateThread((HANDLE) pTsk->pThreadHandle, dwExticode);
 	}
 	return dwExticode;
 }
+
 int spl_thread_destroy(SPL_HANDLE h)
 {
-	win_tsk_p * pTsk = (win_tsk_p *)h;
-	CloseHandle((HANDLE)pTsk->pThreadHandle);
-	free(h);
+	win_tsk_p *pTsk = (win_tsk_p*)h;
+	CloseHandle((HANDLE) pTsk->pThreadHandle);
+	kmem_free(h);
 	return SPL_EC_OK;
 }
 
@@ -370,9 +365,9 @@ typedef struct _win_process_p {
  */
 SPL_HANDLE spl_process_create(int prio, char *const argv[])
 {
-	win_process_p * pProc = kmem_alloz(1,win_process_p);
+	win_process_p *pProc = kmem_alloz(1, win_process_p);
 	DWORD dwCreate = CREATE_NO_WINDOW;
-	char cmd[2048] = {0}, *p = cmd;
+	char cmd[2048] = { 0 }, *p = cmd;
 	int i = 0;
 	int ofs = 0, len;
 
@@ -390,111 +385,97 @@ SPL_HANDLE spl_process_create(int prio, char *const argv[])
 
 	pProc->StartupInfo.cb = sizeof(STARTUPINFO);
 
-	if (CreateProcess(NULL,//(LPCWSTR) (l_vpMoudleName), // No module name (use command line).
-				(LPTSTR)cmd,//(LPCWSTR)l_vpCommandline, // Command line.
-				NULL, // Process handle not inheritable.
-				NULL, // Thread handle not inheritable.
-				FALSE, // Set handle inheritance to FALSE.
-				dwCreate,//CREATE_NO_WINDOW, // No creation flags.
-				NULL, // Use parent's environment block.
-				NULL, // Use parent's starting directory.
-				&pProc->StartupInfo, // Pointer to STARTUPINFO structure.
-				&pProc->ProcessInfo) // Pointer to PROCESS_INFORMATION structure.
-	)
-	{
+	if (CreateProcess(NULL,     //(LPCWSTR) (l_vpMoudleName), // No module name (use command line).
+				(LPTSTR) cmd,     //(LPCWSTR)l_vpCommandline, // Command line.
+				NULL,     // Process handle not inheritable.
+				NULL,     // Thread handle not inheritable.
+				FALSE,    // Set handle inheritance to FALSE.
+				dwCreate, //CREATE_NO_WINDOW, // No creation flags.
+				NULL,     // Use parent's environment block.
+				NULL,     // Use parent's starting directory.
+				&pProc->StartupInfo,      // Pointer to STARTUPINFO structure.
+				&pProc->ProcessInfo)      // Pointer to PROCESS_INFORMATION structure.
+	   ) {
 		pProc->ProcessHandle = pProc->ProcessInfo.hProcess;
 		pProc->ThreadHandle = pProc->ProcessInfo.hThread;
 		pProc->ProcessId = pProc->ProcessInfo.dwProcessId;
-	}
-	else
-	{
-		free(pProc);
+	} else {
+		kmem_free(pProc);
 		pProc = NULL;
 	}
 
-	return (SPL_HANDLE)pProc;
+	return (SPL_HANDLE) pProc;
 }
 
 int spl_process_set_priority(SPL_HANDLE h, int prio)
 {
-	win_process_p * pProc = (win_process_p *)h;
+	win_process_p *pProc = (win_process_p*)h;
 	int ret = SPL_EC_NG;
 
 	int iPriorty = NORMAL_PRIORITY_CLASS;
 
-	if (prio<-10)
-	{
+	if (prio < -10) {
 		iPriorty = IDLE_PRIORITY_CLASS;
-	}
-	else if (prio<0)
-	{
+	} else if (prio < 0) {
 		iPriorty = BELOW_NORMAL_PRIORITY_CLASS;
-	}
-	else if (prio < 10)
-	{
+	} else if (prio < 10) {
 		iPriorty = NORMAL_PRIORITY_CLASS;
-	}
-	else if (prio < 20)
-	{
+	} else if (prio < 20) {
 		iPriorty = ABOVE_NORMAL_PRIORITY_CLASS;
-	}
-	else if (prio < 50)
-	{
+	} else if (prio < 50) {
 		iPriorty = HIGH_PRIORITY_CLASS;
-	}
-	else
-	{
+	} else {
 		iPriorty = REALTIME_PRIORITY_CLASS;
 	}
 
 
-	if (!SetPriorityClass((HANDLE)pProc->ProcessHandle,iPriorty))
-	{
+	if (!SetPriorityClass((HANDLE) pProc->ProcessHandle, iPriorty)) {
 		ret = SPL_EC_OK;
 	}
 
 
 	return ret;
 }
+
 int spl_process_wait(SPL_HANDLE h)
 {
-	win_process_p * pProc = (win_process_p *)h;
+	win_process_p *pProc = (win_process_p*)h;
 	int status = 0;
 
 	status = WaitForSingleObject(pProc->ProcessHandle, INFINITE);
 
 	return status ? SPL_EC_OK : SPL_EC_NG;
 }
+
 int spl_process_kill(SPL_HANDLE h, int signo)
 {
 	int ret = SPL_EC_NG;
 	STARTUPINFO l_Si;
 	PROCESS_INFORMATION l_Pi;
-	win_process_p * pProc = (win_process_p *)h;
+	win_process_p *pProc = (win_process_p*)h;
 	BOOL l_Bret = FALSE;
-	char killCommand[256] = {0};
+	char killCommand[256] = { 0 };
 
-	memset(&l_Si,0,sizeof(STARTUPINFO));
+	memset(&l_Si, 0, sizeof(STARTUPINFO));
 	l_Si.cb = sizeof(l_Si);
-	memset(&l_Pi,0,sizeof(PROCESS_INFORMATION));
-	sprintf_s(killCommand, 256, "tskill %d",(DWORD)pProc->ProcessId);
+	memset(&l_Pi, 0, sizeof(PROCESS_INFORMATION));
+	sprintf_s(killCommand, 256, "tskill %d", (DWORD) pProc->ProcessId);
 
-	l_Bret = CreateProcess(NULL, // No module name (use command line).
+	l_Bret = CreateProcess(NULL,        // No module name (use command line).
 			killCommand, // Command line.
-			NULL, // Process handle not inheritable.
-			NULL, // Thread handle not inheritable.
-			FALSE, // Set handle inheritance to FALSE.
-			CREATE_NO_WINDOW,//CREATE_NO_WINDOW, // No creation flags.
-			NULL, // Use parent's environment block.
-			NULL, // Use parent's starting directory.
-			&l_Si, // Pointer to STARTUPINFO structure.
-			&l_Pi); // Pointer to PROCESS_INFORMATION structure.
+			NULL,        // Process handle not inheritable.
+			NULL,        // Thread handle not inheritable.
+			FALSE,       // Set handle inheritance to FALSE.
+			CREATE_NO_WINDOW,    //CREATE_NO_WINDOW, // No creation flags.
+			NULL,        // Use parent's environment block.
+			NULL,        // Use parent's starting directory.
+			&l_Si,       // Pointer to STARTUPINFO structure.
+			&l_Pi);      // Pointer to PROCESS_INFORMATION structure.
 
-	if (l_Bret)
-	{
+	if (l_Bret) {
 		// Wait until child process exits.
 		//WaitForSingleObject(l_Pi.hProcess, INFINITE);
-		WaitForSingleObject(l_Pi.hProcess, 30*1000);
+		WaitForSingleObject(l_Pi.hProcess, 30 * 1000);
 
 		// Close process and thread handles.
 		CloseHandle(l_Pi.hProcess);
@@ -507,16 +488,14 @@ int spl_process_kill(SPL_HANDLE h, int signo)
 
 int spl_process_destroy(SPL_HANDLE h)
 {
-	win_process_p * pProc = (win_process_p *)h;
+	win_process_p *pProc = (win_process_p*)h;
 
 	if (pProc == NULL)
-	{
 		return SPL_EC_NG;
-	}
 
 	CloseHandle(pProc->ThreadHandle);
 	CloseHandle(pProc->ProcessHandle);
-	free(pProc);
+	kmem_free(pProc);
 
 	return SPL_EC_OK;
 }
@@ -556,7 +535,7 @@ unsigned long spl_get_ticks(void)
 		base_tick = GetTickCount();
 	}
 	QueryPerformanceCounter((LARGE_INTEGER*)&counter);
-	return base_tick + (unsigned long)(1000 * (double) (counter.QuadPart - start.QuadPart) / freq.QuadPart);
+	return base_tick + (unsigned long) (1000 * (double) (counter.QuadPart - start.QuadPart) / freq.QuadPart);
 }
 
 /**
@@ -570,7 +549,7 @@ kchar kvfs_path_sep(kvoid)
 /**
  * @brief is this path, include file or directory exist
  */
-kbool kvfs_exist(const kchar *a_path)
+kbool kvfs_exist(const kchar * a_path)
 {
 	if (-1 != _access(a_path, 0)) {
 		return ktrue;
@@ -592,7 +571,7 @@ static kuint get_file_attr(kuint d_type)
 	return attr;
 }
 
-kbean kvfs_findfirst(const kchar *a_fspec, KVFS_FINDDATA *a_finfo)
+kbean kvfs_findfirst(const kchar * a_fspec, KVFS_FINDDATA * a_finfo)
 {
 	kchar fspec[300];
 	struct _finddata_t fileinfo;
@@ -611,10 +590,10 @@ kbean kvfs_findfirst(const kchar *a_fspec, KVFS_FINDDATA *a_finfo)
 	}
 }
 
-kint kvfs_findnext(kbean a_find, KVFS_FINDDATA *a_finfo)
+kint kvfs_findnext(kbean a_find, KVFS_FINDDATA * a_finfo)
 {
 	struct _finddata_t fileinfo;
-	if (!_findnext((intptr_t)a_find, &fileinfo)) {
+	if (!_findnext((intptr_t) a_find, &fileinfo)) {
 		a_finfo->attrib = get_file_attr(fileinfo.attrib);
 		strncpy(a_finfo->name, fileinfo.name, sizeof(a_finfo->name) - 1);
 		a_finfo->name[sizeof(a_finfo->name) - 1] = '\0';
@@ -626,15 +605,15 @@ kint kvfs_findnext(kbean a_find, KVFS_FINDDATA *a_finfo)
 
 kint kvfs_findclose(kbean a_find)
 {
-	return _findclose((intptr_t)a_find);
+	return _findclose((intptr_t) a_find);
 }
 
-kint kvfs_chdir(const kchar *dir)
+kint kvfs_chdir(const kchar * dir)
 {
 	return _chdir(dir);
 }
 
-kchar *kvfs_getcwd(kchar *buf, kint size)
+kchar *kvfs_getcwd(kchar * buf, kint size)
 {
 	return _getcwd(buf, size);
 }
@@ -675,8 +654,7 @@ void *spl_lib_load(const char *path, int flags)
 
 	handle = (void*)LoadLibrary(path);
 	if (!handle)
-		printf("LoadLibrary(%s) failure, errno:%d\n", path,
-				GetLastError());
+		printf("LoadLibrary(%s) failure, errno:%d\n", path, GetLastError());
 	return handle;
 }
 
@@ -687,8 +665,7 @@ void *spl_lib_getsym(void *lib, const char *name)
 
 	sym = (void*)GetProcAddress(lib, name);
 	if (!sym)
-		printf("GetProcAddress(%s) failure, errno:%d\n", name,
-				GetLastError());
+		printf("GetProcAddress(%s) failure, errno:%d\n", name, GetLastError());
 	return sym;
 }
 
@@ -699,7 +676,7 @@ int spl_lib_unload(void *handle)
 	return 0;
 }
 
-void spl_exedir(char *argv[], kchar *exedir)
+void spl_exedir(char *argv[], kchar * exedir)
 {
 	kbool fullpath;
 	char *pspos, cwd[1024];
@@ -727,10 +704,10 @@ int spl_mkdir(const char *path, unsigned int mode)
 
 int spl_sock_close(void *s)
 {
-	return CloseHandle((HANDLE)s);
+	return CloseHandle((HANDLE) s);
 }
+
 int spl_sock_err()
 {
 	return WSAGetLastError();
 }
-
