@@ -110,9 +110,12 @@ int opt_get_err(int *no, char **msg);
 
 /* _s => short */
 #define opt_add_s(p, a, s, g) \
-		opt_add((p), NULL, (a), (s), (g), NULL, NULL, NULL)
+	opt_add((p), NULL, (a), (s), (g), NULL, NULL, NULL)
 
-int opt_add(const char *path, const char *desc, unsigned int attr,
+#define opt_add(p, d, a, set, get, del, ua, ub) \
+	opt_new((p), (d), (a), (set), (get), (del), (void*)(ua), (void*)(ub))
+
+int opt_new(const char *path, const char *desc, unsigned int attr,
 		OPT_SETTER setter, OPT_GETTER getter, OPT_DELTER delter,
 		void *ua, void *ub);
 int opt_del(const char *path);
