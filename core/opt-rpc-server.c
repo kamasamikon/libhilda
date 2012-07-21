@@ -237,7 +237,7 @@ static int rpc_client_wch_clr(rpc_client_t *c)
 	return 0;
 }
 
-static int rpc_watch(int ses, void *opt, const char *path, void *wch)
+static void rpc_watch(int ses, void *opt, const char *path, void *wch)
 {
 	void *ua = wch_ua(wch);
 	char msg[16384], *ini;
@@ -246,14 +246,13 @@ static int rpc_watch(int ses, void *opt, const char *path, void *wch)
 	klog("path:%s\n", path);
 
 	if (opt_getini_by_opt(opt, &ini))
-		return -1;
+		return;
 
 	bytes = snprintf(msg, sizeof(msg) - 1, "wchnotify %s\r\n%s", path, ini);
 	if (send_watch_message((rpc_client_t*)ua, msg))
 		close_client((rpc_client_t*)ua);
 
 	kmem_free(ini);
-	return 0;
 }
 
 /*-----------------------------------------------------------------------
@@ -474,7 +473,7 @@ int opt_rpc_server_init(int argc, char *argv[])
 	klog("port: %d\n", port);
 
 	ignore_pipe();
-	spl_thread_create(worker_thread_or_server, (void *)port, 0);
+	spl_thread_create(worker_thread_or_server, (void*)port, 0);
 	return 0;
 }
 

@@ -98,7 +98,7 @@ typedef int (*OPT_SETTER)(int ses, void *opt, const char *path,
 typedef int (*OPT_GETTER)(void *opt, const char *path, void **pa, void **pb);
 typedef int (*OPT_DELTER)(void *opt, const char *path);
 
-typedef int (*OPT_WATCH)(int ses, void *opt, const char *path, void *wch);
+typedef void (*OPT_WATCH)(int ses, void *opt, const char *path, void *wch);
 typedef int (*OPT_WCH_DELTER)(void *wch, const char *path);
 
 int opt_make_kv(const char *buffer, int blen, char ***okv, int *ocnt);
