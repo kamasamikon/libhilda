@@ -195,7 +195,7 @@ struct _optcc_t {
 		/** after watch header */
 	} nywch;
 
-	int next_session_id;
+	int sesid_last;     /**< the last used session Id, can not be zero */
 	kbean lck;	    /**< lck to protect oehdr, ahdr, bhdr */
 
 	struct {
@@ -1930,14 +1930,16 @@ int opt_final()
  * all the operation emit all at once.
  */
 /**
- * \brief return session id, increase
+ * \brief return session id, can not be zero
  */
 int opt_session_start()
 {
-	int sid = ++__g_optcc->next_session_id;
+	int now = ++__g_optcc->sesid_last;
 
-	opt_setint_sp(0, "i:/k/opt/session/start", NULL, NULL, sid);
-	return sid;
+	/* XXX: skip the sesid 0 */
+	__g_optcc->sesid_last += !now;
+	opt_setint_s(0, "i:/k/opt/session/start", __g_optcc->sesid_last);
+	return __g_optcc->sesid_last;
 }
 
 /* end session with error number */
