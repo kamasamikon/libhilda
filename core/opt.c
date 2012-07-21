@@ -1938,7 +1938,7 @@ int opt_session_start()
 
 	/* XXX: skip the sesid 0 */
 	__g_optcc->sesid_last += !now;
-	opt_setint_s(0, "i:/k/opt/session/start", __g_optcc->sesid_last);
+	opt_setint_s(__g_optcc->sesid_last, "i:/k/opt/session/start", 0);
 	return __g_optcc->sesid_last;
 }
 
