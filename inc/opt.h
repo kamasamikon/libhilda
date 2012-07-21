@@ -170,10 +170,12 @@ int opt_getdat_p(const char *path, void **pa, void **pb, char **arr, int *len);
 int opt_foreach(const char *pattern, OPT_FOREACH foreach, void *userdata);
 
 /* _u => ua,ub */
-#define opt_awch(p, w) opt_awch_u((p), (w), NULL, NULL)
-void *opt_awch_u(const char *path, OPT_WATCH wch, void *ua, void *ub);
-#define opt_bwch(p, w) opt_bwch_u((p), (w), NULL, NULL)
-void *opt_bwch_u(const char *path, OPT_WATCH wch, void *ua, void *ub);
+void *watch_new(const char *path, OPT_WATCH wch, void *ua, void *ub, int awch);
+
+#define opt_awch(p, w) watch_new((p), (w), NULL, NULL, 1)
+#define opt_awch_u(p, w, ua, ub) watch_new((p), (w), (void*)(ua), (void*)(ub), 1)
+#define opt_bwch(p, w) watch_new((p), (w), NULL, NULL, 0)
+#define opt_bwch_u(p, w, ua, ub) watch_new((p), (w), (void*)(ua), (void*)(ub), 0)
 int opt_wch_del(void *wch);
 
 void *opt_init(int argc, char *argv[]);
