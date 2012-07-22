@@ -248,8 +248,7 @@ static int do_dump(cnode_t *node, void *ua, void *ub)
 	return 0;
 }
 
-static int og_cnode_diag_dump(void *opt, const char *path,
-		void **pa, void **pb)
+static int og_cnode_diag_dump(void *opt, void **pa, void **pb)
 {
 	char dmpbuf[8192 * 8];
 
@@ -259,8 +258,7 @@ static int og_cnode_diag_dump(void *opt, const char *path,
 	return EC_OK;
 }
 
-static int os_cnode_cmd(int ses, void *opt, const char *path,
-		void **pa, void **pb)
+static int os_cnode_cmd(int ses, void *opt, void **pa, void **pb)
 {
 	char *name = opt_get_new_str(opt);
 	char type = (char)(int)opt_ua(opt);
