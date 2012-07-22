@@ -41,7 +41,7 @@ static kmodu_t *lib_load(const char *path);
 static int lib_unload(kmodu_t *mod);
 static int manual_layout();
 
-static int og_kmodu_diag_dump(void *opt, const char *path, void **pa, void **pb)
+static int og_kmodu_diag_dump(void *opt, void **pa, void **pb)
 {
 	kmoducc_t *cc = (kmoducc_t*)opt_ua(opt);
 

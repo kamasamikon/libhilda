@@ -249,7 +249,7 @@ static void target_opt_clr(kcfg_target_t *ct)
 		kmem_free_sz(ct->opts.arr[i]);
 }
 
-static void ow_opt_dirty(int ses, void *opt, const char *path, void *wch)
+static void ow_opt_dirty(int ses, void *opt, void *wch)
 {
 	if (__g_cfg_loaded)
 		kcfg_save_delay(500);
@@ -325,8 +325,7 @@ static void make_save_buffer(kcfg_target_t *ct, char **dat, int *len)
  *
  * \return
  */
-static int og_targets(void *opt, const char *path,
-		void **pa, void **pb)
+static int og_targets(void *opt, void **pa, void **pb)
 {
 	int i;
 	kcfg_t *c = __g_cfg;
@@ -354,8 +353,7 @@ static int og_targets(void *opt, const char *path,
  *
  * \return
  */
-static int og_target(void *opt, const char *path,
-		void **pa, void **pb)
+static int og_target(void *opt, void **pa, void **pb)
 {
 	int i, len = 0;
 	kcfg_target_t *ct;
@@ -374,7 +372,7 @@ static int og_target(void *opt, const char *path,
 	return 0;
 }
 
-static void ow_reset(int ses, void *opt, const char *path, void *wch)
+static void ow_reset(int ses, void *opt, void *wch)
 {
 	int i;
 	kcfg_target_t *ct;
@@ -391,22 +389,22 @@ static void ow_reset(int ses, void *opt, const char *path, void *wch)
 	cfg_save_dpc(NULL, NULL);
 }
 
-static void ow_load(int ses, void *opt, const char *path, void *wch)
+static void ow_load(int ses, void *opt, void *wch)
 {
 	kcfg_load();
 }
-static void ow_save(int ses, void *opt, const char *path, void *wch)
+static void ow_save(int ses, void *opt, void *wch)
 {
 	kcfg_save();
 }
-static void ow_sync(int ses, void *opt, const char *path, void *wch)
+static void ow_sync(int ses, void *opt, void *wch)
 {
 	cfg_save_dpc(NULL, NULL);
 }
-static void ow_session_start(int ses, void *opt, const char *path, void *wch)
+static void ow_session_start(int ses, void *opt, void *wch)
 {
 }
-static void ow_session_done(int ses, void *opt, const char *path, void *wch)
+static void ow_session_done(int ses, void *opt, void *wch)
 {
 	int error = 0, cancel;
 
@@ -701,8 +699,7 @@ static int file_load(kcfg_target_t *ct, char **dat,
 	return 0;
 }
 
-static int os_cfg_target_file_add(int ses, void *opt,
-		const char *path, void **pa, void **pb)
+static int os_cfg_target_file_add(int ses, void *opt, void **pa, void **pb)
 {
 	char *file = opt_get_new_str(opt);
 	char name[1024];

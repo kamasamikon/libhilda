@@ -302,6 +302,10 @@ static int getdat(opt_entry_t *oe, void **pa, void **pb, char **val, int *len);
  */
 
 /* normal access */
+kinline char *opt_path(void *oe)
+{
+	return ((opt_entry_t*)(oe))->path;
+}
 kinline char *opt_desc(void *oe)
 {
 	return ((opt_entry_t*)(oe))->desc;
@@ -389,6 +393,11 @@ kinline char *opt_get_new_str(void *oe)
 kinline void *opt_get_new_ptr(void *oe)
 {
 	return ((opt_entry_t*)(oe))->v.new.p.v;
+}
+
+kinline void *wch_path(void *ow)
+{
+	return ((opt_watch_t*)(ow))->path;
 }
 
 kinline void *wch_ua(void *ow)
@@ -953,7 +962,7 @@ static int entry_del(opt_entry_t *oe)
 
 	pushback_nylist(oe);
 	if (oe->delter)
-		oe->delter(oe, oe->path);
+		oe->delter(oe);
 	remove_dlist_entry(&oe->entry);
 
 	kflg_clr(oe->attr, OA_IN_DEL);
@@ -1015,7 +1024,7 @@ static void call_watch(int ses, opt_entry_t *oe,
 		entry = entry->next;
 
 		if (ow->wch) {
-			ow->wch(ses, (void*)oe, oe->path, (void*)ow);
+			ow->wch(ses, (void*)oe, (void*)ow);
 			oe->awch_called += !!awch;
 			oe->awch_called += !awch;
 		}
@@ -1200,7 +1209,7 @@ static int setint(int ses, opt_entry_t *oe, void **pa, void **pb, int val)
 		oe->v.cur.i.v = oe->set_called;
 	else {
 		if (oe->setter) {
-			ret = oe->setter(ses, oe, oe->path, oe->set_pa, oe->set_pb);
+			ret = oe->setter(ses, oe, oe->set_pa, oe->set_pb);
 			if (EC_DEFAULT == ret) {
 				ret = 0;
 				oe->v.cur.i.v = val;
@@ -1254,7 +1263,7 @@ static int getint(opt_entry_t *oe, void **pa, void **pb, int *val)
 	if (oe->getter) {
 		oe->get_pa = pa;
 		oe->get_pb = pb;
-		ret = oe->getter(oe, oe->path, oe->get_pa, oe->get_pb);
+		ret = oe->getter(oe, oe->get_pa, oe->get_pb);
 		if (EC_DEFAULT == ret)
 			ret = 0;
 	}
@@ -1306,7 +1315,7 @@ static int setptr(int ses, opt_entry_t *oe, void **pa, void **pb, void *val)
 	CALL_BWCH();
 
 	if (oe->setter) {
-		ret = oe->setter(ses, oe, oe->path, oe->set_pa, oe->set_pb);
+		ret = oe->setter(ses, oe, oe->set_pa, oe->set_pb);
 		if (EC_DEFAULT == ret) {
 			ret = 0;
 			oe->v.cur.p.v = val;
@@ -1356,7 +1365,7 @@ static int getptr(opt_entry_t *oe, void **pa, void **pb, void **val)
 	if (oe->getter) {
 		oe->get_pa = pa;
 		oe->get_pb = pb;
-		ret = oe->getter(oe, oe->path, oe->get_pa, oe->get_pb);
+		ret = oe->getter(oe, oe->get_pa, oe->get_pb);
 		if (EC_DEFAULT == ret)
 			ret = 0;
 	}
@@ -1408,7 +1417,7 @@ static int setstr(int ses, opt_entry_t *oe, void **pa, void **pb, char *val)
 	CALL_BWCH();
 
 	if (oe->setter) {
-		ret = oe->setter(ses, oe, oe->path, oe->set_pa, oe->set_pb);
+		ret = oe->setter(ses, oe, oe->set_pa, oe->set_pb);
 		if (EC_DEFAULT == ret) {
 			ret = 0;
 			kmem_free_sz(oe->v.cur.s.v);
@@ -1461,7 +1470,7 @@ static int getstr(opt_entry_t *oe, void **pa, void **pb, char **val)
 	if (oe->getter) {
 		oe->get_pa = pa;
 		oe->get_pb = pb;
-		ret = oe->getter(oe, oe->path, oe->get_pa, oe->get_pb);
+		ret = oe->getter(oe, oe->get_pa, oe->get_pb);
 		if (EC_DEFAULT == ret)
 			ret = 0;
 	}
@@ -1505,7 +1514,7 @@ static int setarr(int ses, opt_entry_t *oe,
 	CALL_BWCH();
 
 	if (oe->setter) {
-		ret = oe->setter(ses, oe, oe->path, oe->set_pa, oe->set_pb);
+		ret = oe->setter(ses, oe, oe->set_pa, oe->set_pb);
 		if (EC_DEFAULT == ret) {
 			ret = 0;
 			kmem_free_sz(oe->v.cur.a.v);
@@ -1568,7 +1577,7 @@ static int setdat(int ses, opt_entry_t *oe,
 	CALL_BWCH();
 
 	if (oe->setter) {
-		ret = oe->setter(ses, oe, oe->path, oe->set_pa, oe->set_pb);
+		ret = oe->setter(ses, oe, oe->set_pa, oe->set_pb);
 		if (EC_DEFAULT == ret) {
 			ret = 0;
 			kmem_free_sz(oe->v.cur.d.v);
@@ -1626,7 +1635,7 @@ static int getdat(opt_entry_t *oe, void **pa, void **pb, char **val, int *len)
 	if (oe->getter) {
 		oe->get_pa = pa;
 		oe->get_pb = pb;
-		ret = oe->getter(oe, oe->path, oe->get_pa, oe->get_pb);
+		ret = oe->getter(oe, oe->get_pa, oe->get_pb);
 		if (EC_DEFAULT == ret)
 			ret = 0;
 	}
@@ -1738,7 +1747,7 @@ int opt_wch_del(void *wch)
 	/* spl_lck_get(__g_optcc->lck); */
 
 	if (ow->delter)
-		ow->delter((void*)ow, ow->path);
+		ow->delter((void*)ow);
 
 	remove_dlist_entry(&ow->entry);
 
@@ -1756,7 +1765,7 @@ static void diag_list_foreach(void *opt, const char *path, void *userdata)
 	strcat((char*)userdata, "\r\n");
 }
 
-static int og_diag_list(void *opt, const char *path, void **pa, void **pb)
+static int og_diag_list(void *opt, void **pa, void **pb)
 {
 	char lsbuf[8192];
 
@@ -1817,7 +1826,7 @@ static void diag_dump_foreach(void *opt, const char *path, void *userdata)
 	strcat((char*)userdata, buffer);
 }
 
-static int og_diag_dump(void *opt, const char *path, void **pa, void **pb)
+static int og_diag_dump(void *opt, void **pa, void **pb)
 {
 	char dmpbuf[8192 * 80];
 
@@ -1979,14 +1988,14 @@ void opt_session_set_err(void *opt, int error)
 /*
  * Only use for debugging
  */
-int os_opt_hook(int ses, void *opt, const char *path, void **pa, void **pb)
+int os_opt_hook(int ses, void *opt, void **pa, void **pb)
 {
-	klog("ses:%d, path:%s\n", ses, path);
+	klog("ses:%d, path:%s\n", ses, opt_path(opt));
 	return EC_DEFAULT;
 }
-int og_opt_hook(void *opt, const char *path, void **pa, void **pb)
+int og_opt_hook(void *opt, void **pa, void **pb)
 {
-	klog("path:%s\n", path);
+	klog("path:%s\n", opt_path(opt));
 	return EC_DEFAULT;
 }
 

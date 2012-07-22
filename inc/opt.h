@@ -9,6 +9,7 @@ extern "C" {
 
 #include <sysdeps.h>
 
+kinline char *opt_path(void *oe);
 kinline char *opt_desc(void *oe);
 
 kinline void *opt_ua(void *oe);
@@ -58,6 +59,7 @@ kinline void *opt_get_new_ptr(void *oe);
 
 kinline void *wch_ua(void *ow);
 kinline void *wch_ub(void *ow);
+kinline void *wch_path(void *ow);
 
 #define OPT_CHK_TYPE(p) ((p) && \
 		((p)[1] == ':') && \
@@ -93,13 +95,12 @@ kinline void *wch_ub(void *ow);
  * \retval 1 Please do default
  */
 typedef void (*OPT_FOREACH)(void *opt, const char *path, void *userdata);
-typedef int (*OPT_SETTER)(int ses, void *opt, const char *path,
-		void **pa, void **pb);
-typedef int (*OPT_GETTER)(void *opt, const char *path, void **pa, void **pb);
-typedef int (*OPT_DELTER)(void *opt, const char *path);
+typedef int (*OPT_SETTER)(int ses, void *opt, void **pa, void **pb);
+typedef int (*OPT_GETTER)(void *opt, void **pa, void **pb);
+typedef int (*OPT_DELTER)(void *opt);
 
-typedef void (*OPT_WATCH)(int ses, void *opt, const char *path, void *wch);
-typedef int (*OPT_WCH_DELTER)(void *wch, const char *path);
+typedef void (*OPT_WATCH)(int ses, void *opt, void *wch);
+typedef int (*OPT_WCH_DELTER)(void *wch);
 
 int opt_make_kv(const char *buffer, int blen, char ***okv, int *ocnt);
 void opt_free_kv(char **kv, int cnt);
