@@ -25,7 +25,7 @@ endif
 ifeq ($(FAINT_PLATFORM),x86)
 	export LOCAL_CFLAGS := $(DBG_CFLAGS) $(WFLAGS) -fno-strict-aliasing -DPLATFORM_X86
 	export SYS_LIB_LDFLAGS :=
-	CC=gcc
+	CC=gcc -m32
 	AR=ar
 	LD=ld
 else ifeq ($(FAINT_PLATFORM),5602)

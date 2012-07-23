@@ -444,7 +444,6 @@ int kcfg_init()
 
 	opt_getptr("p:/prog/mque/main", (void**)&__g_mque_main);
 
-	target_argv();
 	target_file();
 
 	setup_opt();
@@ -619,6 +618,8 @@ static int load_targets()
  */
 int kcfg_load()
 {
+	/* make sure the argv is the last to load */
+	target_argv();
 	load_targets();
 	__g_cfg_loaded++;
 	return 0;
