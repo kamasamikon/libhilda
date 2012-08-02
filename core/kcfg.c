@@ -325,7 +325,7 @@ static void make_save_buffer(kcfg_target_t *ct, char **dat, int *len)
  *
  * \return
  */
-static int og_targets(void *opt, void **pa, void **pb)
+static int og_targets(void *opt, void *pa, void *pb)
 {
 	int i;
 	kcfg_t *c = __g_cfg;
@@ -353,16 +353,16 @@ static int og_targets(void *opt, void **pa, void **pb)
  *
  * \return
  */
-static int og_target(void *opt, void **pa, void **pb)
+static int og_target(void *opt, void *pa, void *pb)
 {
 	int i, len = 0;
 	kcfg_target_t *ct;
 	char *dat = NULL;
 
-	if (!pa || !*pa)
+	if (!pa)
 		return -1;
 
-	i = target_find((char*)*pa);
+	i = target_find((char*)pa);
 	if (-1 == i)
 		return -1;
 
@@ -700,7 +700,7 @@ static int file_load(kcfg_target_t *ct, char **dat,
 	return 0;
 }
 
-static int os_cfg_target_file_add(int ses, void *opt, void **pa, void **pb)
+static int os_cfg_target_file_add(int ses, void *opt, void *pa, void *pb)
 {
 	char *file = opt_get_new_str(opt);
 	char name[1024];
