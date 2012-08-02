@@ -357,7 +357,7 @@ int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const ch
 	time_t t;
 	struct tm *tmp;
 
-	unsigned long tick;
+	unsigned long tick = 0;
 
 	t = time(NULL);
 	tmp = localtime(&t);

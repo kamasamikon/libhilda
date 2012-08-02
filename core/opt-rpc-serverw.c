@@ -280,10 +280,10 @@ static int rpc_client_wch_clr(rpc_client_t *c)
 	return 0;
 }
 
-static void rpc_watch(int ses, void *opt, const char *path, void *wch)
+static void rpc_watch(int ses, void *opt, void *wch)
 {
 	void *ua = wch_ua(wch);
-	char msg[16384], *ini;
+	char msg[16384], *ini, *path = opt_path(wch);
 	int bytes;
 
 	klog("~rpc_watch:path:%s\n", path);

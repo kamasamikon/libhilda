@@ -107,8 +107,8 @@ struct _opt_entry_t {
 	OPT_DELTER delter;
 
 	void *ua, *ub;
-	void **set_pa, **set_pb;
-	void **get_pa, **get_pb;
+	void *set_pa, *set_pb;
+	void *get_pa, *get_pb;
 
 	int ses;
 
@@ -284,18 +284,18 @@ static optcc_t *__g_optcc = NULL;
 static int entry_del(opt_entry_t *oe);
 static kinline opt_entry_t *entry_find(const char *path);
 
-static int setint(int ses, opt_entry_t *oe, void **pa, void **pb, int val);
-static int setptr(int ses, opt_entry_t *oe, void **pa, void **pb, void *val);
-static int setstr(int ses, opt_entry_t *oe, void **pa, void **pb, char *val);
-static int setdat(int ses, opt_entry_t *oe, void **pa, void **pb,
+static int setint(int ses, opt_entry_t *oe, void *pa, void *pb, int val);
+static int setptr(int ses, opt_entry_t *oe, void *pa, void *pb, void *val);
+static int setstr(int ses, opt_entry_t *oe, void *pa, void *pb, char *val);
+static int setdat(int ses, opt_entry_t *oe, void *pa, void *pb,
 		const char *val, int len);
-static int setarr(int ses, opt_entry_t *oe, void **pa, void **pb,
+static int setarr(int ses, opt_entry_t *oe, void *pa, void *pb,
 		const char **val, int len);
 
-static int getint(opt_entry_t *oe, void **pa, void **pb, int *val);
-static int getstr(opt_entry_t *oe, void **pa, void **pb, char **val);
-static int getptr(opt_entry_t *oe, void **pa, void **pb, void **val);
-static int getdat(opt_entry_t *oe, void **pa, void **pb, char **val, int *len);
+static int getint(opt_entry_t *oe, void *pa, void *pb, int *val);
+static int getstr(opt_entry_t *oe, void *pa, void *pb, char **val);
+static int getptr(opt_entry_t *oe, void *pa, void *pb, void **val);
+static int getdat(opt_entry_t *oe, void *pa, void *pb, char **val, int *len);
 
 /*-----------------------------------------------------------------------
  * kinline functions
@@ -320,7 +320,7 @@ kinline void *opt_ub(void *oe)
 	return ((opt_entry_t*)(oe))->ub;
 }
 
-kinline int opt_set_pa(void *oe, void **pa)
+kinline int opt_get_setpa(void *oe, void **pa)
 {
 	if (kflg_chk_any(((opt_entry_t*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH)) {
 		*pa = ((opt_entry_t*)oe)->set_pa;
@@ -328,7 +328,7 @@ kinline int opt_set_pa(void *oe, void **pa)
 	}
 	return -1;
 }
-kinline int opt_set_pb(void *oe, void **pb)
+kinline int opt_get_setpb(void *oe, void **pb)
 {
 	if (kflg_chk_any(((opt_entry_t*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH)) {
 		*pb = ((opt_entry_t*)oe)->set_pb;
@@ -1192,7 +1192,7 @@ int opt_setkv(int ses, const char *k, const char *v)
  * \retval -2 not allowed
  * \retval -.
  */
-static int setint(int ses, opt_entry_t *oe, void **pa, void **pb, int val)
+static int setint(int ses, opt_entry_t *oe, void *pa, void *pb, int val)
 {
 	int ret = 0;
 
@@ -1230,7 +1230,7 @@ static int setint(int ses, opt_entry_t *oe, void **pa, void **pb, int val)
 	return ret;
 }
 
-int opt_setint_sp(int ses, const char *path, void **pa, void **pb, int val)
+int opt_setint_sp(int ses, const char *path, void *pa, void *pb, int val)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1247,7 +1247,7 @@ int opt_setint_sp(int ses, const char *path, void **pa, void **pb, int val)
 	return ret;
 }
 
-static int getint(opt_entry_t *oe, void **pa, void **pb, int *val)
+static int getint(opt_entry_t *oe, void *pa, void *pb, int *val)
 {
 	int ret = 0;
 
@@ -1274,7 +1274,7 @@ static int getint(opt_entry_t *oe, void **pa, void **pb, int *val)
 	return ret;
 }
 
-int opt_getint_p(const char *path, void **pa, void **pb, int *val)
+int opt_getint_p(const char *path, void *pa, void *pb, int *val)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1301,7 +1301,7 @@ int opt_getint_p(const char *path, void **pa, void **pb, int *val)
  * \retval -2 not allowed
  * \retval -.
  */
-static int setptr(int ses, opt_entry_t *oe, void **pa, void **pb, void *val)
+static int setptr(int ses, opt_entry_t *oe, void *pa, void *pb, void *val)
 {
 	int ret = 0;
 
@@ -1332,7 +1332,7 @@ static int setptr(int ses, opt_entry_t *oe, void **pa, void **pb, void *val)
 	return ret;
 }
 
-int opt_setptr_sp(int ses, const char *path, void **pa, void **pb, void *val)
+int opt_setptr_sp(int ses, const char *path, void *pa, void *pb, void *val)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1349,7 +1349,7 @@ int opt_setptr_sp(int ses, const char *path, void **pa, void **pb, void *val)
 	return ret;
 }
 
-static int getptr(opt_entry_t *oe, void **pa, void **pb, void **val)
+static int getptr(opt_entry_t *oe, void *pa, void *pb, void **val)
 {
 	int ret = 0;
 
@@ -1376,7 +1376,7 @@ static int getptr(opt_entry_t *oe, void **pa, void **pb, void **val)
 	return ret;
 }
 
-int opt_getptr_p(const char *path, void **pa, void **pb, void **val)
+int opt_getptr_p(const char *path, void *pa, void *pb, void **val)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1403,7 +1403,7 @@ int opt_getptr_p(const char *path, void **pa, void **pb, void **val)
  * \retval -2 not allowed
  * \retval -.
  */
-static int setstr(int ses, opt_entry_t *oe, void **pa, void **pb, char *val)
+static int setstr(int ses, opt_entry_t *oe, void *pa, void *pb, char *val)
 {
 	int ret = 0;
 
@@ -1437,7 +1437,7 @@ static int setstr(int ses, opt_entry_t *oe, void **pa, void **pb, char *val)
 	return ret;
 }
 
-int opt_setstr_sp(int ses, const char *path, void **pa, void **pb, char *val)
+int opt_setstr_sp(int ses, const char *path, void *pa, void *pb, char *val)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1454,7 +1454,7 @@ int opt_setstr_sp(int ses, const char *path, void **pa, void **pb, char *val)
 	return ret;
 }
 
-static int getstr(opt_entry_t *oe, void **pa, void **pb, char **val)
+static int getstr(opt_entry_t *oe, void *pa, void *pb, char **val)
 {
 	int ret = 0;
 
@@ -1481,7 +1481,7 @@ static int getstr(opt_entry_t *oe, void **pa, void **pb, char **val)
 	return ret;
 }
 
-int opt_getstr_p(const char *path, void **pa, void **pb, char **val)
+int opt_getstr_p(const char *path, void *pa, void *pb, char **val)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1499,7 +1499,7 @@ int opt_getstr_p(const char *path, void **pa, void **pb, char **val)
 }
 
 static int setarr(int ses, opt_entry_t *oe,
-		void **pa, void **pb, const char **val, int len)
+		void *pa, void *pb, const char **val, int len)
 {
 	int ret = 0;
 
@@ -1539,7 +1539,7 @@ static int setarr(int ses, opt_entry_t *oe,
 }
 
 int opt_setarr_sp(int ses, const char *path,
-		void **pa, void **pb, const char **val, int len)
+		void *pa, void *pb, const char **val, int len)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1556,13 +1556,13 @@ int opt_setarr_sp(int ses, const char *path,
 	return ret;
 }
 
-int opt_getarr_p(const char *path, void **pa, void **pb, void **arr, int *len)
+int opt_getarr_p(const char *path, void *pa, void *pb, void **arr, int *len)
 {
 	return EC_OK;
 }
 
 static int setdat(int ses, opt_entry_t *oe,
-		void **pa, void **pb, const char *val, int len)
+		void *pa, void *pb, const char *val, int len)
 {
 	int ret = 0;
 
@@ -1602,7 +1602,7 @@ static int setdat(int ses, opt_entry_t *oe,
 }
 
 int opt_setdat_sp(int ses, const char *path,
-		void **pa, void **pb, const char *val, int len)
+		void *pa, void *pb, const char *val, int len)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1619,7 +1619,7 @@ int opt_setdat_sp(int ses, const char *path,
 	return ret;
 }
 
-static int getdat(opt_entry_t *oe, void **pa, void **pb, char **val, int *len)
+static int getdat(opt_entry_t *oe, void *pa, void *pb, char **val, int *len)
 {
 	int ret = 0;
 
@@ -1647,7 +1647,7 @@ static int getdat(opt_entry_t *oe, void **pa, void **pb, char **val, int *len)
 	return ret;
 }
 
-int opt_getdat_p(const char *path, void **pa, void **pb, char **val, int *len)
+int opt_getdat_p(const char *path, void *pa, void *pb, char **val, int *len)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1712,7 +1712,7 @@ static void queue_watch(opt_entry_t *oe, opt_watch_t *ow, int awch)
  *
  * \return watch number, -1 for error
  */
-void *watch_new(const char *path, OPT_WATCH wch,
+void *opt_wch_new(const char *path, OPT_WATCH wch,
 		void *ua, void *ub, int awch)
 {
 	opt_entry_t *oe;
@@ -1765,7 +1765,7 @@ static void diag_list_foreach(void *opt, const char *path, void *userdata)
 	strcat((char*)userdata, "\r\n");
 }
 
-static int og_diag_list(void *opt, void **pa, void **pb)
+static int og_diag_list(void *opt, void *pa, void *pb)
 {
 	char lsbuf[8192];
 
@@ -1826,7 +1826,7 @@ static void diag_dump_foreach(void *opt, const char *path, void *userdata)
 	strcat((char*)userdata, buffer);
 }
 
-static int og_diag_dump(void *opt, void **pa, void **pb)
+static int og_diag_dump(void *opt, void *pa, void *pb)
 {
 	char dmpbuf[8192 * 80];
 
@@ -1988,12 +1988,12 @@ void opt_session_set_err(void *opt, int error)
 /*
  * Only use for debugging
  */
-int os_opt_hook(int ses, void *opt, void **pa, void **pb)
+int os_opt_hook(int ses, void *opt, void *pa, void *pb)
 {
 	klog("ses:%d, path:%s\n", ses, opt_path(opt));
 	return EC_DEFAULT;
 }
-int og_opt_hook(void *opt, void **pa, void **pb)
+int og_opt_hook(void *opt, void *pa, void *pb)
 {
 	klog("path:%s\n", opt_path(opt));
 	return EC_DEFAULT;
