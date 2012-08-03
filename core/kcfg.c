@@ -1,25 +1,5 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-/**
- * \file config.c
- * \brief Config act as a non-session INI file which save the
- * preference of the system.
- *
- * Configure module should be initialized by before any other
- * helper module and \c kcfg_load() MUST called after all the
- * other modules initialized. Because the \c kcfg_load() function
- * will write back the opt, the opt must be exists when them be set
- * by call \c opt_setxxx().
- *
- * The key function \c kcfg_save() theoretically can be called any
- * time any where. But continually call should be cached for reduce
- * access of flash etc.
- *
- * Only apts added by \c kcfg_target_opt_add() can be processed,
- * all the other opts will be
- * droped. So other module MUST call \c kcfg_target_opt_add() to
- * ensure opts can be saved.
- */
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
@@ -36,12 +16,6 @@
 #include <opt.h>
 #include <kmque.h>
 #include <kcfg.h>
-
-/**
- * \brief INI file
- * Some config update, only `some' should be saved.
- * That, only which `dirty' should write back.
- */
 
 static kcfg_t *__g_cfg = NULL;
 static kmque_t *__g_mque_main = NULL;
@@ -258,6 +232,7 @@ static void ow_opt_dirty(int ses, void *opt, void *wch)
 int kcfg_target_opt_add(const char *name, const char *opt)
 {
 	int err = -1, i = target_find(name);
+
 	if (-1 != i)
 		err = target_opt_add(__g_cfg->target.arr[i], opt);
 	if (!err)
@@ -468,7 +443,6 @@ int kcfg_final(kcfg_t *cfg)
  *
  * \return
  */
-
 static void cfg_save_dpc(void *ua, void *ub)
 {
 	int i, len;
