@@ -663,7 +663,7 @@ void *spl_lib_getsym(void *lib, const char *name)
 {
 	void *sym;
 
-	sym = (void*)(FARPROC)GetProcAddress(lib, name);
+	sym = (void*)GetProcAddress(lib, name);
 	if (!sym)
 		printf("GetProcAddress(%s) failure, errno:%d\n", name, GetLastError());
 	return sym;
