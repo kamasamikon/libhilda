@@ -659,8 +659,7 @@ static kinline opt_entry_t *entry_find(const char *path)
 		if (0 == strcmp(path, oe->path))
 			return oe;
 	}
-	/* kerror("entry_find: not found: <%s>\n", path); */
-	opt_set_err(EC_NOTFOUND, "OPT not exist");
+
 	return NULL;
 }
 
@@ -713,8 +712,7 @@ int opt_setbat(const char *inibuf, int errbrk)
 		if (opt_ret == EC_SKIP)
 			opt_ret = EC_OK;
 		if (opt_ret) {
-			kerror("ret:%d, k:<%s>, v:<%s>",
-						opt_ret, k, v);
+			kerror("ret:%d, k:<%s>, v:<%s>", opt_ret, k, v);
 			if (errbrk)
 				break;
 		}
@@ -723,15 +721,14 @@ int opt_setbat(const char *inibuf, int errbrk)
 	/* spl_lck_rel(__g_optcc->lck); */
 
 	opt_free_kv(kv, cnt);
-	klog("opt:%d, ses:%d, ret:%d\n",
-				opt_ret, ses_ret, reterr);
+	klog("opt:%d, ses:%d, ret:%d\n", opt_ret, ses_ret, reterr);
 	return opt_ret | ses_ret | reterr;
 }
 
 static char *dat_to_str(char *dat, int len)
 {
-	static char map[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'a', 'b', 'c', 'd', 'e', 'f' };
+	static char map[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
+		'9', 'a', 'b', 'c', 'd', 'e', 'f' };
 	char *ret, *p;
 	int i;
 	unsigned char c;
@@ -814,6 +811,7 @@ int opt_getini(const char *path, char **ret)
 	/* spl_lck_get(__g_optcc->lck); */
 	if (!oe) {
 		/* spl_lck_rel(__g_optcc->lck); */
+		kerror("Opt not found: <%s>\n", path);
 		return EC_NOTFOUND;
 	}
 
@@ -985,10 +983,11 @@ int opt_del(const char *path)
 	oe = entry_find(path);
 	if (oe) {
 		entry_del(oe);
-
-		klog("%s\n", path);
 		/* spl_lck_rel(__g_optcc->lck); */
 		return EC_OK;
+	} else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
 	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
@@ -1008,7 +1007,8 @@ int opt_type(const char *path)
 
 	if (oe)
 		return OPT_TYPE(oe);
-	opt_set_err(EC_NG, "OPT not exist");
+	opt_set_err(EC_NG, "Opt not found");
+	kerror("Opt not found: <%s>\n", path);
 	return -1;
 }
 
@@ -1121,7 +1121,7 @@ int opt_setkv(int ses, const char *k, const char *v)
 
 	if (!k) {
 		kerror("NULL key\n");
-		opt_set_err(EC_NOTFOUND, "OPT not exist.");
+		opt_set_err(EC_NOTFOUND, "Opt not found.");
 
 		/* spl_lck_rel(__g_optcc->lck); */
 		return EC_NOTFOUND;
@@ -1136,9 +1136,9 @@ int opt_setkv(int ses, const char *k, const char *v)
 	}
 
 	oe = entry_find(k);
-
 	if (!oe) {
 		/* spl_lck_rel(__g_optcc->lck); */
+		kerror("Opt not found: <%s>\n", k);
 		return EC_NOTFOUND;
 	}
 
@@ -1240,8 +1240,10 @@ int opt_setint_sp(int ses, const char *path, void *pa, void *pb, int val)
 	oe = entry_find(path);
 	if (oe)
 		ret = setint(ses, oe, pa, pb, val);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1284,8 +1286,10 @@ int opt_getint_p(const char *path, void *pa, void *pb, int *val)
 	oe = entry_find(path);
 	if (oe)
 		ret = getint(oe, pa, pb, val);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1342,8 +1346,10 @@ int opt_setptr_sp(int ses, const char *path, void *pa, void *pb, void *val)
 	oe = entry_find(path);
 	if (oe)
 		ret = setptr(ses, oe, pa, pb, val);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1386,8 +1392,10 @@ int opt_getptr_p(const char *path, void *pa, void *pb, void **val)
 	oe = entry_find(path);
 	if (oe)
 		ret = getptr(oe, pa, pb, val);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1447,8 +1455,10 @@ int opt_setstr_sp(int ses, const char *path, void *pa, void *pb, char *val)
 	oe = entry_find(path);
 	if (oe)
 		ret = setstr(ses, oe, pa, pb, val);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1491,8 +1501,10 @@ int opt_getstr_p(const char *path, void *pa, void *pb, char **val)
 	oe = entry_find(path);
 	if (oe)
 		ret = getstr(oe, pa, pb, val);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1549,8 +1561,10 @@ int opt_setarr_sp(int ses, const char *path,
 	oe = entry_find(path);
 	if (oe)
 		ret = setarr(ses, oe, pa, pb, val, len);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1612,8 +1626,10 @@ int opt_setdat_sp(int ses, const char *path,
 	oe = entry_find(path);
 	if (oe)
 		ret = setdat(ses, oe, pa, pb, val, len);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1657,8 +1673,10 @@ int opt_getdat_p(const char *path, void *pa, void *pb, char **val, int *len)
 	oe = entry_find(path);
 	if (oe)
 		ret = getdat(oe, pa, pb, val, len);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1710,7 +1728,7 @@ static void queue_watch(opt_entry_t *oe, opt_watch_t *ow, int awch)
  * \brief Watch a option update.
  * \c opt_wch_prev() hook before update, \c opt_wch_post() hook after update
  *
- * \return watch number, -1 for error
+ * \return watch number, 0 for error
  */
 void *opt_wch_new(const char *path, OPT_WATCH wch,
 		void *ua, void *ub, int awch)
@@ -1967,8 +1985,10 @@ int opt_session_commit(int ses, int cancel, int *reterr)
 		ret = setint(ses, oe, NULL, NULL, cancel);
 		if (reterr)
 			*reterr = (int)oe->ub;
-	} else
-		opt_set_err(EC_NG, "OPT not exist");
+	} else {
+		kerror("Opt not found: <%s>\n", "i:/k/opt/session/done");
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;

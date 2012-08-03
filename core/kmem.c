@@ -221,7 +221,7 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 			line = width;
 
 		for (i = 0; i < line; i++)
-			p += sprintf(p, "%02x ", (char)dat[i]);
+			p += sprintf(p, "%02x ", (kuchar)dat[i]);
 		for (; i < width; i++)
 			p += sprintf(p, "   ");
 
