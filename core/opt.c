@@ -1855,6 +1855,34 @@ static int og_diag_dump(void *opt, void *pa, void *pb)
 	return EC_OK;
 }
 
+static int og_diag_wch_notyet(void *opt, void *pa, void *pb)
+{
+	K_dlist_entry *entry;
+	opt_watch_t *wch;
+	char dmpbuf[8192 * 80], *p = dmpbuf;
+
+	p += sprintf(p, "nywch.ahdr:\n");
+	entry = __g_optcc->nywch.ahdr.next;
+	while (entry != &__g_optcc->nywch.ahdr) {
+		wch = FIELD_TO_STRUCTURE(entry, opt_watch_t, entry);
+		entry = entry->next;
+
+		p += sprintf(p, "%s\n", wch->path);
+	}
+
+	p += sprintf(p, "\nnywch.bhdr:\n");
+	entry = __g_optcc->nywch.bhdr.next;
+	while (entry != &__g_optcc->nywch.bhdr) {
+		wch = FIELD_TO_STRUCTURE(entry, opt_watch_t, entry);
+		entry = entry->next;
+
+		p += sprintf(p, "%s\n", wch->path);
+	}
+
+	opt_set_cur_str(opt, dmpbuf);
+	return EC_OK;
+}
+
 void *opt_attach(void *logcc)
 {
 	__g_optcc = (optcc_t*)logcc;
@@ -1894,6 +1922,7 @@ void *opt_init(int argc, char *argv[])
 	/* self diag */
 	opt_add_s("s:/k/opt/diag/list", OA_GET, NULL, og_diag_list);
 	opt_add_s("s:/k/opt/diag/dump", OA_GET, NULL, og_diag_dump);
+	opt_add_s("s:/k/opt/wch/notyet", OA_GET, NULL, og_diag_wch_notyet);
 
 	return (void*)__g_optcc;
 }
