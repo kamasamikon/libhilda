@@ -60,8 +60,8 @@ md5_calculate                                   @58
 opt_desc                                        @59
 opt_ua                                          @60
 opt_ub                                          @61
-opt_set_pa                                      @62
-opt_set_pb                                      @63
+opt_get_setpa                                   @62
+opt_get_setpb                                   @63
 opt_get_cur_arr                                 @64
 opt_get_cur_arr_len                             @65
 opt_get_cur_dat                                 @66
@@ -88,7 +88,7 @@ opt_free_kv                                     @86
 opt_pack_kv                                     @87
 opt_set_err                                     @88
 opt_get_err                                     @89
-opt_add                                         @90
+opt_new                                         @90
 opt_del                                         @91
 opt_type                                        @92
 opt_load_argv                                   @93
@@ -108,8 +108,7 @@ opt_getarr_p                                    @106
 opt_setdat_sp                                   @107
 opt_getdat_p                                    @108
 opt_foreach                                     @109
-opt_awch_u                                      @110
-opt_bwch_u                                      @111
+opt_wch_new                                     @110
 opt_wch_del                                     @112
 opt_init                                        @113
 opt_cc                                          @114
