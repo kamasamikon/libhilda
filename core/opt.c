@@ -107,8 +107,8 @@ struct _opt_entry_t {
 	OPT_DELTER delter;
 
 	void *ua, *ub;
-	void **set_pa, **set_pb;
-	void **get_pa, **get_pb;
+	void *set_pa, *set_pb;
+	void *get_pa, *get_pb;
 
 	int ses;
 
@@ -284,18 +284,18 @@ static optcc_t *__g_optcc = NULL;
 static int entry_del(opt_entry_t *oe);
 static kinline opt_entry_t *entry_find(const char *path);
 
-static int setint(int ses, opt_entry_t *oe, void **pa, void **pb, int val);
-static int setptr(int ses, opt_entry_t *oe, void **pa, void **pb, void *val);
-static int setstr(int ses, opt_entry_t *oe, void **pa, void **pb, char *val);
-static int setdat(int ses, opt_entry_t *oe, void **pa, void **pb,
+static int setint(int ses, opt_entry_t *oe, void *pa, void *pb, int val);
+static int setptr(int ses, opt_entry_t *oe, void *pa, void *pb, void *val);
+static int setstr(int ses, opt_entry_t *oe, void *pa, void *pb, char *val);
+static int setdat(int ses, opt_entry_t *oe, void *pa, void *pb,
 		const char *val, int len);
-static int setarr(int ses, opt_entry_t *oe, void **pa, void **pb,
+static int setarr(int ses, opt_entry_t *oe, void *pa, void *pb,
 		const char **val, int len);
 
-static int getint(opt_entry_t *oe, void **pa, void **pb, int *val);
-static int getstr(opt_entry_t *oe, void **pa, void **pb, char **val);
-static int getptr(opt_entry_t *oe, void **pa, void **pb, void **val);
-static int getdat(opt_entry_t *oe, void **pa, void **pb, char **val, int *len);
+static int getint(opt_entry_t *oe, void *pa, void *pb, int *val);
+static int getstr(opt_entry_t *oe, void *pa, void *pb, char **val);
+static int getptr(opt_entry_t *oe, void *pa, void *pb, void **val);
+static int getdat(opt_entry_t *oe, void *pa, void *pb, char **val, int *len);
 
 /*-----------------------------------------------------------------------
  * kinline functions
@@ -320,7 +320,7 @@ kinline void *opt_ub(void *oe)
 	return ((opt_entry_t*)(oe))->ub;
 }
 
-kinline int opt_set_pa(void *oe, void **pa)
+kinline int opt_get_setpa(void *oe, void **pa)
 {
 	if (kflg_chk_any(((opt_entry_t*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH)) {
 		*pa = ((opt_entry_t*)oe)->set_pa;
@@ -328,7 +328,7 @@ kinline int opt_set_pa(void *oe, void **pa)
 	}
 	return -1;
 }
-kinline int opt_set_pb(void *oe, void **pb)
+kinline int opt_get_setpb(void *oe, void **pb)
 {
 	if (kflg_chk_any(((opt_entry_t*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH)) {
 		*pb = ((opt_entry_t*)oe)->set_pb;
@@ -659,8 +659,7 @@ static kinline opt_entry_t *entry_find(const char *path)
 		if (0 == strcmp(path, oe->path))
 			return oe;
 	}
-	/* kerror("entry_find: not found: <%s>\n", path); */
-	opt_set_err(EC_NOTFOUND, "OPT not exist");
+
 	return NULL;
 }
 
@@ -713,8 +712,7 @@ int opt_setbat(const char *inibuf, int errbrk)
 		if (opt_ret == EC_SKIP)
 			opt_ret = EC_OK;
 		if (opt_ret) {
-			kerror("ret:%d, k:<%s>, v:<%s>",
-						opt_ret, k, v);
+			kerror("ret:%d, k:<%s>, v:<%s>", opt_ret, k, v);
 			if (errbrk)
 				break;
 		}
@@ -723,15 +721,14 @@ int opt_setbat(const char *inibuf, int errbrk)
 	/* spl_lck_rel(__g_optcc->lck); */
 
 	opt_free_kv(kv, cnt);
-	klog("opt:%d, ses:%d, ret:%d\n",
-				opt_ret, ses_ret, reterr);
+	klog("opt:%d, ses:%d, ret:%d\n", opt_ret, ses_ret, reterr);
 	return opt_ret | ses_ret | reterr;
 }
 
 static char *dat_to_str(char *dat, int len)
 {
-	static char map[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'a', 'b', 'c', 'd', 'e', 'f' };
+	static char map[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
+		'9', 'a', 'b', 'c', 'd', 'e', 'f' };
 	char *ret, *p;
 	int i;
 	unsigned char c;
@@ -814,6 +811,7 @@ int opt_getini(const char *path, char **ret)
 	/* spl_lck_get(__g_optcc->lck); */
 	if (!oe) {
 		/* spl_lck_rel(__g_optcc->lck); */
+		kerror("Opt not found: <%s>\n", path);
 		return EC_NOTFOUND;
 	}
 
@@ -985,10 +983,11 @@ int opt_del(const char *path)
 	oe = entry_find(path);
 	if (oe) {
 		entry_del(oe);
-
-		klog("%s\n", path);
 		/* spl_lck_rel(__g_optcc->lck); */
 		return EC_OK;
+	} else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
 	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
@@ -1008,7 +1007,8 @@ int opt_type(const char *path)
 
 	if (oe)
 		return OPT_TYPE(oe);
-	opt_set_err(EC_NG, "OPT not exist");
+	opt_set_err(EC_NG, "Opt not found");
+	kerror("Opt not found: <%s>\n", path);
 	return -1;
 }
 
@@ -1121,7 +1121,7 @@ int opt_setkv(int ses, const char *k, const char *v)
 
 	if (!k) {
 		kerror("NULL key\n");
-		opt_set_err(EC_NOTFOUND, "OPT not exist.");
+		opt_set_err(EC_NOTFOUND, "Opt not found.");
 
 		/* spl_lck_rel(__g_optcc->lck); */
 		return EC_NOTFOUND;
@@ -1136,9 +1136,9 @@ int opt_setkv(int ses, const char *k, const char *v)
 	}
 
 	oe = entry_find(k);
-
 	if (!oe) {
 		/* spl_lck_rel(__g_optcc->lck); */
+		kerror("Opt not found: <%s>\n", k);
 		return EC_NOTFOUND;
 	}
 
@@ -1192,7 +1192,7 @@ int opt_setkv(int ses, const char *k, const char *v)
  * \retval -2 not allowed
  * \retval -.
  */
-static int setint(int ses, opt_entry_t *oe, void **pa, void **pb, int val)
+static int setint(int ses, opt_entry_t *oe, void *pa, void *pb, int val)
 {
 	int ret = 0;
 
@@ -1230,7 +1230,7 @@ static int setint(int ses, opt_entry_t *oe, void **pa, void **pb, int val)
 	return ret;
 }
 
-int opt_setint_sp(int ses, const char *path, void **pa, void **pb, int val)
+int opt_setint_sp(int ses, const char *path, void *pa, void *pb, int val)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1240,14 +1240,16 @@ int opt_setint_sp(int ses, const char *path, void **pa, void **pb, int val)
 	oe = entry_find(path);
 	if (oe)
 		ret = setint(ses, oe, pa, pb, val);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
 }
 
-static int getint(opt_entry_t *oe, void **pa, void **pb, int *val)
+static int getint(opt_entry_t *oe, void *pa, void *pb, int *val)
 {
 	int ret = 0;
 
@@ -1274,7 +1276,7 @@ static int getint(opt_entry_t *oe, void **pa, void **pb, int *val)
 	return ret;
 }
 
-int opt_getint_p(const char *path, void **pa, void **pb, int *val)
+int opt_getint_p(const char *path, void *pa, void *pb, int *val)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1284,8 +1286,10 @@ int opt_getint_p(const char *path, void **pa, void **pb, int *val)
 	oe = entry_find(path);
 	if (oe)
 		ret = getint(oe, pa, pb, val);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1301,7 +1305,7 @@ int opt_getint_p(const char *path, void **pa, void **pb, int *val)
  * \retval -2 not allowed
  * \retval -.
  */
-static int setptr(int ses, opt_entry_t *oe, void **pa, void **pb, void *val)
+static int setptr(int ses, opt_entry_t *oe, void *pa, void *pb, void *val)
 {
 	int ret = 0;
 
@@ -1332,7 +1336,7 @@ static int setptr(int ses, opt_entry_t *oe, void **pa, void **pb, void *val)
 	return ret;
 }
 
-int opt_setptr_sp(int ses, const char *path, void **pa, void **pb, void *val)
+int opt_setptr_sp(int ses, const char *path, void *pa, void *pb, void *val)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1342,14 +1346,16 @@ int opt_setptr_sp(int ses, const char *path, void **pa, void **pb, void *val)
 	oe = entry_find(path);
 	if (oe)
 		ret = setptr(ses, oe, pa, pb, val);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
 }
 
-static int getptr(opt_entry_t *oe, void **pa, void **pb, void **val)
+static int getptr(opt_entry_t *oe, void *pa, void *pb, void **val)
 {
 	int ret = 0;
 
@@ -1376,7 +1382,7 @@ static int getptr(opt_entry_t *oe, void **pa, void **pb, void **val)
 	return ret;
 }
 
-int opt_getptr_p(const char *path, void **pa, void **pb, void **val)
+int opt_getptr_p(const char *path, void *pa, void *pb, void **val)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1386,8 +1392,10 @@ int opt_getptr_p(const char *path, void **pa, void **pb, void **val)
 	oe = entry_find(path);
 	if (oe)
 		ret = getptr(oe, pa, pb, val);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1403,7 +1411,7 @@ int opt_getptr_p(const char *path, void **pa, void **pb, void **val)
  * \retval -2 not allowed
  * \retval -.
  */
-static int setstr(int ses, opt_entry_t *oe, void **pa, void **pb, char *val)
+static int setstr(int ses, opt_entry_t *oe, void *pa, void *pb, char *val)
 {
 	int ret = 0;
 
@@ -1437,7 +1445,7 @@ static int setstr(int ses, opt_entry_t *oe, void **pa, void **pb, char *val)
 	return ret;
 }
 
-int opt_setstr_sp(int ses, const char *path, void **pa, void **pb, char *val)
+int opt_setstr_sp(int ses, const char *path, void *pa, void *pb, char *val)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1447,14 +1455,16 @@ int opt_setstr_sp(int ses, const char *path, void **pa, void **pb, char *val)
 	oe = entry_find(path);
 	if (oe)
 		ret = setstr(ses, oe, pa, pb, val);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
 }
 
-static int getstr(opt_entry_t *oe, void **pa, void **pb, char **val)
+static int getstr(opt_entry_t *oe, void *pa, void *pb, char **val)
 {
 	int ret = 0;
 
@@ -1481,7 +1491,7 @@ static int getstr(opt_entry_t *oe, void **pa, void **pb, char **val)
 	return ret;
 }
 
-int opt_getstr_p(const char *path, void **pa, void **pb, char **val)
+int opt_getstr_p(const char *path, void *pa, void *pb, char **val)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1491,15 +1501,17 @@ int opt_getstr_p(const char *path, void **pa, void **pb, char **val)
 	oe = entry_find(path);
 	if (oe)
 		ret = getstr(oe, pa, pb, val);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
 }
 
 static int setarr(int ses, opt_entry_t *oe,
-		void **pa, void **pb, const char **val, int len)
+		void *pa, void *pb, const char **val, int len)
 {
 	int ret = 0;
 
@@ -1539,7 +1551,7 @@ static int setarr(int ses, opt_entry_t *oe,
 }
 
 int opt_setarr_sp(int ses, const char *path,
-		void **pa, void **pb, const char **val, int len)
+		void *pa, void *pb, const char **val, int len)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1549,20 +1561,22 @@ int opt_setarr_sp(int ses, const char *path,
 	oe = entry_find(path);
 	if (oe)
 		ret = setarr(ses, oe, pa, pb, val, len);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
 }
 
-int opt_getarr_p(const char *path, void **pa, void **pb, void **arr, int *len)
+int opt_getarr_p(const char *path, void *pa, void *pb, void **arr, int *len)
 {
 	return EC_OK;
 }
 
 static int setdat(int ses, opt_entry_t *oe,
-		void **pa, void **pb, const char *val, int len)
+		void *pa, void *pb, const char *val, int len)
 {
 	int ret = 0;
 
@@ -1602,7 +1616,7 @@ static int setdat(int ses, opt_entry_t *oe,
 }
 
 int opt_setdat_sp(int ses, const char *path,
-		void **pa, void **pb, const char *val, int len)
+		void *pa, void *pb, const char *val, int len)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1612,14 +1626,16 @@ int opt_setdat_sp(int ses, const char *path,
 	oe = entry_find(path);
 	if (oe)
 		ret = setdat(ses, oe, pa, pb, val, len);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
 }
 
-static int getdat(opt_entry_t *oe, void **pa, void **pb, char **val, int *len)
+static int getdat(opt_entry_t *oe, void *pa, void *pb, char **val, int *len)
 {
 	int ret = 0;
 
@@ -1647,7 +1663,7 @@ static int getdat(opt_entry_t *oe, void **pa, void **pb, char **val, int *len)
 	return ret;
 }
 
-int opt_getdat_p(const char *path, void **pa, void **pb, char **val, int *len)
+int opt_getdat_p(const char *path, void *pa, void *pb, char **val, int *len)
 {
 	int ret = -1;
 	opt_entry_t *oe;
@@ -1657,8 +1673,10 @@ int opt_getdat_p(const char *path, void **pa, void **pb, char **val, int *len)
 	oe = entry_find(path);
 	if (oe)
 		ret = getdat(oe, pa, pb, val, len);
-	else
-		opt_set_err(EC_NG, "OPT not exist");
+	else {
+		kerror("Opt not found: <%s>\n", path);
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1710,9 +1728,9 @@ static void queue_watch(opt_entry_t *oe, opt_watch_t *ow, int awch)
  * \brief Watch a option update.
  * \c opt_wch_prev() hook before update, \c opt_wch_post() hook after update
  *
- * \return watch number, -1 for error
+ * \return watch number, 0 for error
  */
-void *watch_new(const char *path, OPT_WATCH wch,
+void *opt_wch_new(const char *path, OPT_WATCH wch,
 		void *ua, void *ub, int awch)
 {
 	opt_entry_t *oe;
@@ -1765,7 +1783,7 @@ static void diag_list_foreach(void *opt, const char *path, void *userdata)
 	strcat((char*)userdata, "\r\n");
 }
 
-static int og_diag_list(void *opt, void **pa, void **pb)
+static int og_diag_list(void *opt, void *pa, void *pb)
 {
 	char lsbuf[8192];
 
@@ -1826,13 +1844,41 @@ static void diag_dump_foreach(void *opt, const char *path, void *userdata)
 	strcat((char*)userdata, buffer);
 }
 
-static int og_diag_dump(void *opt, void **pa, void **pb)
+static int og_diag_dump(void *opt, void *pa, void *pb)
 {
 	char dmpbuf[8192 * 80];
 
 	sprintf(dmpbuf, "\r\nS:G:D   SC:  GC: AWC: BWC AC:BC PATH ...\r\n");
 
 	opt_foreach(NULL, diag_dump_foreach, (void*)dmpbuf);
+	opt_set_cur_str(opt, dmpbuf);
+	return EC_OK;
+}
+
+static int og_diag_wch_notyet(void *opt, void *pa, void *pb)
+{
+	K_dlist_entry *entry;
+	opt_watch_t *wch;
+	char dmpbuf[8192 * 80], *p = dmpbuf;
+
+	p += sprintf(p, "nywch.ahdr:\n");
+	entry = __g_optcc->nywch.ahdr.next;
+	while (entry != &__g_optcc->nywch.ahdr) {
+		wch = FIELD_TO_STRUCTURE(entry, opt_watch_t, entry);
+		entry = entry->next;
+
+		p += sprintf(p, "%s\n", wch->path);
+	}
+
+	p += sprintf(p, "\nnywch.bhdr:\n");
+	entry = __g_optcc->nywch.bhdr.next;
+	while (entry != &__g_optcc->nywch.bhdr) {
+		wch = FIELD_TO_STRUCTURE(entry, opt_watch_t, entry);
+		entry = entry->next;
+
+		p += sprintf(p, "%s\n", wch->path);
+	}
+
 	opt_set_cur_str(opt, dmpbuf);
 	return EC_OK;
 }
@@ -1876,6 +1922,7 @@ void *opt_init(int argc, char *argv[])
 	/* self diag */
 	opt_add_s("s:/k/opt/diag/list", OA_GET, NULL, og_diag_list);
 	opt_add_s("s:/k/opt/diag/dump", OA_GET, NULL, og_diag_dump);
+	opt_add_s("s:/k/opt/wch/notyet", OA_GET, NULL, og_diag_wch_notyet);
 
 	return (void*)__g_optcc;
 }
@@ -1967,8 +2014,10 @@ int opt_session_commit(int ses, int cancel, int *reterr)
 		ret = setint(ses, oe, NULL, NULL, cancel);
 		if (reterr)
 			*reterr = (int)oe->ub;
-	} else
-		opt_set_err(EC_NG, "OPT not exist");
+	} else {
+		kerror("Opt not found: <%s>\n", "i:/k/opt/session/done");
+		opt_set_err(EC_NG, "Opt not found");
+	}
 
 	/* spl_lck_rel(__g_optcc->lck); */
 	return ret;
@@ -1988,12 +2037,12 @@ void opt_session_set_err(void *opt, int error)
 /*
  * Only use for debugging
  */
-int os_opt_hook(int ses, void *opt, void **pa, void **pb)
+int os_opt_hook(int ses, void *opt, void *pa, void *pb)
 {
 	klog("ses:%d, path:%s\n", ses, opt_path(opt));
 	return EC_DEFAULT;
 }
-int og_opt_hook(void *opt, void **pa, void **pb)
+int og_opt_hook(void *opt, void *pa, void *pb)
 {
 	klog("path:%s\n", opt_path(opt));
 	return EC_DEFAULT;
