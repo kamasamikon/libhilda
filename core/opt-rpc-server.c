@@ -410,8 +410,6 @@ static void *worker_thread_or_server(void *userdata)
 	__g_epoll_fd = epoll_create(__g_epoll_max);
 	ev.data.fd = s_listen;
 	ev.events = EPOLLIN;
-	ev.events = EPOLLIN | EPOLLERR | EPOLLHUP | EPOLLET;
-	ev.events = EPOLLIN;
 	epoll_ctl(__g_epoll_fd, EPOLL_CTL_ADD, s_listen, &ev);
 
 	for (;;) {
@@ -599,8 +597,6 @@ static int process_connect(int new_fd)
 				if (mode == 'o') {
 					struct epoll_event ev;
 					ev.data.fd = new_fd;
-					ev.events = EPOLLIN;
-					ev.events = EPOLLIN | EPOLLERR | EPOLLHUP | EPOLLET;
 					ev.events = EPOLLIN;
 					epoll_ctl(__g_epoll_fd, EPOLL_CTL_ADD, new_fd, &ev);
 				}

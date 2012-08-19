@@ -111,7 +111,7 @@ int opt_get_err(int *no, char **msg);
 
 /* _s => short */
 #define opt_add_s(p, a, s, g) \
-	opt_add((p), NULL, (a), (s), (g), NULL, NULL, NULL)
+	opt_new((p), NULL, (a), (s), (g), NULL, NULL, NULL)
 
 #define opt_add(p, d, a, set, get, del, ua, ub) \
 	opt_new((p), (d), (a), (set), (get), (del), (void*)(ua), (void*)(ub))
