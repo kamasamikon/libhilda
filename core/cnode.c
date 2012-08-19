@@ -321,15 +321,15 @@ static void setup_opt()
 			og_cnode_diag_dump);
 
 	opt_add("s:/k/cnode/cmd/start", NULL, OA_SET,
-			os_cnode_cmd, NULL, NULL, (void*)'S', NULL);
+			os_cnode_cmd, NULL, NULL, 'S', NULL);
 	opt_add("s:/k/cnode/cmd/stop", NULL, OA_SET,
-			os_cnode_cmd, NULL, NULL, (void*)'s', NULL);
+			os_cnode_cmd, NULL, NULL, 's', NULL);
 	opt_add("s:/k/cnode/cmd/pause", NULL, OA_SET,
-			os_cnode_cmd, NULL, NULL, (void*)'p', NULL);
+			os_cnode_cmd, NULL, NULL, 'p', NULL);
 	opt_add("s:/k/cnode/cmd/resume", NULL, OA_SET,
-			os_cnode_cmd, NULL, NULL, (void*)'r', NULL);
+			os_cnode_cmd, NULL, NULL, 'r', NULL);
 	opt_add("s:/k/cnode/cmd/link", NULL, OA_SET,
-			os_cnode_cmd, NULL, NULL, (void*)'l', NULL);
+			os_cnode_cmd, NULL, NULL, 'l', NULL);
 }
 
 void *cnode_init(int argc, char *argv[])
