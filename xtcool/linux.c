@@ -719,10 +719,14 @@ char* popen_read(const char *cmd, char *buffer, int buflen)
 	FILE *fp = popen(cmd, "r");
 	if (!fp)
 		return NULL;
-	ret = fgets(buffer, buflen, fp);
-	kstr_trim(buffer);
+	ret = fread(buffer, sizeof(char), buflen, fp);
 	fclose(fp);
-	return buffer;
+
+	if (ret >= 0) {
+		kstr_trim(buffer);
+		return buffer;
+	} else
+		return NULL;
 }
 
 void *spl_lib_load(const char *path, int flags)
