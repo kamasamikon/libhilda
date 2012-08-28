@@ -667,9 +667,14 @@ int opt_load_argv(int argc, char *argv[])
 {
 	int i;
 
-	for (i = 0; i < argc; i++)
-		if (argv[i] && (!strncmp(argv[i], "--opt-file=", 11)))
+	for (i = 0; i < argc; i++) {
+		if (!argv[i])
+			continue;
+		if (!strncmp(argv[i], "--opt-file=", 11))
 			opt_setfile(argv[i] + 11);
+		else if (!strcmp(argv[i], "--opt-file") && argv[i + 1])
+			opt_setfile(argv[i + 1]);
+	}
 	return 0;
 }
 
