@@ -177,7 +177,7 @@ def do_cmds(cmds, sock = None):
             out.write("<CMD>: " + cmds[line_ofs] + "\r\n")
             line_ofs += 1
             if sock:
-                sock.send(str_to_bytes(line))
+                sock.send(str_to_bytes('\n'.join(line.split("\\r\\n"))))
                 data = sock.recv(1024 * 512)
                 out.write(data.decode("utf-8").strip() + "\r\n")
     return line_ofs
