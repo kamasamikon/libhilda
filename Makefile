@@ -55,6 +55,21 @@ amust: banner
 #########################################################################
 # Architecture of target board
 #
+.PHONY: arch.3602
+arch.3602: clean
+	echo -e "Set default gcc to 3602"
+	./cfg_update arch 3602
+
+.PHONY: arch.5602
+arch.5602: clean
+	echo -e "Set default gcc to 5602"
+	./cfg_update arch 5602
+
+.PHONY: arch.marvell
+arch.marvell: clean
+	echo -e "Set default gcc to marvell"
+	./cfg_update arch marvell
+
 .PHONY: arch.x86
 arch.x86: clean
 	echo -e "Set default gcc to x86"
