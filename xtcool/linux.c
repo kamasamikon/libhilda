@@ -715,14 +715,17 @@ int spl_timer_del(void *id)
 
 char* popen_read(const char *cmd, char *buffer, int buflen)
 {
-	char *ret;
+	int ret;
 	FILE *fp = popen(cmd, "r");
+
 	if (!fp)
 		return NULL;
+
 	ret = fread(buffer, sizeof(char), buflen, fp);
 	fclose(fp);
 
 	if (ret >= 0) {
+		buffer[ret] = '\0';
 		kstr_trim(buffer);
 		return buffer;
 	} else

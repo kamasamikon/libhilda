@@ -237,11 +237,12 @@ static int rpc_client_wch_clr(rpc_client_t *c)
 	return 0;
 }
 
-static void rpc_watch(int ses, void *opt, const char *path, void *wch)
+static void rpc_watch(int ses, void *opt, void *wch)
 {
 	void *ua = wch_ua(wch);
 	char msg[16384], *ini;
 	int bytes;
+	char *path = opt_path(opt);
 
 	klog("path:%s\n", path);
 
@@ -471,7 +472,7 @@ int opt_rpc_server_init(int argc, char *argv[])
 	klog("port: %d\n", port);
 
 	ignore_pipe();
-	spl_thread_create(worker_thread_or_server, (void*)port, 0);
+	spl_thread_create(worker_thread_or_server, (void*)(int)port, 0);
 	return 0;
 }
 

@@ -241,7 +241,7 @@ kint hget_recv(SOCKET a_socket, const kchar *a_host, const kchar *a_path,
 				"Host: %s\r\n"
 				"Content-Type: text/xml\r\n\r\n" "%s",
 				a_path, a_cmd ? strlen(a_cmd) : 0,
-				a_host, a_cmd ? a_cmd : "");
+				a_host, a_cmd ? (char*)a_cmd : "");
 
 	klog("(%d): start send\n", a_socket);
 
