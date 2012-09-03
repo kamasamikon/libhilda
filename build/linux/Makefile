@@ -24,6 +24,7 @@ SUB_OBJS_hilda = \
 ../../core/pflock.o \
 ../../core/sdlist.o \
 ../../core/trace.o \
+../../core/xmldoc.o \
 ../../xtcool/linux.o 
 
 LOCAL_CFLAGS += -DMEM_STAT
