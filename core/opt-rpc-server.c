@@ -102,7 +102,7 @@ static char *mk_errline(int ret, char ebuf[])
 	else if (ret == EC_COMMAND)
 		sprintf(ebuf, "1 BAD COMMAND%s", CRLF);
 	else if (ret == EC_NOTHING)
-		sprintf(ebuf, "1 NOTHING BE DONE%s", CRLF);
+		sprintf(ebuf, "1 NOTHING BEEN DONE%s", CRLF);
 	else if (ret == EC_EXIST)
 		sprintf(ebuf, "1 ENTRY ALREADY EXIST%s", CRLF);
 	else
