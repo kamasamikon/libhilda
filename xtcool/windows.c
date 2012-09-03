@@ -626,7 +626,7 @@ int wlogf(const char *fmt, ...)
 
 	va_start(ap, fmt);
 	ret = vsnprintf(bufptr, bufsize, fmt, ap);
-	while (ret < 0) {
+	while (ret > bufsize - 1) {
 		bufsize <<= 1;
 		if (bufptr != buffer)
 			kmem_free(bufptr);

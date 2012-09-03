@@ -391,7 +391,7 @@ int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const ch
 		ofs += sprintf(bufptr + ofs, " ");
 
 	ret = vsnprintf(bufptr + ofs, bufsize - ofs, fmt, ap);
-	while (ret < 0) {
+	while (ret > bufsize - ofs - 1) {
 		bufsize <<= 1;
 		if (bufptr != buffer)
 			kmem_free(bufptr);
