@@ -76,6 +76,16 @@ static void setup_opt(kmoducc_t *cc)
 			NULL, NULL, (void*)cc, NULL);
 	opt_add("s:/k/modu/layout/path", NULL, OA_DFT, NULL,
 			NULL, NULL, (void*)cc, NULL);
+
+	/* pa => module_scan_dir */
+	opt_add_s("e:/k/modu/load/start", OA_DFT, NULL, NULL);
+	/* pa => module_scan_dir, pb => err */
+	opt_add_s("e:/k/modu/load/done", OA_DFT, NULL, NULL);
+
+	/* pa => mod_path */
+	opt_add_s("e:/k/modu/load/mod/start", OA_DFT, NULL, NULL);
+	/* pa => mod_path, pb => err */
+	opt_add_s("e:/k/modu/load/mod/done", OA_DFT, NULL, NULL);
 }
 
 static void add_config_file(kmoducc_t *cc)
@@ -221,9 +231,13 @@ int kmodu_load()
 	kbean fd;
 	char path[1024], ps = kvfs_path_sep();
 	KVFS_FINDDATA fdat;
+	int err;
+
+	opt_setint_p("e:/k/modu/load/start", cc->path.root, NULL, 1);
 
 	fd = kvfs_findfirst(cc->path.root, &fdat);
 	if (!fd) {
+		opt_setint_p("e:/k/modu/load/done", cc->path.root, 1, 1);
 		kerror("Scan module dir failed. <%s>\n", cc->path.root);
 		return -1;
 	}
@@ -233,10 +247,13 @@ int kmodu_load()
 		if (!kflg_chk_bit(fdat.attrib, KVFS_A_DIR))
 			continue;
 		sprintf(path, "%s%c%s", cc->path.root, ps, fdat.name);
-		module_load(cc, path);
+		opt_setint_p("e:/k/modu/load/mod/start", path, NULL, 1);
+		err = module_load(cc, path);
+		opt_setint_p("e:/k/modu/load/mod/done", path, err, 1);
 	} while (-1 != kvfs_findnext(fd, &fdat));
 	kvfs_findclose(fd);
 
+	opt_setint_p("e:/k/modu/load/done", cc->path.root, 0, 1);
 	return 0;
 }
 
