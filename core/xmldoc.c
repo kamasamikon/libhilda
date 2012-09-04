@@ -7,6 +7,7 @@
 #include <assert.h>
 
 #include <kmem.h>
+#include <klog.h>
 #include <kstr.h>
 #include <xtcool.h>
 
@@ -31,7 +32,7 @@ static void onStartElement(void *userData, const XML_Char *name, const XML_Char 
 	KXmlNode *node = xmlnode_new(knil, (kchar*)name, knil);
 	KXmlAttr *attr;
 
-	xmldoc_addNode(doc, node, doc->cur_node);
+	xmldoc_add_node(doc, node, doc->cur_node);
 	doc->cur_node = node;
 
 	/* (i)th is attribution name, (i+1)th is attribution value */
@@ -50,9 +51,9 @@ static void onStartElement(void *userData, const XML_Char *name, const XML_Char 
 static void onEndElement(void *userData, const XML_Char *name)
 {
 	KXmlDoc *doc = (KXmlDoc*)userData;
-	kassert(doc);
 
-	xmldoc_gotoNode(doc, "..", 0);
+	if (doc)
+		xmldoc_goto_node(doc, "..", 0);
 }
 
 #define ISSPACE(c) (((c) == 0x20) || ((c) == 0x0D) || ((c) == 0x0A) || ((c) == 0x09))
@@ -113,7 +114,7 @@ KXmlDoc *xmldoc_new(KXmlDoc *doc)
 		doc->cur_node = doc->root;
 		doc->parser = XML_ParserCreate_MM(knil, &mhs, knil);
 		if (doc->parser == knil) {
-			kerror(("create xml parser failed\n"));
+			kerror("create xml parser failed\n");
 			xmldoc_del(doc);
 			doc = knil;
 		}
@@ -174,17 +175,17 @@ kvoid xmldoc_parse(KXmlDoc *doc, const kchar *buffer, kint buflen)
  * @param fp target file
  * @param level indent level
  */
-static kint xmlnode_print(KXmlNode *node, kbean fp, kint *level)
+static kint xmlnode_print(KXmlNode *node, FILE *fp, kint *level)
 {
 	KXmlAttr *attr;
 	KXmlNode *subnode;
 	K_dlist_entry *entry, *hdr;
 	kint i, subCnt = 0, textCnt = 0;
 
-	kvfs_printf(fp, "\n");
+	fprintf(fp, "\n");
 	for (i = 0; i < *level; i++)
-		kvfs_printf(fp, "\t");
-	kvfs_printf(fp, "<%s", node->name);
+		fprintf(fp, "\t");
+	fprintf(fp, "<%s", node->name);
 
 	/* fill attributions */
 	hdr = &node->attrHdr;
@@ -193,10 +194,10 @@ static kint xmlnode_print(KXmlNode *node, kbean fp, kint *level)
 		attr = FIELD_TO_STRUCTURE(entry, KXmlAttr, entry);
 		entry = entry->next;
 
-		kvfs_printf(fp, " %s=\"%s\"", attr->name, attr->value);
+		fprintf(fp, " %s=\"%s\"", attr->name, attr->value);
 	}
 
-	kvfs_printf(fp, ">");
+	fprintf(fp, ">");
 
 	(*level)++;
 
@@ -214,20 +215,20 @@ static kint xmlnode_print(KXmlNode *node, kbean fp, kint *level)
 	(*level)--;
 
 	if (node->text) {
-		kvfs_printf(fp, "%s", node->text);
+		fprintf(fp, "%s", node->text);
 		textCnt++;
 	}
 
 	if (subCnt) {
-		kvfs_printf(fp, "\n");
+		fprintf(fp, "\n");
 		for (i = 0; i < *level; i++)
-			kvfs_printf(fp, "\t");
+			fprintf(fp, "\t");
 	}
 
 	if (!(*level))
-		kvfs_printf(fp, "</%s>", node->name);
+		fprintf(fp, "</%s>", node->name);
 	else
-		kvfs_printf(fp, "</%s>", node->name);
+		fprintf(fp, "</%s>", node->name);
 
 	return 0;
 }
@@ -245,14 +246,15 @@ kint xmldoc_save(KXmlDoc *doc, const kchar *path)
 	K_dlist_entry *entry, *hdr;
 	kint level = 0;
 
-	kbean fp = (kbean) kvfs_open((kchar*)path, "w+t", 0);
+	FILE *fp = fopen((char*)path, "wt");
+
 	if (!fp)
 		return -1;
 
-	node = xmldoc_getNode(doc, "/", 0);
+	node = xmldoc_get_node(doc, "/", 0);
 
 	/* XXX default to be UTF-8 */
-	kvfs_printf(fp, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+	fprintf(fp, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 
 	/* fill sub */
 	hdr = &node->subHdr;
@@ -264,15 +266,16 @@ kint xmldoc_save(KXmlDoc *doc, const kchar *path)
 		xmlnode_print(subnode, fp, &level);
 	}
 
-	kvfs_close(fp);
+	fclose(fp);
 	return 0;
 }
 
-kint xmldoc_getNodeCnt(KXmlDoc *doc, const kchar *path)
+kint xmldoc_get_node_cnt(KXmlDoc *doc, const kchar *path)
 {
 	K_dlist_entry *entry;
 	KXmlNode *node;
 	kint curIndex = 0;
+
 	if (doc && path) {
 		KXmlNode *curnode = doc->cur_node;
 
@@ -303,7 +306,7 @@ kint xmldoc_getNodeCnt(KXmlDoc *doc, const kchar *path)
  *
  * @return KXmlNode for success, knil for error.
  */
-KXmlNode *xmldoc_getNode(KXmlDoc *doc, const kchar *path, kint index)
+KXmlNode *xmldoc_get_node(KXmlDoc *doc, const kchar *path, kint index)
 {
 	if (doc && path) {
 		KXmlNode *curnode = doc->cur_node;
@@ -363,10 +366,11 @@ KXmlNode *xmldoc_getNode(KXmlDoc *doc, const kchar *path, kint index)
  * @param path node name
  * @param index Goto (index)th of path node
  */
-KXmlNode *xmldoc_gotoNode(KXmlDoc *doc, const kchar *path, kint index)
+KXmlNode *xmldoc_goto_node(KXmlDoc *doc, const kchar *path, kint index)
 {
-	/* similar to xmldoc_getNode, but it will set cur_node to path */
-	KXmlNode *node = xmldoc_getNode(doc, path, index);
+	/* similar to xmldoc_get_node, but it will set cur_node to path */
+	KXmlNode *node = xmldoc_get_node(doc, path, index);
+
 	if (node)
 		doc->cur_node = node;
 	return node;
@@ -379,7 +383,7 @@ KXmlNode *xmldoc_gotoNode(KXmlDoc *doc, const kchar *path, kint index)
  * @param node XML node to be append.
  * @param parent Parent node, if knil, default to current node
  */
-KXmlNode *xmldoc_addNode(KXmlDoc *doc, KXmlNode *node, KXmlNode *parent)
+KXmlNode *xmldoc_add_node(KXmlDoc *doc, KXmlNode *node, KXmlNode *parent)
 {
 	if (doc && node) {
 		if (!parent)
@@ -424,6 +428,7 @@ kint xmlnode_set_text(KXmlNode *node, const kchar *text)
 kint xmlnode_set_attr_value(KXmlNode *node, const kchar *name, const kchar *value)
 {
 	KXmlAttr *attr;
+
 	attr = xmlnode_getattr(node, name);
 	if (attr)
 		setVal(attr->value, value);
@@ -437,6 +442,7 @@ kint xmlnode_set_attr_value(KXmlNode *node, const kchar *name, const kchar *valu
 kchar *xmlnode_get_attr_value(KXmlNode *node, const kchar *name)
 {
 	KXmlAttr *attr;
+
 	attr = xmlnode_getattr(node, name);
 	if (attr)
 		return attr->value;
@@ -489,7 +495,6 @@ kint xmlnode_detach(KXmlNode *node)
  */
 KXmlNode *xmlnode_next(KXmlNode *node)
 {
-	kassert(node);
 	if (node && node->parentNode)
 		if (&node->parentNode->subHdr != node->entry.next)
 			return FIELD_TO_STRUCTURE(node->entry.next, KXmlNode, entry);
@@ -500,7 +505,7 @@ KXmlNode *xmlnode_next(KXmlNode *node)
 KXmlNode *xmlnode_next_same(KXmlNode *node)
 {
 	KXmlNode *tnode = node;
-	kassert(node);
+
 	if (node && node->parentNode)
 		while (&tnode->parentNode->subHdr != tnode->entry.next) {
 			tnode = FIELD_TO_STRUCTURE(tnode->entry.next, KXmlNode, entry);
@@ -514,7 +519,6 @@ KXmlNode *xmlnode_next_same(KXmlNode *node)
 
 KXmlNode *xmlnode_prev(KXmlNode *node)
 {
-	kassert(node);
 	if (node && node->parentNode)
 		if (&node->parentNode->subHdr != node->entry.prev)
 			return FIELD_TO_STRUCTURE(node->entry.prev, KXmlNode, entry);
@@ -525,7 +529,7 @@ KXmlNode *xmlnode_prev(KXmlNode *node)
 KXmlNode *xmlnode_prev_same(KXmlNode *node)
 {
 	KXmlNode *tnode = node;
-	kassert(node);
+
 	if (node && node->parentNode)
 		while (&tnode->parentNode->subHdr != tnode->entry.prev) {
 			tnode = FIELD_TO_STRUCTURE(tnode->entry.prev, KXmlNode, entry);
@@ -551,6 +555,7 @@ KXmlAttr *xmlnode_getattr(KXmlNode *node, const kchar *attrname)
 	if (node && attrname) {
 		K_dlist_entry *entry;
 		KXmlAttr *attr;
+
 		entry = node->attrHdr.next;
 		while (entry != &node->attrHdr) {
 			attr = FIELD_TO_STRUCTURE(entry, KXmlAttr, entry);
@@ -628,13 +633,13 @@ kint xsmain(kint argc, kchar **argv)
 
 	xmldoc_parse(doc, buffer, len);
 
-	node = xmldoc_getNode(doc, ".", 0);
-	node = xmldoc_gotoNode(doc, "/", 1);
-	node = xmldoc_gotoNode(doc, "Service", 0);
-	node = xmldoc_gotoNode(doc, ".", 0);
-	node = xmldoc_gotoNode(doc, "Name", 2);
+	node = xmldoc_get_node(doc, ".", 0);
+	node = xmldoc_goto_node(doc, "/", 1);
+	node = xmldoc_goto_node(doc, "Service", 0);
+	node = xmldoc_goto_node(doc, ".", 0);
+	node = xmldoc_goto_node(doc, "Name", 2);
 	attr = xmlnode_getattr(node, "lang");
-	node = xmldoc_gotoNode(doc, "..", 2);
+	node = xmldoc_goto_node(doc, "..", 2);
 
 	xmldoc_save(doc, "saved.xml");
 
