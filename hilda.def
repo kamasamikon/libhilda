@@ -201,3 +201,34 @@ kmem_rpt                                        @200
 spl_mkdir                                       @201
 klog_add_rlogger                                @202
 klog_del_rlogger                                @203
+
+
+
+xmldoc_new                                      @300
+xmldoc_del                                      @301
+xmldoc_parse                                    @302
+xmldoc_save                                     @303
+xmldoc_get_node_cnt                             @304
+xmldoc_get_node                                 @305
+xmldoc_goto_node                                @306
+xmldoc_add_node                                 @307
+xmlnode_new                                     @308
+xmlnode_set_name                                @309
+xmlnode_set_text                                @310
+xmlnode_set_attr_value                          @311
+xmlnode_get_attr_value                          @312
+xmlnode_del                                     @313
+xmlnode_detach                                  @314
+xmlnode_next                                    @315
+xmlnode_next_same                               @316
+xmlnode_prev                                    @317
+xmlnode_prev_same                               @318
+xmlnode_addattr                                 @319
+xmlnode_getattr                                 @320
+xmlattr_new                                     @321
+xmlattr_del                                     @322
+xmlattr_detach                                  @323
+xmlattr_set_name                                @324
+xmlattr_set_value                               @325
+
+
