@@ -38,7 +38,7 @@ static void onStartElement(void *userData, const XML_Char *name, const XML_Char 
 	/* (i)th is attribution name, (i+1)th is attribution value */
 	for (i = 0; atts[i]; i += 2) {
 		attr = xmlattr_new(knil, (kchar*)atts[i], (kchar*)atts[i + 1]);
-		xmlnode_addattr(node, attr);
+		xmlnode_add_attr(node, attr);
 	}
 }
 
@@ -435,12 +435,12 @@ kint xmlnode_set_attr_value(KXmlNode *node, const kchar *name, const kchar *valu
 {
 	KXmlAttr *attr;
 
-	attr = xmlnode_getattr(node, name);
+	attr = xmlnode_get_attr(node, name);
 	if (attr)
 		setVal(attr->value, value);
 	else {
 		attr = xmlattr_new(knil, name, value);
-		xmlnode_addattr(node, attr);
+		xmlnode_add_attr(node, attr);
 	}
 	return 0;
 }
@@ -449,7 +449,7 @@ kchar *xmlnode_get_attr_value(KXmlNode *node, const kchar *name)
 {
 	KXmlAttr *attr;
 
-	attr = xmlnode_getattr(node, name);
+	attr = xmlnode_get_attr(node, name);
 	if (attr)
 		return attr->value;
 	return knil;
@@ -546,7 +546,7 @@ KXmlNode *xmlnode_prev_same(KXmlNode *node)
 	return knil;
 }
 
-kint xmlnode_addattr(KXmlNode *node, KXmlAttr *attr)
+kint xmlnode_add_attr(KXmlNode *node, KXmlAttr *attr)
 {
 	if (node && attr) {
 		insert_dlist_tail_entry(&node->attrHdr, &attr->entry);
@@ -556,7 +556,7 @@ kint xmlnode_addattr(KXmlNode *node, KXmlAttr *attr)
 	return -1;
 }
 
-KXmlAttr *xmlnode_getattr(KXmlNode *node, const kchar *attrname)
+KXmlAttr *xmlnode_get_attr(KXmlNode *node, const kchar *attrname)
 {
 	if (node && attrname) {
 		K_dlist_entry *entry;
@@ -644,7 +644,7 @@ kint xsmain(kint argc, kchar **argv)
 	node = xmldoc_goto_node(doc, "Service", 0);
 	node = xmldoc_goto_node(doc, ".", 0);
 	node = xmldoc_goto_node(doc, "Name", 2);
-	attr = xmlnode_getattr(node, "lang");
+	attr = xmlnode_get_attr(node, "lang");
 	node = xmldoc_goto_node(doc, "..", 2);
 
 	xmldoc_save(doc, "saved.xml");
