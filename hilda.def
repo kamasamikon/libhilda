@@ -223,8 +223,8 @@ xmlnode_next                                    @315
 xmlnode_next_same                               @316
 xmlnode_prev                                    @317
 xmlnode_prev_same                               @318
-xmlnode_addattr                                 @319
-xmlnode_getattr                                 @320
+xmlnode_add_attr                                @319
+xmlnode_get_attr                                @320
 xmlattr_new                                     @321
 xmlattr_del                                     @322
 xmlattr_detach                                  @323
