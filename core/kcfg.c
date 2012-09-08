@@ -417,7 +417,7 @@ int kcfg_init()
 
 	__g_cfg = (kcfg_t*)kmem_alloz(1, kcfg_t);
 
-	opt_getptr("p:/prog/mque/main", (void**)&__g_mque_main);
+	opt_getptr("p:/env/mque", (void**)&__g_mque_main);
 
 	target_file();
 
