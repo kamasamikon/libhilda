@@ -9,8 +9,9 @@ extern "C" {
 
 #include <ktypes.h>
 #include <sdlist.h>
+#include <kmem.h>
 
-#include "expat.h"
+#include <expat.h>
 
 typedef struct _KXmlNode {
 	K_dlist_entry entry;
@@ -38,7 +39,7 @@ typedef struct _KXmlDoc {
 
 #define setVal(a, v) \
 do { \
-	kmem_free(a); \
+	kmem_free_sz(a); \
 	if (v) { \
 		a = kstr_dup(v); \
 	} \
@@ -52,15 +53,15 @@ do { \
 		osl = strlen(os); \
 		nsl = strlen(ns); \
 		if (maxlen < nsl) nsl = maxlen; \
-		nbuf = kmem_alloc(osl + nsl + 1); \
+		nbuf = kmem_alloc(osl + nsl + 1, char); \
 		memcpy(nbuf, os, osl); \
 		memcpy(nbuf + osl, ns, nsl); \
 		nbuf[osl + nsl] = 0; \
-		kmem_free(os); \
+		kmem_free_sz(os); \
 	} else { \
 		nsl = strlen(ns); \
 		if (maxlen < nsl) nsl = maxlen; \
-		nbuf = kmem_alloc(nsl + 1); \
+		nbuf = kmem_alloc(nsl + 1, char); \
 		memcpy(nbuf, ns, nsl + 1); \
 		nbuf[nsl] = 0; \
 	} \

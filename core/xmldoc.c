@@ -80,7 +80,7 @@ static void onCharacterData(void *userData, const XML_Char *s, int len)
 		memcpy(nbuf, (node->text), osl);
 		memcpy(nbuf + osl, (s), nsl);
 		nbuf[osl + nsl] = 0;
-		kmem_free((node->text));
+		kmem_free_sz(node->text);
 	} else {
 		nsl = len;
 		nbuf = kmem_alloc(nsl + 1, char);
@@ -91,6 +91,12 @@ static void onCharacterData(void *userData, const XML_Char *s, int len)
 }
 
 /** @} */
+
+static void kmem_rel_s(void *ptr)
+{
+	if (ptr)
+		kmem_rel(ptr);
+}
 
 /**
  * @brief Construct a xml doc.
@@ -104,7 +110,7 @@ KXmlDoc *xmldoc_new(KXmlDoc *doc)
 	XML_Memory_Handling_Suite mhs;
 	mhs.malloc_fcn = kmem_get;
 	mhs.realloc_fcn = kmem_reget;
-	mhs.free_fcn = kmem_rel;
+	mhs.free_fcn = kmem_rel_s;
 
 	if (!doc)
 		doc = (KXmlDoc*)kmem_alloz(1, KXmlDoc);
@@ -142,7 +148,7 @@ kint xmldoc_del(KXmlDoc *doc)
 			doc->root = knil;
 		}
 
-		kmem_free(doc);
+		kmem_free_sz(doc);
 		return 0;
 	}
 	return -1;
@@ -467,10 +473,10 @@ kint xmlnode_del(KXmlNode *node)
 			xmlnode_del(snode);
 		}
 
-		kmem_free(node->name);
-		kmem_free(node->text);
+		kmem_free_sz(node->name);
+		kmem_free_sz(node->text);
 
-		kmem_free(node);
+		kmem_free_sz(node);
 		return 0;
 	}
 	return -1;
@@ -584,9 +590,9 @@ KXmlAttr *xmlattr_new(KXmlAttr *attr, const kchar *name, const kchar *value)
 kint xmlattr_del(KXmlAttr *attr)
 {
 	if (attr) {
-		kmem_free(attr->name);
-		kmem_free(attr->value);
-		kmem_free(attr);
+		kmem_free_sz(attr->name);
+		kmem_free_sz(attr->value);
+		kmem_free_sz(attr);
 		return 0;
 	}
 	return -1;
