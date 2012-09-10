@@ -17,14 +17,13 @@ ifneq ($(GCC_INCDIR),"")
 SYS_INC_DIRS += -I $(subst :, -I, ${GCC_INCDIR})
 endif
 ifneq ($(GCC_LIBDIR),"")
-SYS_LIB_DIRS := -L $(subst :, -L , ${GCC_LIBDIR})
+SYS_LIB_LDFLAGS := -L $(subst :, -L , ${GCC_LIBDIR})
 endif
 
 #WFLAGS := -Werror
 
 ifeq ($(FAINT_PLATFORM),x86)
 	export LOCAL_CFLAGS := $(DBG_CFLAGS) $(WFLAGS) -fno-strict-aliasing -DPLATFORM_X86
-	export SYS_LIB_LDFLAGS :=
 	CC=gcc -m32
 	AR=ar
 	LD=ld
@@ -35,8 +34,7 @@ else ifeq ($(FAINT_PLATFORM),5602)
 	LD:=$(CROSS_COMPILE)ld
 	export CC AR LD
 	export LOCAL_CFLAGS := $(DBG_CFLAGS) $(WFLAGS) -fno-strict-aliasing -DPLATFORM_5602
-	export SYS_LIB_LDFLAGS :=
-	export SYS_LIB_DIRS += -L $(LINUX_KERNEL)/../../embedded_rootfs/build/readline-5.1
+	export SYS_LIB_LDFLAGS += -L $(LINUX_KERNEL)/../../embedded_rootfs/build/readline-5.1
 else ifeq ($(FAINT_PLATFORM),marvell)
 	CROSS_COMPILE:=arm-marvell-linux-gnueabi-
 	CC:=$(CROSS_COMPILE)gcc
@@ -45,7 +43,7 @@ else ifeq ($(FAINT_PLATFORM),marvell)
 	export CC AR LD
 	export LOCAL_CFLAGS := $(DBG_CFLAGS) $(WFLAGS) -fno-strict-aliasing -DPLATFORM_MARVELL -D__LINUX__ -D_REENTRANT -D_LARGEFILE64_SOURCE
 	export SYS_LIB_LDFLAGS :=
-	export SYS_LIB_DIRS +=
+	export SYS_LIB_LDFLAGS +=
 else ifeq ($(FAINT_PLATFORM),3602)
 	CROSS_COMPILE:=mips64-octeon-linux-gnu-
 	CC:=$(CROSS_COMPILE)gcc -mabi=n32
@@ -54,7 +52,7 @@ else ifeq ($(FAINT_PLATFORM),3602)
 	export CC AR LD
 	export LOCAL_CFLAGS := $(DBG_CFLAGS) $(WFLAGS) -fno-strict-aliasing -DPLATFORM_3602
 	export SYS_LIB_LDFLAGS :=
-	export SYS_LIB_DIRS += -L $(LINUX_KERNEL)/../../embedded_rootfs/build/readline-5.1
+	export SYS_LIB_LDFLAGS += -L $(LINUX_KERNEL)/../../embedded_rootfs/build/readline-5.1
 endif
 
 MAKE += CC="$(CC)" AR="$(AR)" LD="$(LD)"
