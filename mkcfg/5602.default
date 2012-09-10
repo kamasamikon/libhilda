@@ -1,0 +1,16 @@
+FAINT_PLATFORM += 5602
+FAINT_DEBUG += yes
+
+OCTEON_SDK_ROOT += 
+CAVIUM_SRC_ROOT += 
+LINUX_KERNEL += /opt/cavium5602sdk/kernels/linux-2.6.31.1-cavm1
+LINUX_SRC += /opt/cavium5602sdk/kernels/linux-2.6.31.1-cavm1
+GCC_PATH += /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/tools/bin/
+GCC_INCDIR += /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/sysroot/usr/include
+GCC_LIBDIR += /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/sysroot/usr/lib
+GCC_LIBDIR += /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/sysroot/usr/lib
+IMG_FS_ROOT += /opt/cavium5602sdk/initramfs3
+IMG_MK_ROOT += /opt/cavium5602sdk/netHD
+IMG_MK_TARGET += 
+IMG_MK_OUTPUT += /opt/cavium5602sdk/kernels/linux-2.6.31.1-cavm1/arch/arm/boot/bootpImage
+
