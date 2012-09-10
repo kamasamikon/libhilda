@@ -1,0 +1,20 @@
+FAINT_PLATFORM += marvell
+FAINT_DEBUG += yes
+
+LINUX_KERNEL += /opt/MV88DE3010_SDK/Linux/linux_kernel/source
+LINUX_SRC += /opt/MV88DE3010_SDK/Linux/linux_kernel/source
+GCC_PATH += /usr/local/arm-marvell-linux-gnueabi/bin
+GCC_INCDIR += /opt/MV88DE3010_SDK/Linux/rootfs/rootfs_release/rootfs_packages/marvell_tools-0.1/usr/local/arm-marvell-linux-gnueabi/libc/usr/include
+GCC_INCDIR += /opt/MV88DE3010_SDK/Linux/rootfs/rootfs_release/rootfs_packages/DirectFB-1.2.9/usr/include/directfb
+GCC_INCDIR += /opt/MV88DE3010_SDK/Customization_Data/File_Systems/application/include
+GCC_INCDIR += /opt/MV88DE3010_SDK/Linux/rootfs/rootfs_release/rootfs_packages/expat-2.0.1/usr/include
+GCC_LIBDIR += /opt/MV88DE3010_SDK/Linux/rootfs/rootfs_release/rootfs_packages/marvell_tools-0.1/usr/local/lib
+GCC_LIBDIR += /opt/MV88DE3010_SDK/Customization_Data/File_Systems/rootfs/usr/lib
+GCC_LIBDIR += /opt/MV88DE3010_SDK/Customization_Data/File_Systems/rootfs/usr/lib
+GCC_LIBDIR += /opt/MV88DE3010_SDK/Customization_Data/File_Systems/application/lib
+GCC_LIBDIR += /opt/MV88DE3010_SDK/Linux/rootfs/rootfs_release/rootfs_packages/expat-2.0.1/usr/lib
+IMG_FS_ROOT += 
+IMG_MK_ROOT += 
+IMG_MK_TARGET += 
+IMG_MK_OUTPUT += 
+

@@ -57,34 +57,30 @@ amust: banner
 #
 .PHONY: arch.3602
 arch.3602: clean
-	echo -e "Set default gcc to 3602"
-	./cfg_update arch 3602
+	@./cfgmaker.py ${CLOUD_PRJ_ROOT}/mkcfg/3602 ${CLOUD_PRJ_ROOT}/.configure
 
 .PHONY: arch.5602
 arch.5602: clean
-	echo -e "Set default gcc to 5602"
-	./cfg_update arch 5602
+	@./cfgmaker.py ${CLOUD_PRJ_ROOT}/mkcfg/5602 ${CLOUD_PRJ_ROOT}/.configure
 
 .PHONY: arch.marvell
 arch.marvell: clean
-	echo -e "Set default gcc to marvell"
-	./cfg_update arch marvell
+	@./cfgmaker.py ${CLOUD_PRJ_ROOT}/mkcfg/marvell ${CLOUD_PRJ_ROOT}/.configure
 
 .PHONY: arch.x86
 arch.x86: clean
-	echo -e "Set default gcc to x86"
-	./cfg_update arch x86
+	@./cfgmaker.py ${CLOUD_PRJ_ROOT}/mkcfg/x86 ${CLOUD_PRJ_ROOT}/.configure
 
 #########################################################################
 # Architecture of target board
 #
 .PHONY: debug.yes
 debug.yes: clean
-	./cfg_update debug yes
+	@sed -i "s/export FAINT_DEBUG=no/export FAINT_DEBUG=yes/g" ${CLOUD_PRJ_ROOT}/.configure
 
 .PHONY: debug.no
 debug.no: clean
-	./cfg_update debug no
+	@sed -i "s/export FAINT_DEBUG=yes/export FAINT_DEBUG=no/g" ${CLOUD_PRJ_ROOT}/.configure
 
 #########################################################################
 # ${CLOUD_PRJ_ROOT}/hilda
