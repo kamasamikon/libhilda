@@ -91,7 +91,6 @@ opt_get_err                                     @89
 opt_new                                         @90
 opt_del                                         @91
 opt_type                                        @92
-opt_load_argv                                   @93
 opt_setkv                                       @94
 opt_setfile                                     @95
 opt_setbat                                      @96
