@@ -462,10 +462,10 @@ int opt_rpc_server_init(int argc, char *argv[])
 	kushort port = OPT_PORT;
 	int i;
 
-	i = arg_find(argc, argv, "--or-port=", 0);
-	if (i > 0) {
+	i = arg_find(argc, argv, "--or-port", 1);
+	if (i > 0 && (i + 1) < argc) {
 		int tmp;
-		if (!kstr_toint(argv[i] + 10, &tmp))
+		if (!kstr_toint(argv[i + 1], &tmp))
 			port = tmp;
 	}
 
