@@ -67,7 +67,7 @@ struct _opt_rpc_t {
 	char errmsg[2048];
 	int prompt_len;
 
-	void (*wch_func)(void *conn, const char *path);
+	void (*wch_func)(void *conn, const char *path, void *ua, void *ub);
 	void *ua, *ub;
 };
 
@@ -137,7 +137,7 @@ static void *watch_thread_or_client(void *userdata)
 			}
 
 			if (!strncmp("wchnotify ", buf, 10)) {
-				or->wch_func(or, buf + 10);
+				or->wch_func(or, buf + 10, or->ua, or->ub);
 				sprintf(buf, "0 OK\r\n");
 			} else if (!strncmp("bye", buf, 3)) {
 				kerror("remote say bye.\n");
@@ -159,8 +159,8 @@ static void *watch_thread_or_client(void *userdata)
 		}
 	}
 
-	or->wch_func(or, NULL);
-	or->wch_func(or, "");
+	or->wch_func(or, NULL, or->ua, or->ub);
+	or->wch_func(or, "", or->ua, or->ub);
 
 	close(or->wch_socket);
 	or->wch_socket = -1;
@@ -526,7 +526,8 @@ static void config_socket(int s)
 }
 
 void *opt_rpc_connect(const char *server, unsigned short port,
-		void (*wfunc)(void *conn, const char *path),
+		void (*wfunc)(void *conn, const char *path, void *ua, void *ub),
+		void *wfunc_ua, void *wfunc_ub,
 		const char *client_name, const char *user_name,
 		const char *user_pass)
 {
@@ -536,6 +537,9 @@ void *opt_rpc_connect(const char *server, unsigned short port,
 	opt_rpc_t *or = (opt_rpc_t*)kmem_alloz(1, opt_rpc_t);
 
 	or->wch_func = wfunc;
+	or->ua = wfunc_ua;
+	or->ub = wfunc_ub;
+
 	or->opt_socket = -1;
 	or->wch_socket = -1;
 	strcpy(or->client_name, client_name);
