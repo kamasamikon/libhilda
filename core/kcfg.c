@@ -59,14 +59,15 @@ static int setup_skipped_target()
 	for (i = 0; i < argc; i++) {
 		if (!argv[i])
 			continue;
-		if (strncmp(argv[i], "--config-skip=", 14))
+		if (strcmp(argv[i], "--kcfg-skip"))
 			continue;
-		if (!argv[i][14])
+		if (!argv[i + 1])
 			continue;
 
+		i++;
 		for (j = 0; j < arrlen; j++)
 			if (!__g_skips[j])
-				__g_skips[j] = kstr_dup(argv[i] + 14);
+				__g_skips[j] = kstr_dup(argv[i]);
 	}
 
 	return 0;
@@ -347,27 +348,6 @@ static int og_target(void *opt, void *pa, void *pb)
 	return 0;
 }
 
-static void ow_reset(int ses, void *opt, void *wch)
-{
-	int i;
-	kcfg_target_t *ct;
-
-	for (i = 0; i < __g_cfg->target.cnt; i++) {
-		ct = __g_cfg->target.arr[i];
-		if (!strcmp(ct->name, "fakeee"))
-			continue;
-		if (ct)
-			target_opt_clr(ct);
-	}
-
-	i = system("/stv/reset_net_set.sh");
-	cfg_save_dpc(NULL, NULL);
-}
-
-static void ow_load(int ses, void *opt, void *wch)
-{
-	kcfg_load();
-}
 static void ow_save(int ses, void *opt, void *wch)
 {
 	kcfg_save();
@@ -395,12 +375,11 @@ static void setup_opt()
 	opt_add_s("s:/k/cfg/targets", OA_GET, NULL, og_targets);
 	opt_add_s("s:/k/cfg/target", OA_GET, NULL, og_target);
 
-	opt_add_s("e:/k/cfg/reset", OA_SET, NULL, NULL);
-	opt_awch("e:/k/cfg/reset", ow_reset);
-	opt_add_s("e:/k/cfg/load", OA_SET, NULL, NULL);
-	opt_awch("e:/k/cfg/load", ow_load);
 	opt_add_s("e:/k/cfg/save", OA_SET, NULL, NULL);
 	opt_awch("e:/k/cfg/save", ow_save);
+
+	opt_add_s("e:/k/cfg/load/start", OA_DFT, NULL, NULL);
+	opt_add_s("e:/k/cfg/load/done", OA_DFT, NULL, NULL);
 
 	opt_awch("e:/prog/sync", ow_sync);
 
@@ -592,9 +571,20 @@ static int load_targets()
  */
 int kcfg_load()
 {
-	/* make sure the argv is the last to load */
+	if (__g_cfg_loaded == 0)
+		opt_setint("e:/k/cfg/load/start", 1);
+	/*
+	 * XXX: target_file already loaded in kcfg_init,
+	 * The argv should be the last target, because
+	 * argv will overwrite all the other opts.
+	 */
 	target_argv();
+
 	load_targets();
+
+	if (__g_cfg_loaded == 0)
+		opt_setint("e:/k/cfg/load/done", 1);
+
 	__g_cfg_loaded++;
 	return 0;
 }
@@ -633,18 +623,23 @@ static int target_argv()
 	opt_getint("i:/prog/argc", &argc);
 	opt_getptr("p:/prog/argv", (void**)&argv);
 
-	for (i = 0; i < argc; i++)
-		if (argv[i] && (!strncmp(argv[i], "--opt-file=", 11))) {
-			path = argv[i] + 11;
-			if (!path)
-				continue;
+	for (i = 0; i < argc; i++) {
+		if (!argv[i])
+			continue;
+		if (strcmp(argv[i], "--kcfg-file"))
+			continue;
+		if (!argv[i + 1])
+			continue;
 
-			sprintf(name, "argv:%s", path);
-			ct = kcfg_target_add(name, NULL, argv_load,
-					NULL, (void*)path, NULL);
-			if (ct)
-				ct->pass_through = 1;
-		}
+		i++;
+		path = argv[i];
+
+		sprintf(name, "argv:%s", path);
+		ct = kcfg_target_add(name, NULL, argv_load,
+				NULL, (void*)path, NULL);
+		if (ct)
+			ct->pass_through = 1;
+	}
 
 	return 0;
 }
