@@ -67,6 +67,10 @@ arch.5602: clean
 arch.marvell: clean
 	@./cfgmaker.py ${CLOUD_PRJ_ROOT}/mkcfg/marvell ${CLOUD_PRJ_ROOT}/.configure
 
+.PHONY: arch.hi3716c
+arch.hi3716c: clean
+	@./cfgmaker.py ${CLOUD_PRJ_ROOT}/mkcfg/hi3716c ${CLOUD_PRJ_ROOT}/.configure
+
 .PHONY: arch.x86
 arch.x86: clean
 	@./cfgmaker.py ${CLOUD_PRJ_ROOT}/mkcfg/x86 ${CLOUD_PRJ_ROOT}/.configure
