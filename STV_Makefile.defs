@@ -27,6 +27,14 @@ ifeq ($(FAINT_PLATFORM),x86)
 	CC=gcc -m32
 	AR=ar
 	LD=ld
+else ifeq ($(FAINT_PLATFORM),hi3716c)
+	CROSS_COMPILE:=arm-hisiv200-linux-
+	CC:=$(CROSS_COMPILE)gcc
+	AR:=$(CROSS_COMPILE)ar
+	LD:=$(CROSS_COMPILE)ld
+	export CC AR LD
+	export LOCAL_CFLAGS := $(DBG_CFLAGS) $(WFLAGS) -DCHIP_TYPE_hi3716cv101 -DBOARD_TYPE_hi3716cdmoverb
+	export SYS_LIB_LDFLAGS += -L $(LINUX_KERNEL)/../../embedded_rootfs/build/readline-5.1
 else ifeq ($(FAINT_PLATFORM),5602)
 	CROSS_COMPILE:=arm-linux-
 	CC:=$(CROSS_COMPILE)gcc

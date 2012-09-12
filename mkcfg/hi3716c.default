@@ -1,0 +1,16 @@
+FAINT_PLATFORM += hi3716c
+FAINT_DEBUG += yes
+
+OCTEON_SDK_ROOT += 
+CAVIUM_SRC_ROOT += 
+LINUX_KERNEL += 
+LINUX_SRC +=
+GCC_PATH += /opt/hisi-linux/x86-arm/arm-hisiv200-linux/target/bin
+GCC_INCDIR += /opt/hisi-linux/x86-arm/arm-hisiv200-linux/target/usr/include
+GCC_LIBDIR += /opt/hisi-linux/x86-arm/arm-hisiv200-linux/target/usr/lib
+GCC_LIBDIR += 
+IMG_FS_ROOT += 
+IMG_MK_ROOT += 
+IMG_MK_TARGET += 
+IMG_MK_OUTPUT += 
+
