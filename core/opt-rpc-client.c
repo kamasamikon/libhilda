@@ -159,6 +159,7 @@ static void *watch_thread_or_client(void *userdata)
 		}
 	}
 
+	or->wch_func(or, NULL);
 	or->wch_func(or, "");
 
 	close(or->wch_socket);
