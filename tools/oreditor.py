@@ -296,6 +296,8 @@ if __name__ == "__main__":
         out.write("Connect to %s:%d\r\n" % (serv, port))
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
+            opts_all = []
+            opts_shown = []
             sock.connect((serv, port))
 
             say_hey(heystr)
