@@ -24,7 +24,11 @@ int opt_rpc_getstr(void *conn, const char *path, char **val);
 int opt_rpc_getarr(void *conn, const char *path, void **arr, int *len);
 int opt_rpc_getbin(void *conn, const char *path, char **arr, int *len);
 
-void *opt_rpc_connect(const char *server, unsigned short port, void (*wfunc)(void *conn, const char *path), const char *client_name, const char *user_name, const char *user_pass);
+void *opt_rpc_connect(const char *server, unsigned short port,
+		void (*wfunc)(void *conn, const char *path, void *ua, void *ub),
+		void *wfunc_ua, void *wfunc_ub,
+		const char *client_name, const char *user_name,
+		const char *user_pass);
 int opt_rpc_disconnect(void *conn);
 
 #ifdef __cplusplus
