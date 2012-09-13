@@ -291,17 +291,23 @@ if __name__ == "__main__":
     if "--help" in sys.argv:
         help_and_die()
 
-    serv, port, heystr, ol = get_opts()
-    out.write("Connect to %s:%d\r\n" % (serv, port))
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.connect((serv, port))
+    while True:
+        serv, port, heystr, ol = get_opts()
+        out.write("Connect to %s:%d\r\n" % (serv, port))
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.connect((serv, port))
 
-        say_hey(heystr)
-        get_opt_list(ol)
+            say_hey(heystr)
+            get_opt_list(ol)
 
-        show_dialog()
-    finally:
-        sock.close()
+            show_dialog()
+        except KeyboardInterrupt:
+            break
+        except:
+            time.sleep(1)
+            continue
+        finally:
+            sock.close()
 
 # vim: sw=4 ts=4 sts=4 ai et
