@@ -20,7 +20,7 @@ ifneq ($(GCC_LIBDIR),"")
 SYS_LIB_LDFLAGS := -L $(subst :, -L , ${GCC_LIBDIR})
 endif
 
-#WFLAGS := -Werror
+WFLAGS := -DKLOG_MODU=\"hilda\"
 
 ifeq ($(FAINT_PLATFORM),x86)
 	export LOCAL_CFLAGS := $(DBG_CFLAGS) $(WFLAGS) -fno-strict-aliasing -DPLATFORM_X86

@@ -755,8 +755,9 @@ void *spl_lib_getsym(void *lib, const char *name)
 void spl_exedir(char *argv[], kchar *exedir)
 {
 	char *p, buf[1024];
+	int ret;
 
-	readlink("/proc/self/exe", buf, sizeof(buf));
+	ret = readlink("/proc/self/exe", buf, sizeof(buf));
 
 	strcpy(exedir, buf);
 	p = strrchr(exedir, '/');
