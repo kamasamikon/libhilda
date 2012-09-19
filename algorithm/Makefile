@@ -1,5 +1,5 @@
 export CLOUD_PRJ_ROOT = ../..
--include $(CLOUD_PRJ_ROOT)/STV_Makefile.defs
+-include $(CLOUD_PRJ_ROOT)/Makefile.defs
 
 LOCAL_CFLAGS += -Werror
 
@@ -15,5 +15,5 @@ LOCAL_OUT_LIB = algorithm_lib.a
 
 all:BUILD_SUB_DIRS $(LOCAL_OUT_LIB)
 
--include $(CLOUD_PRJ_ROOT)/STV_Makefile.rules
+-include $(CLOUD_PRJ_ROOT)/Makefile.rules
 
