@@ -1,16 +1,29 @@
-FAINT_PLATFORM += hi3716c
-FAINT_DEBUG += yes
+# => -DPLATFORM_hi3716c
+FAINT_PLATFORM := hi3716c
+# yes => -g3, no => -O3
+FAINT_DEBUG := yes
 
-OCTEON_SDK_ROOT += 
-CAVIUM_SRC_ROOT += 
-LINUX_KERNEL += 
-LINUX_SRC +=
+HILDA_DIR := /home/auv/eoe/hilda/
+
+# Will Add the $PATH
 GCC_PATH += /opt/hisi-linux/x86-arm/arm-hisiv200-linux/target/bin
-GCC_INCDIR += /opt/hisi-linux/x86-arm/arm-hisiv200-linux/target/usr/include
-GCC_LIBDIR += /opt/hisi-linux/x86-arm/arm-hisiv200-linux/target/usr/lib
-GCC_LIBDIR += 
-IMG_FS_ROOT += 
-IMG_MK_ROOT += 
-IMG_MK_TARGET += 
-IMG_MK_OUTPUT += 
+
+INCDIR += -I /opt/hisi-linux/x86-arm/arm-hisiv200-linux/target/usr/include
+LIBDIR += -L /opt/hisi-linux/x86-arm/arm-hisiv200-linux/target/usr/lib
+
+LIBS += -lexpat -lpthread -lrt -ldl
+ 
+# DEFINES += -DAAA -DBBB
+DEFINES += -DCHIP_TYPE_hi3716cv101 -DBOARD_TYPE_hi3716cdmoverb
+DEFINES += -D_REENTRANT -D_LARGEFILE64_SOURCE
+
+CFLAGS += -fno-strict-aliasing 
+LDFLAGS +=
+
+CROSS_COMPILE := arm-hisiv200-linux-
+CC := $(CROSS_COMPILE)gcc
+AR := $(CROSS_COMPILE)ar
+LD := $(CROSS_COMPILE)ld
+RM = rm
+OS = linux
 
