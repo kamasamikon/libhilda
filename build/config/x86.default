@@ -1,15 +1,26 @@
-FAINT_PLATFORM += x86
-FAINT_DEBUG += yes
+# => -DPLATFORM_X86
+FAINT_PLATFORM := x86
+# yes => -g3, no => -O3
+FAINT_DEBUG := yes
 
-OCTEON_SDK_ROOT +=
-CAVIUM_SRC_ROOT +=
-LINUX_KERNEL +=
-LINUX_SRC +=
+# Will Add the $PATH
 GCC_PATH +=
-GCC_INCDIR += /usr/include
-GCC_LIBDIR += /usr/lib
-IMG_FS_ROOT +=
-IMG_MK_ROOT +=
-IMG_MK_TARGET +=
-IMG_MK_OUTPUT +=
+
+INCDIR += -I /usr/include
+
+LIBS += -L /usr/lib -lpthread -lrt -ldl -lexpat 
+ 
+# DEFINES += -DAAA -DBBB
+DEFINES += -DCHIP_TYPE_hi3716cv101 -DBOARD_TYPE_hi3716cdmoverb
+DEFINES += -D_REENTRANT -D_LARGEFILE64_SOURCE
+
+CFLAGS += -fno-strict-aliasing 
+LDFLAGS +=
+
+CROSS_COMPILE := 
+CC := $(CROSS_COMPILE)gcc
+AR := $(CROSS_COMPILE)ar
+LD := $(CROSS_COMPILE)ld
+RM = rm
+OS = linux
 

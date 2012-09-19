@@ -1,14 +1,14 @@
 $(LOCAL_OUT_ELF): $(LOCAL_OUT_OBJS) $(LOCAL_LINK_OBJS) $(LOCAL_LIBS)
-	$(CC) $(LOCAL_CFLAGS) $(LOCAL_OUT_OBJS) $(LOCAL_LINK_OBJS) $(GLOBAL_LIBS) $(LOCAL_LIBS) -o $@ $(SYS_LIB_LDFLAGS) 
+	$(CC) $(CFLAGS) $(LOCAL_CFLAGS) $(LOCAL_OUT_OBJS) $(LOCAL_LINK_OBJS) $(LOCAL_LIBS) -o $@ $(LDFLAGS) 
 
 $(LOCAL_OUT_LIB): $(LOCAL_OUT_OBJS) $(LOCAL_LIBS)
 	$(AR) crus $@ $(LOCAL_OUT_OBJS)
 
 $(LOCAL_SHARE_LIB): $(LOCAL_OUT_OBJS) $(LOCAL_LIBS)
-	$(CC) -shared -fPIC $^ -o $@ $(SYS_LIB_LDFLAGS)
+	$(CC) -shared -fPIC $^ -o $@ $(LDFLAGS)
 
 %.o: %.c
-	$(CC) $(LOCAL_CFLAGS) -fPIC $(LOCAL_INCDIRS) $(SYS_INC_DIRS) -c $< -o $@
+	$(CC) $(CFLAGS) $(LOCAL_CFLAGS) -fPIC $(LOCAL_INCDIRS) -c $< -o $@
 
 BUILD_SUB_DIRS: 
 	@$(foreach dir, $(MAKEDIRS),                         \

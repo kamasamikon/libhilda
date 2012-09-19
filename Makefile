@@ -1,6 +1,5 @@
 
 export CLOUD_PRJ_ROOT := $(CURDIR)
-DOT_CFG := $(CLOUD_PRJ_ROOT)/.configure
 
 .PHONY: all clean
 
@@ -32,23 +31,23 @@ amust: banner
 #
 .PHONY: arch.3602
 arch.3602: clean
-	@./cfgmaker.py $(CLOUD_PRJ_ROOT)/build/config/3602 $(CLOUD_PRJ_ROOT)/.configure
+	cp -f $(CLOUD_PRJ_ROOT)/build/config/$(shell echo $@ | sed 's/arch.//g') $(CLOUD_PRJ_ROOT)/.configure
 
 .PHONY: arch.5602
 arch.5602: clean
-	@./cfgmaker.py $(CLOUD_PRJ_ROOT)/build/config/5602 $(CLOUD_PRJ_ROOT)/.configure
+	cp -f $(CLOUD_PRJ_ROOT)/build/config/$(shell echo $@ | sed 's/arch.//g') $(CLOUD_PRJ_ROOT)/.configure
 
 .PHONY: arch.marvell
 arch.marvell: clean
-	@./cfgmaker.py $(CLOUD_PRJ_ROOT)/build/config/marvell $(CLOUD_PRJ_ROOT)/.configure
+	cp -f $(CLOUD_PRJ_ROOT)/build/config/$(shell echo $@ | sed 's/arch.//g') $(CLOUD_PRJ_ROOT)/.configure
 
 .PHONY: arch.hisi
 arch.hisi: clean
-	@./cfgmaker.py $(CLOUD_PRJ_ROOT)/build/config/hisi $(CLOUD_PRJ_ROOT)/.configure
+	cp -f $(CLOUD_PRJ_ROOT)/build/config/$(shell echo $@ | sed 's/arch.//g') $(CLOUD_PRJ_ROOT)/.configure
 
 .PHONY: arch.x86
 arch.x86: clean
-	@./cfgmaker.py $(CLOUD_PRJ_ROOT)/build/config/x86 $(CLOUD_PRJ_ROOT)/.configure
+	cp -f $(CLOUD_PRJ_ROOT)/build/config/$(shell echo $@ | sed 's/arch.//g') $(CLOUD_PRJ_ROOT)/.configure
 
 #########################################################################
 # Architecture of target board
