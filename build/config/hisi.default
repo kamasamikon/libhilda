@@ -1,9 +1,7 @@
-# => -DPLATFORM_hi3716c
-FAINT_PLATFORM := hi3716c
+# => -DPLATFORM_hisi
+FAINT_PLATFORM := hisi
 # yes => -g3, no => -O3
 FAINT_DEBUG := yes
-
-HILDA_DIR := /home/auv/eoe/hilda/
 
 # Will Add the $PATH
 GCC_PATH += /opt/hisi-linux/x86-arm/arm-hisiv200-linux/target/bin

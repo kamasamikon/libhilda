@@ -3,8 +3,6 @@ FAINT_PLATFORM := 5602
 # yes => -g3, no => -O3
 FAINT_DEBUG := yes
 
-HILDA_DIR := /home/auv/eoe/hilda/
-
 # Will Add the $PATH
 GCC_PATH += /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/tools/bin/
 
@@ -16,7 +14,6 @@ LIBS += -L /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/sysroot/usr/lib
 LIBS += -lexpat -lpthread -lrt -ldl
 
 # DEFINES += -DAAA -DBBB
-DEFINES += -DCHIP_TYPE_hi3716cv101 -DBOARD_TYPE_hi3716cdmoverb
 DEFINES += -D_REENTRANT -D_LARGEFILE64_SOURCE
 
 CFLAGS += -fno-strict-aliasing
