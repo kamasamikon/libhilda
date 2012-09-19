@@ -1,16 +1,31 @@
-FAINT_PLATFORM += 5602
-FAINT_DEBUG += yes
+# => -DPLATFORM_5602
+FAINT_PLATFORM := 5602
+# yes => -g3, no => -O3
+FAINT_DEBUG := yes
 
-OCTEON_SDK_ROOT += 
-CAVIUM_SRC_ROOT += 
-LINUX_KERNEL += /opt/cavium5602sdk/kernels/linux-2.6.31.1-cavm1
-LINUX_SRC += /opt/cavium5602sdk/kernels/linux-2.6.31.1-cavm1
+HILDA_DIR := /home/auv/eoe/hilda/
+
+# Will Add the $PATH
 GCC_PATH += /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/tools/bin/
-GCC_INCDIR += /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/sysroot/usr/include
-GCC_LIBDIR += /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/sysroot/usr/lib
-GCC_LIBDIR += /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/sysroot/usr/lib
-IMG_FS_ROOT += /opt/cavium5602sdk/initramfs3
-IMG_MK_ROOT += /opt/cavium5602sdk/netHD
-IMG_MK_TARGET += 
-IMG_MK_OUTPUT += /opt/cavium5602sdk/kernels/linux-2.6.31.1-cavm1/arch/arm/boot/bootpImage
+
+INCDIR += -I /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/sysroot/usr/include
+
+LIBS += -L /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/sysroot/usr/lib
+LIBS += -L /opt/cnstools/arm-linux-glibc-static-2009.q1_RC4/sysroot/usr/lib
+
+LIBS += -lexpat -lpthread -lrt -ldl
+
+# DEFINES += -DAAA -DBBB
+DEFINES += -DCHIP_TYPE_hi3716cv101 -DBOARD_TYPE_hi3716cdmoverb
+DEFINES += -D_REENTRANT -D_LARGEFILE64_SOURCE
+
+CFLAGS += -fno-strict-aliasing
+LDFLAGS +=
+
+CROSS_COMPILE := arm-linux-
+CC := $(CROSS_COMPILE)gcc
+AR := $(CROSS_COMPILE)ar
+LD := $(CROSS_COMPILE)ld
+RM = rm
+OS = linux
 
