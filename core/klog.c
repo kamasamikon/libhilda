@@ -148,8 +148,8 @@ kinline int klog_touches(void)
 
 /* opt setting should has the same format as argv */
 /* just like a raw command line */
-/* --klog-la=left --klog-lf=left=:werw:wer: */
-/* --klog-fa=left --klog-ff=left=:werw:wer: */
+/* --klog-la=leftTLFM --klog-lf=left=:werw:wer: */
+/* --klog-fa=leftTLFM --klog-ff=left=:werw:wer: */
 void klog_setflg(const char *cmd)
 {
 	int argc;
@@ -181,13 +181,15 @@ static void set_fa_str(const char *arg)
 			else if (c == 'f')
 				kflg_clr(cc->flg, LOG_FAT);
 			else if (c == 't')
-				kflg_clr(cc->flg, LOG_TM_REL);
+				kflg_clr(cc->flg, LOG_RTM);
 			else if (c == 'T')
-				kflg_clr(cc->flg, LOG_TM_ABS);
-			else if (c == 'F')
-				kflg_clr(cc->flg, LOG_FUNC);
+				kflg_clr(cc->flg, LOG_ATM);
 			else if (c == 'L')
 				kflg_clr(cc->flg, LOG_LINE);
+			else if (c == 'F')
+				kflg_clr(cc->flg, LOG_FILE);
+			else if (c == 'M')
+				kflg_clr(cc->flg, LOG_MODU);
 		} else if (c == 'l')
 			kflg_set(cc->flg, LOG_LOG);
 		else if (c == 'e')
@@ -195,13 +197,15 @@ static void set_fa_str(const char *arg)
 		else if (c == 'f')
 			kflg_set(cc->flg, LOG_FAT);
 		else if (c == 't')
-			kflg_set(cc->flg, LOG_TM_REL);
+			kflg_set(cc->flg, LOG_RTM);
 		else if (c == 'T')
-			kflg_set(cc->flg, LOG_TM_ABS);
-		else if (c == 'T')
-			kflg_set(cc->flg, LOG_FUNC);
-		else if (c == 'T')
+			kflg_set(cc->flg, LOG_ATM);
+		else if (c == 'L')
 			kflg_set(cc->flg, LOG_LINE);
+		else if (c == 'F')
+			kflg_set(cc->flg, LOG_FILE);
+		else if (c == 'M')
+			kflg_set(cc->flg, LOG_MODU);
 	}
 }
 
@@ -211,8 +215,7 @@ static void set_fa_arg(int argc, char **argv)
 	int i;
 
 	for (i = 0; i < argc && argv[i]; i++)
-		if ((!strncmp(argv[i], "--klog-la=", 10)) ||
-				(!strncmp(argv[i], "--klog-fa=", 10)))
+		if (!strncmp(argv[i], "--klog-fa=", 10))
 			set_fa_str(argv[i] + 10);
 }
 
@@ -227,8 +230,7 @@ static void set_ff_arg(int argc, char **argv)
 	strcat(p, " = ");
 
 	for (i = 0; i < argc && argv[i]; i++)
-		if ((!strncmp(argv[i], "--klog-lf=", 10)) ||
-				(!strncmp(argv[i], "--klog-ff=", 10))) {
+		if (!strncmp(argv[i], "--klog-ff=", 10)) {
 			p = strcat(p, argv[i] + 10);
 			p = strcat(p, " ");
 		}
@@ -236,7 +238,6 @@ static void set_ff_arg(int argc, char **argv)
 
 /**
  * \brief Set parameters for debug message, should be called once in main
- * --klog-la=lef-t --klog-lf=<left>=:file1:file2:
  * --klog-fa=lef-t --klog-ff=<left>=:file1:file2:
  *
  * \param flg ored of LOG_LOG, LOG_ERR and LOG_FAT
@@ -245,6 +246,16 @@ static void set_ff_arg(int argc, char **argv)
 void *klog_init(kuint flg, int argc, char **argv)
 {
 	klogcc_t *cc;
+
+	if (arg_find(argc, argv, "--klog-help", 1) > 0) {
+		wlogf("klog-help:\n");
+		wlogf("\t--klog-fa=leftTLFM --klog-ff=leftTLFM=:file1.c:fileX.c:\n");
+		wlogf("\n\t--klog-fa: fa = Flags for All\n");
+		wlogf("\t--klog-ff: fa = Flags for File\n");
+		wlogf("\n\tA - in leftTLFM can hide the show, e.g. --klog-fa=-le will hide ALL LOG.\n");
+
+		exit(0);
+	}
 
 	if (__g_klogcc)
 		return (void*)__g_klogcc;
@@ -269,14 +280,14 @@ void *klog_init(kuint flg, int argc, char **argv)
  * The command line format is --klog-ff=<left> :file1.ext:file2.ext:file:
  *      file.ext is the file name. If exist dup name file, the flag set to all.
  */
-kuint klog_getflg(const kchar *fn)
+kuint klog_getflg(const kchar *file)
 {
 	klogcc_t *cc = __g_klogcc;
 	kchar pattern[256], *start;
 	kbool set;
 	kuint flg = cc->flg;
 
-	sprintf(pattern, ":%s:", fn);
+	sprintf(pattern, ":%s:", file);
 
 	start = strstr(cc->ff, pattern);
 	if (start) {
@@ -310,27 +321,33 @@ kuint klog_getflg(const kchar *fn)
 				break;
 			case 't':
 				if (set)
-					kflg_set(flg, LOG_TM_REL);
+					kflg_set(flg, LOG_RTM);
 				else
-					kflg_clr(flg, LOG_TM_REL);
+					kflg_clr(flg, LOG_RTM);
 				break;
 			case 'T':
 				if (set)
-					kflg_set(flg, LOG_TM_ABS);
+					kflg_set(flg, LOG_ATM);
 				else
-					kflg_clr(flg, LOG_TM_ABS);
-				break;
-			case 'F':
-				if (set)
-					kflg_set(flg, LOG_FUNC);
-				else
-					kflg_clr(flg, LOG_FUNC);
+					kflg_clr(flg, LOG_ATM);
 				break;
 			case 'N':
 				if (set)
 					kflg_set(flg, LOG_LINE);
 				else
 					kflg_clr(flg, LOG_LINE);
+				break;
+			case 'F':
+				if (set)
+					kflg_set(flg, LOG_FILE);
+				else
+					kflg_clr(flg, LOG_FILE);
+				break;
+			case 'M':
+				if (set)
+					kflg_set(flg, LOG_MODU);
+				else
+					kflg_clr(flg, LOG_MODU);
 				break;
 			default:
 				break;
@@ -346,7 +363,7 @@ kuint klog_getflg(const kchar *fn)
 	return flg;
 }
 
-int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const char *fmt, ...)
+int klogf(unsigned char type, unsigned int flg, const char *modu, const char *file, int ln, const char *fmt, ...)
 {
 	klogcc_t *cc = __g_klogcc;
 	va_list ap;
@@ -367,24 +384,26 @@ int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const ch
 
 	for (i = 0; i < cc->rlogger_cnt; i++)
 		if (cc->rloggers[i])
-			cc->rloggers[i](type, flg, fn, ln, fmt, ap);
+			cc->rloggers[i](type, flg, modu, file, ln, fmt, ap);
 
-	if (flg & (LOG_TM_REL | LOG_TM_ABS))
+	if (flg & (LOG_RTM | LOG_ATM))
 		tick = spl_get_ticks();
 
 	ofs = 0;
 	if (type)
 		ofs += sprintf(bufptr, "|%c|", type);
-	if (flg & LOG_TM_REL)
+	if (flg & LOG_RTM)
 		ofs += sprintf(bufptr + ofs, "%lu|", tick);
-	if (flg & LOG_TM_ABS) {
+	if (flg & LOG_ATM) {
 		t = time(NULL);
 		tmp = localtime(&t);
 		strftime(tmbuf, sizeof(tmbuf), "%Y/%m/%d %H:%M:%S", tmp);
 		ofs += sprintf(bufptr + ofs, "%s.%03d|", tmbuf, (kuint)(tick % 1000));
 	}
-	if (flg & LOG_FUNC)
-		ofs += sprintf(bufptr + ofs, "%s|", fn);
+	if ((flg & LOG_MODU) && modu)
+		ofs += sprintf(bufptr + ofs, "%s|", modu);
+	if ((flg & LOG_FILE) && file)
+		ofs += sprintf(bufptr + ofs, "%s|", file);
 	if (flg & LOG_LINE)
 		ofs += sprintf(bufptr + ofs, "%d|", ln);
 	if (ofs)
@@ -400,12 +419,14 @@ int klogf(unsigned char type, unsigned int flg, const char *fn, int ln, const ch
 		ofs = 0;
 		if (type)
 			ofs += sprintf(bufptr, "|%c|", type);
-		if (flg & LOG_TM_REL)
+		if (flg & LOG_RTM)
 			ofs += sprintf(bufptr + ofs, "%lu|", tick);
-		if (flg & LOG_TM_ABS)
+		if (flg & LOG_ATM)
 			ofs += sprintf(bufptr + ofs, "%s.%03d|", tmbuf, (kuint)(tick % 1000));
-		if (flg & LOG_FUNC)
-			ofs += sprintf(bufptr + ofs, "%s|", fn);
+		if ((flg & LOG_MODU) && modu)
+			ofs += sprintf(bufptr + ofs, "%s|", modu);
+		if ((flg & LOG_FILE) && file)
+			ofs += sprintf(bufptr + ofs, "%s|", file);
 		if (flg & LOG_LINE)
 			ofs += sprintf(bufptr + ofs, "%d|", ln);
 		if (ofs)
