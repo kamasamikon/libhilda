@@ -72,3 +72,9 @@ hilda: amust
 hilda.clean: amust
 	make -C $(CLOUD_PRJ_ROOT)/build/platform/linux clean
 
+#########################################################################
+# Target::install
+#
+.PHONY: install install.test
+install: hilda
+	@./build/install/${FAINT_PLATFORM}

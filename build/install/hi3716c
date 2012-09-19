@@ -1,0 +1,9 @@
+#!/bin/sh
+
+CURDIR=`pwd`
+TARGETDIR=${CURDIR}/build/target/3716c
+
+rm -fr ${TARGETDIR}
+mkdir -p ${TARGETDIR}
+
+cp build/platform/linux/libhilda.so ${TARGETDIR}
