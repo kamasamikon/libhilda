@@ -230,4 +230,7 @@ xmlattr_detach                                  @323
 xmlattr_set_name                                @324
 xmlattr_set_value                               @325
 
+url_getv                                        @400
+split_ipaddr                                    @401
+
 

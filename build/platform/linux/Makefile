@@ -25,6 +25,7 @@ SUB_OBJS_hilda = \
 				 $(CLOUD_PRJ_ROOT)/core/sdlist.o \
 				 $(CLOUD_PRJ_ROOT)/core/trace.o \
 				 $(CLOUD_PRJ_ROOT)/core/xmldoc.o \
+				 $(CLOUD_PRJ_ROOT)/core/misc.o \
 				 $(CLOUD_PRJ_ROOT)/xtcool/linux.o 
 
 LOCAL_CFLAGS += -DMEM_STAT
