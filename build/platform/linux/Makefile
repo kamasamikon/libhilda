@@ -29,6 +29,8 @@ SUB_OBJS_hilda = \
 
 LOCAL_CFLAGS += -DMEM_STAT
 
+LDFLAGS += -lexpat
+
 LOCAL_INCDIRS = -I $(CLOUD_PRJ_ROOT)/inc
 LOCAL_OUT_OBJS = $(SUB_OBJS_hilda)
 LOCAL_OUT_LIB = hilda.a
