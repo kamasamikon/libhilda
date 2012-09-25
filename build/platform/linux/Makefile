@@ -28,10 +28,6 @@ SUB_OBJS_hilda = \
 				 $(CLOUD_PRJ_ROOT)/core/kmisc.o \
 				 $(CLOUD_PRJ_ROOT)/xtcool/linux.o 
 
-LOCAL_CFLAGS += -DMEM_STAT
-
-LDFLAGS += -lexpat
-
 LOCAL_INCDIRS = -I $(CLOUD_PRJ_ROOT)/inc
 LOCAL_OUT_OBJS = $(SUB_OBJS_hilda)
 LOCAL_OUT_LIB = hilda.a
