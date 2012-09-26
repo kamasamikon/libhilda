@@ -9,7 +9,7 @@ extern "C" {
 
 #include <sysdeps.h>
 
-int opt_rpc_server_init(int argc, char *argv[]);
+int opt_rpc_server_init(unsigned short port, int argc, char *argv[]);
 int opt_rpc_server_final();
 
 #ifdef __cplusplus

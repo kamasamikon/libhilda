@@ -79,8 +79,6 @@ static rpc_client_t __g_clients[BACKLOG];
 static int __g_epoll_fd = -1;
 static struct epoll_event __g_epoll_events[__g_epoll_max];
 
-#define OPT_PORT 9000
-
 static char *mk_errline(int ret, char ebuf[])
 {
 	if (EC_OK == ret)
@@ -457,10 +455,12 @@ static void *worker_thread_or_server(void *userdata)
 	return NULL;
 }
 
-int opt_rpc_server_init(int argc, char *argv[])
+int opt_rpc_server_init(unsigned short port, int argc, char *argv[])
 {
-	kushort port = OPT_PORT;
 	int i;
+
+	if (port == 0)
+		port = 9000;
 
 	i = arg_find(argc, argv, "--or-port", 1);
 	if (i > 0 && (i + 1) < argc) {
