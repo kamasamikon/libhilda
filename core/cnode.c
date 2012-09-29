@@ -227,9 +227,9 @@ static int cnode_foreach(CNODE_FOREACH foreach, void *ua, void *ub)
 static int do_dump(cnode_t *node, void *ua, void *ub)
 {
 	char *dmpbuf = (char*)ua, node_buf[1024], dstr_buf[2048], *p;
-	int i, ret;
+	int i, ret, ofs;
 
-	sprintf(node_buf, "\r\nT:%08x A:%08x F:%08x write:%p name:%s\r\n",
+	ofs = sprintf(node_buf, "\r\nT:%08x A:%08x F:%08x write:%p name:%s\r\n",
 			node->type, node->attr, node->flg, node->write,
 			node->name);
 
