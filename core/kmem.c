@@ -134,7 +134,7 @@ kvoid kmem_rel(kvoid *usrptr)
 	}
 
 	if (!(__g_free_cnt % __g_dump_loop))
-		wlogf("\n\n#### MEMORY ####: ac:%d, fc:%d, now:%d\n\n\n",
+		klogs("\n\n#### MEMORY ####: ac:%d, fc:%d, now:%d\n\n\n",
 				__g_alloc_cnt, __g_free_cnt, __g_memusage);
 
 	free(old_rawptr);
@@ -208,8 +208,8 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 	else
 		pbuf = cache;
 
-	wlogf("\n%s\n", banner);
-	wlogf("Data:%p, Length:%d\n", dat, len);
+	klogs("\n%s\n", banner);
+	klogs("Data:%p, Length:%d\n", dat, len);
 
 	while (offset < len) {
 		p = pbuf;
@@ -232,7 +232,7 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 			else
 				p += sprintf(p, ".");
 		p += sprintf(p, "|\n");
-		wlog(pbuf);
+		klogs(pbuf);
 
 		offset += line;
 		dat += width;
