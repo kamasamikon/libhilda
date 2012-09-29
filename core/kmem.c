@@ -5,6 +5,7 @@
 #include <memory.h>
 #include <kmem.h>
 #include <xtcool.h>
+#include <klog.h>
 
 #ifdef MEM_STAT
 static kuint __g_mempeak = 0;
