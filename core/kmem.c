@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include <kmem.h>
+#include <klog.h>
 #include <xtcool.h>
 
 #ifdef MEM_STAT

@@ -322,7 +322,7 @@ kinline void *opt_ub(void *oe)
 
 kinline int opt_get_setpa(void *oe, void **pa)
 {
-	if (kflg_chk_any(((opt_entry_t*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH)) {
+	if (kflg_chk_any(((opt_entry_t*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH | OA_IN_SET)) {
 		*pa = ((opt_entry_t*)oe)->set_pa;
 		return 0;
 	}
@@ -330,7 +330,7 @@ kinline int opt_get_setpa(void *oe, void **pa)
 }
 kinline int opt_get_setpb(void *oe, void **pb)
 {
-	if (kflg_chk_any(((opt_entry_t*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH)) {
+	if (kflg_chk_any(((opt_entry_t*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH | OA_IN_SET)) {
 		*pb = ((opt_entry_t*)oe)->set_pb;
 		return 0;
 	}
