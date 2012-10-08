@@ -291,9 +291,11 @@ if __name__ == "__main__":
     if "--help" in sys.argv:
         help_and_die()
 
+    retries = 0
     while True:
         serv, port, heystr, ol = get_opts()
-        out.write("Connect to %s:%d\r\n" % (serv, port))
+        out.write("\rConnect to %s:%d, try:%08d" % (serv, port, retries))
+        retries += 1
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             opts_all = []
