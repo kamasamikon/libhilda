@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				UseUnicodeResponseFiles="false"
+				AdditionalOptions="/DKLOG_MODU=\&quot;hilda\&quot;"
 				Optimization="0"
 				FavorSizeOrSpeed="0"
 				WholeProgramOptimization="false"
@@ -66,7 +67,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib"
+				AdditionalDependencies="Ws2_32.lib  libexpat.lib"
 				OutputFile="$(SolutionDir)\lib\$(ProjectName)D.dll"
 				ModuleDefinitionFile="hilda.def"
 				GenerateDebugInformation="true"
@@ -120,6 +121,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				UseUnicodeResponseFiles="false"
+				AdditionalOptions="/DKLOG_MODU=\&quot;hilda\&quot;"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
@@ -147,7 +149,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Ws2_32.lib"
+				AdditionalDependencies="Ws2_32.lib libexpat.lib"
 				ShowProgress="0"
 				OutputFile="$(SolutionDir)\lib\$(ProjectName).dll"
 				LinkIncremental="1"
@@ -216,6 +218,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\core\kmisc.c"
+					>
+				</File>
+				<File
 					RelativePath=".\core\kmodu.c"
 					>
 				</File>
@@ -241,6 +247,10 @@
 				</File>
 				<File
 					RelativePath=".\core\sdlist.c"
+					>
+				</File>
+				<File
+					RelativePath=".\core\xmldoc.c"
 					>
 				</File>
 			</Filter>
