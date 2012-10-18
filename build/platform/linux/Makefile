@@ -26,6 +26,7 @@ SUB_OBJS_hilda = \
 				 $(CLOUD_PRJ_ROOT)/core/trace.o \
 				 $(CLOUD_PRJ_ROOT)/core/xmldoc.o \
 				 $(CLOUD_PRJ_ROOT)/core/kmisc.o \
+				 $(CLOUD_PRJ_ROOT)/core/strbuf.o \
 				 $(CLOUD_PRJ_ROOT)/xtcool/linux.o 
 
 LOCAL_INCDIRS = -I $(CLOUD_PRJ_ROOT)/inc

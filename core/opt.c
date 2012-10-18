@@ -14,6 +14,7 @@
 #include <sdlist.h>
 
 #include <xtcool.h>
+#include <strbuf.h>
 
 #include <opt.h>
 
@@ -1778,79 +1779,85 @@ int opt_wch_del(void *wch)
 
 static void diag_list_foreach(void *opt, const char *path, void *userdata)
 {
-	strcat((char*)userdata, path);
-	strcat((char*)userdata, "\r\n");
+	struct strbuf *sb = (struct strbuf*)userdata;
+
+	strbuf_addf(sb, "%s\r\n", path);
 }
 
 static int og_diag_list(void *opt, void *pa, void *pb)
 {
-	char lsbuf[8192];
+	struct strbuf sb;
 
-	lsbuf[0] = '\0';
-	opt_foreach(NULL, diag_list_foreach, (void*)lsbuf);
-	opt_set_cur_str(opt, lsbuf);
+	strbuf_init(&sb, 4096);
+
+	opt_foreach(NULL, diag_list_foreach, (void*)&sb);
+	opt_set_cur_str(opt, sb.buf);
+	strbuf_release(&sb);
+
 	return EC_OK;
 }
 
 static void diag_dump_foreach(void *opt, const char *path, void *userdata)
 {
-	char *rets, buffer[4096 * 8], value[4096 * 8];
+	struct strbuf *sb = (struct strbuf*)userdata;
 	opt_entry_t *oe = (opt_entry_t*)opt;
 	int err, reti;
 	void *retp;
+	char *rets;
 
 	if (!strcmp("s:/k/opt/diag/dump", path))
 		return;
 
+	strbuf_addf(sb, "%1d:%1d:%1d %4d:%4d:%4d:%4d %2d:%2d %-30s\t",
+			!!oe->setter, !!oe->getter, !!oe->delter,
+			oe->set_called, oe->get_called,
+			oe->awch_called, oe->bwch_called,
+			oe->awch_cnt, oe->bwch_cnt, path);
+
 	switch (OPT_TYPE(oe)) {
 	case 'a':
-		sprintf(value, "a:%p, l:%d", oe->v.cur.a.v, oe->v.cur.a.l);
+		strbuf_addf(sb, "a:%p, l:%d", oe->v.cur.a.v, oe->v.cur.a.l);
 		break;
 	case 'b':
 	case 'e':
 	case 'i':
 		reti = 0;
 		err = getint(oe, NULL, NULL, &reti);
-		sprintf(value, "%d", err ? -1 : reti);
+		strbuf_addf(sb, "%d", err ? -1 : reti);
 		break;
 	case 'd':
-		sprintf(value, "a:%p, l:%d", oe->v.cur.a.v, oe->v.cur.a.l);
+		strbuf_addf(sb, "a:%p, l:%d", oe->v.cur.a.v, oe->v.cur.a.l);
 		break;
 	case 's':
 		rets = NULL;
 		err = getstr(oe, NULL, NULL, &rets);
 		if (err)
-			sprintf(value, "(err)");
+			strbuf_addf(sb, "(err)");
 		else if (!rets)
-			sprintf(value, "(null)");
+			strbuf_addf(sb, "(null)");
 		else
-			sprintf(value, "%s", rets);
+			strbuf_addf(sb, "\"%s\"", rets);
 		break;
 	case 'p':
 		retp = 0;
 		err = getptr(oe, NULL, NULL, &retp);
-		sprintf(value, "%p", err ? NULL : retp);
+		strbuf_addf(sb, "%p", err ? NULL : retp);
 		break;
 	}
-
-	sprintf(buffer, "%1d:%1d:%1d %4d:%4d:%4d:%4d %2d:%2d %-30s\t%s\r\n",
-			!!oe->setter, !!oe->getter, !!oe->delter,
-			oe->set_called, oe->get_called,
-			oe->awch_called, oe->bwch_called,
-			oe->awch_cnt, oe->bwch_cnt,
-			path, value);
-
-	strcat((char*)userdata, buffer);
+	strbuf_addf(sb, "\r\n");
 }
 
 static int og_diag_dump(void *opt, void *pa, void *pb)
 {
-	char dmpbuf[8192 * 80];
+	struct strbuf sb;
 
-	sprintf(dmpbuf, "\r\nS:G:D   SC:  GC: AWC: BWC AC:BC PATH ...\r\n");
+	strbuf_init(&sb, 1024 * 128);
+	strbuf_addf(&sb, "\r\nS:G:D   SC:  GC: AWC: BWC AC:BC PATH ...\r\n");
 
-	opt_foreach(NULL, diag_dump_foreach, (void*)dmpbuf);
-	opt_set_cur_str(opt, dmpbuf);
+	opt_foreach(NULL, diag_dump_foreach, (void*)&sb);
+	opt_set_cur_str(opt, sb.buf);
+	strbuf_release(&sb);
+
 	return EC_OK;
 }
 
@@ -1858,27 +1865,31 @@ static int og_diag_wch_notyet(void *opt, void *pa, void *pb)
 {
 	K_dlist_entry *entry;
 	opt_watch_t *wch;
-	char dmpbuf[8192 * 80], *p = dmpbuf;
+	struct strbuf sb;
 
-	p += sprintf(p, "nywch.ahdr:\n");
+	strbuf_init(&sb, 4096);
+
+	strbuf_addf(&sb, "nywch.ahdr:\n");
 	entry = __g_optcc->nywch.ahdr.next;
 	while (entry != &__g_optcc->nywch.ahdr) {
 		wch = FIELD_TO_STRUCTURE(entry, opt_watch_t, entry);
 		entry = entry->next;
 
-		p += sprintf(p, "%s\n", wch->path);
+		strbuf_addf(&sb, "%s\n", wch->path);
 	}
 
-	p += sprintf(p, "\nnywch.bhdr:\n");
+	strbuf_addf(&sb, "\nnywch.bhdr:\n");
 	entry = __g_optcc->nywch.bhdr.next;
 	while (entry != &__g_optcc->nywch.bhdr) {
 		wch = FIELD_TO_STRUCTURE(entry, opt_watch_t, entry);
 		entry = entry->next;
 
-		p += sprintf(p, "%s\n", wch->path);
+		strbuf_addf(&sb, "%s\n", wch->path);
 	}
 
-	opt_set_cur_str(opt, dmpbuf);
+	opt_set_cur_str(opt, sb.buf);
+	strbuf_release(&sb);
+
 	return EC_OK;
 }
 

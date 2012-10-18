@@ -295,6 +295,7 @@ if __name__ == "__main__":
     while True:
         serv, port, heystr, ol = get_opts()
         out.write("\rConnect to %s:%d, try:%08d" % (serv, port, retries))
+        out.flush()
         retries += 1
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
