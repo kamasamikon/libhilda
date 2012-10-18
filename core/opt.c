@@ -1432,6 +1432,10 @@ static int setstr(int ses, opt_entry_t *oe, void *pa, void *pb, char *val)
 
 	CALL_AWCH();
 	kflg_clr(oe->attr, OA_IN_SET);
+
+	if (oe->getter)
+		kmem_free_sz(oe->v.cur.s.v);
+
 	return ret;
 }
 
@@ -1602,6 +1606,11 @@ static int setdat(int ses, opt_entry_t *oe,
 
 	CALL_AWCH();
 	kflg_clr(oe->attr, OA_IN_SET);
+
+	if (oe->getter) {
+		kmem_free_sz(oe->v.cur.d.v);
+		oe->v.cur.d.l = 0;
+	}
 	return ret;
 }
 
