@@ -13,6 +13,7 @@
 #include <cnode.h>
 #include <sdlist.h>
 #include <xtcool.h>
+#include <strbuf.h>
 
 #include <kmodu.h>
 
@@ -44,27 +45,26 @@ static int manual_layout();
 static int og_kmodu_diag_dump(void *opt, void *pa, void *pb)
 {
 	kmoducc_t *cc = (kmoducc_t*)opt_ua(opt);
-
 	kmodu_t *mod;
 	K_dlist_entry *entry;
-	char buf[8192], *p = buf;
-	int bytes;
+	struct strbuf sb;
 
-	*p = '\0';
+	strbuf_init(&sb, 4096);
+
 	entry = cc->modhdr.next;
 	while (entry != &cc->modhdr) {
 		mod = FIELD_TO_STRUCTURE(entry, kmodu_t, entry);
 		entry = entry->next;
 
-		bytes = sprintf(p, "\r\n---->\r\n  path:%s\r\n  name:%s\r\n  "
+		strbuf_addf(&sb, "\r\n---->\r\n  path:%s\r\n  name:%s\r\n  "
 				"version:%08x\r\n  type:%d\r\n  handle:%p\r\n  "
 				"hey:%p\r\n  bye:%p\r\n<----\r\n\r\n",
 				mod->path, mod->name, mod->version, mod->type,
 				mod->handle, mod->hey, mod->bye);
-		p += bytes;
 	}
+	opt_set_cur_str(opt, sb.buf);
+	strbuf_release(&sb);
 
-	opt_set_cur_str(opt, buf);
 	return EC_OK;
 }
 

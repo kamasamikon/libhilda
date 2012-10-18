@@ -11,6 +11,7 @@
 #include <opt.h>
 
 #include <xtcool.h>
+#include <strbuf.h>
 
 #include <cnode.h>
 #include <helper.h>
@@ -226,35 +227,29 @@ static int cnode_foreach(CNODE_FOREACH foreach, void *ua, void *ub)
 
 static int do_dump(cnode_t *node, void *ua, void *ub)
 {
-	char *dmpbuf = (char*)ua, node_buf[1024], dstr_buf[2048], *p;
-	int i, ret, ofs;
+	int i;
+	struct strbuf *sb = (struct strbuf*)ua;
 
-	ofs = sprintf(node_buf, "\r\nT:%08x A:%08x F:%08x write:%p name:%s\r\n",
+	strbuf_addf(sb, "\r\nT:%08x A:%08x F:%08x write:%p name:%s\r\n",
 			node->type, node->attr, node->flg, node->write,
 			node->name);
 
-	dstr_buf[0] = '\0';
-	ret = 0;
-	p = dstr_buf;
-	for (i = 0; i < node->dstr.cnt; i++) {
-		ret = sprintf(p, "\t%02d: %s\r\n", i,
+	for (i = 0; i < node->dstr.cnt; i++)
+		strbuf_addf(sb, "\t%02d: %s\r\n", i,
 				node->dstr.arr[i].node->name);
-		p += ret;
-	}
-
-	strcat(dmpbuf, node_buf);
-	strcat(dmpbuf, dstr_buf);
 
 	return 0;
 }
 
 static int og_cnode_diag_dump(void *opt, void *pa, void *pb)
 {
-	char dmpbuf[8192 * 8];
+	struct strbuf sb;
 
-	dmpbuf[0] = '\0';
-	cnode_foreach(do_dump, (void*)dmpbuf, NULL);
-	opt_set_cur_str(opt, dmpbuf);
+	strbuf_init(&sb, 4096);
+	cnode_foreach(do_dump, (void*)&sb, NULL);
+	opt_set_cur_str(opt, sb.buf);
+	strbuf_release(&sb);
+
 	return EC_OK;
 }
 
