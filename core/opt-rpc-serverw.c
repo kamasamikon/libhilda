@@ -483,20 +483,17 @@ static void *worker_thread_or_server(void *userdata)
 			}
 		}
 	}
-
-	return NULL;
 }
 
-int opt_rpc_server_init(int argc, char *argv[])
+int opt_rpc_server_init(unsigned short port, int argc, char *argv[])
 {
-	kushort port = OPT_PORT;
 	int i;
 
 	i = arg_find(argc, argv, "--or-port", 1);
 	if (i > 0 && (i + 1) < argc) {
 		int tmp;
 		if (!kstr_toint(argv[i + 1], &tmp))
-			port = tmp;
+			port = (unsigned short)tmp;
 	}
 
 	select_init();
