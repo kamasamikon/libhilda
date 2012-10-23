@@ -36,6 +36,7 @@
 #include <opt.h>
 
 #include <xtcool.h>
+#include <strbuf.h>
 
 #include <opt-rpc-common.h>
 #include <opt-rpc-server.h>
@@ -238,7 +239,8 @@ static int rpc_client_wch_clr(rpc_client_t *c)
 static void rpc_watch(int ses, void *opt, void *wch)
 {
 	void *ua = wch_ua(wch);
-	char msg[16384], *ini;
+	char *ini;
+	struct strbuf sb;
 	int bytes;
 	char *path = opt_path(opt);
 
@@ -247,11 +249,14 @@ static void rpc_watch(int ses, void *opt, void *wch)
 	if (opt_getini_by_opt(opt, &ini))
 		return;
 
-	bytes = snprintf(msg, sizeof(msg) - 1, "wchnotify %s\r\n%s", path, ini);
-	if (send_watch_message((rpc_client_t*)ua, msg))
+	strbuf_init(&sb, 4096);
+
+	strbuf_addf(&sb, "wchnotify %s\r\n%s", path, ini);
+	if (send_watch_message((rpc_client_t*)ua, sb.buf))
 		close_client((rpc_client_t*)ua);
 
 	kmem_free(ini);
+	strbuf_release(&sb);
 }
 
 /*-----------------------------------------------------------------------
@@ -372,8 +377,8 @@ static __attribute__((unused)) int setnonblocking(int s)
 
 static void *worker_thread_or_server(void *userdata)
 {
-	int ready, i, n;
-	char buf[8192 * 8];
+	int ready, i, n, bufsize = 128 * 1024;
+	void *buf;
 	struct epoll_event ev, *e;
 
 	unsigned short port = (unsigned short)(int)userdata;
@@ -407,10 +412,12 @@ static void *worker_thread_or_server(void *userdata)
 	}
 
 	__g_epoll_fd = epoll_create(__g_epoll_max);
+	memset(&ev, 0, sizeof(ev));
 	ev.data.fd = s_listen;
 	ev.events = EPOLLIN;
 	epoll_ctl(__g_epoll_fd, EPOLL_CTL_ADD, s_listen, &ev);
 
+	buf = kmem_alloc(bufsize, char);
 	for (;;) {
 		do
 			ready = epoll_wait(__g_epoll_fd, __g_epoll_events, __g_epoll_max, -1);
@@ -439,7 +446,7 @@ static void *worker_thread_or_server(void *userdata)
 				continue;
 			}
 
-			if ((n = recv(e->data.fd, buf, sizeof(buf), 0)) > 0) {
+			if ((n = recv(e->data.fd, buf, bufsize, 0)) > 0) {
 				if (do_opt_command(e->data.fd, buf, n))
 					close_connect(e->data.fd);
 			} else {
@@ -448,6 +455,7 @@ static void *worker_thread_or_server(void *userdata)
 			}
 		}
 	}
+	kmem_free(buf);
 
 	close(__g_epoll_fd);
 	__g_epoll_fd = -1;
