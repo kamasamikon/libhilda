@@ -411,7 +411,7 @@ int klogf(unsigned char type, unsigned int flg, const char *modu, const char *fi
 
 	ret = vsnprintf(bufptr + ofs, bufsize - ofs, fmt, ap);
 	while (ret > bufsize - ofs - 1) {
-		bufsize <<= 1;
+		bufsize = ret + ofs + 1;
 		if (bufptr != buffer)
 			kmem_free(bufptr);
 		bufptr = kmem_get(bufsize);

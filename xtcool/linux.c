@@ -757,7 +757,12 @@ void spl_exedir(char *argv[], kchar *exedir)
 	char *p, buf[1024];
 	int ret;
 
+	memset(buf, 0, sizeof(buf));
 	ret = readlink("/proc/self/exe", buf, sizeof(buf));
+	if (ret == -1) {
+		strcpy(exedir, ".");
+		return;
+	}
 
 	strcpy(exedir, buf);
 	p = strrchr(exedir, '/');
