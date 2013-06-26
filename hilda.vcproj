@@ -266,10 +266,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\algorithm\dataqueue.c"
-					>
-				</File>
-				<File
 					RelativePath=".\algorithm\md5sum.c"
 					>
 				</File>

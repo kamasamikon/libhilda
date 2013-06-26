@@ -1,35 +1,34 @@
-export CLOUD_PRJ_ROOT = ../../..
--include $(CLOUD_PRJ_ROOT)/Makefile.defs
+export HI_PRJ_ROOT = ../../..
+-include $(HI_PRJ_ROOT)/Makefile.defs
 
 SUB_OBJS_hilda = \
-				 $(CLOUD_PRJ_ROOT)/algorithm/crc16.o \
-				 $(CLOUD_PRJ_ROOT)/algorithm/crc32.o \
-				 $(CLOUD_PRJ_ROOT)/algorithm/dataqueue.o \
-				 $(CLOUD_PRJ_ROOT)/algorithm/md5sum.o \
-				 $(CLOUD_PRJ_ROOT)/core/cnode.o \
-				 $(CLOUD_PRJ_ROOT)/core/ftfs.o \
-				 $(CLOUD_PRJ_ROOT)/core/hget.o \
-				 $(CLOUD_PRJ_ROOT)/core/karg.o \
-				 $(CLOUD_PRJ_ROOT)/core/kcfg.o \
-				 $(CLOUD_PRJ_ROOT)/core/klog.o \
-				 $(CLOUD_PRJ_ROOT)/core/kmem.o \
-				 $(CLOUD_PRJ_ROOT)/core/kmodu.o \
-				 $(CLOUD_PRJ_ROOT)/core/kmque.o \
-				 $(CLOUD_PRJ_ROOT)/core/kstr.o \
-				 $(CLOUD_PRJ_ROOT)/core/netif.o \
-				 $(CLOUD_PRJ_ROOT)/core/opt.o \
-				 $(CLOUD_PRJ_ROOT)/core/opt-rpc-client.o \
-				 $(CLOUD_PRJ_ROOT)/core/opt-rpc-common.o \
-				 $(CLOUD_PRJ_ROOT)/core/opt-rpc-server.o \
-				 $(CLOUD_PRJ_ROOT)/core/pflock.o \
-				 $(CLOUD_PRJ_ROOT)/core/sdlist.o \
-				 $(CLOUD_PRJ_ROOT)/core/trace.o \
-				 $(CLOUD_PRJ_ROOT)/core/xmldoc.o \
-				 $(CLOUD_PRJ_ROOT)/core/kmisc.o \
-				 $(CLOUD_PRJ_ROOT)/core/strbuf.o \
-				 $(CLOUD_PRJ_ROOT)/xtcool/linux.o 
+				 $(HI_PRJ_ROOT)/algorithm/crc16.o \
+				 $(HI_PRJ_ROOT)/algorithm/crc32.o \
+				 $(HI_PRJ_ROOT)/algorithm/md5sum.o \
+				 $(HI_PRJ_ROOT)/core/cnode.o \
+				 $(HI_PRJ_ROOT)/core/ftfs.o \
+				 $(HI_PRJ_ROOT)/core/hget.o \
+				 $(HI_PRJ_ROOT)/core/karg.o \
+				 $(HI_PRJ_ROOT)/core/kcfg.o \
+				 $(HI_PRJ_ROOT)/core/klog.o \
+				 $(HI_PRJ_ROOT)/core/kmem.o \
+				 $(HI_PRJ_ROOT)/core/kmodu.o \
+				 $(HI_PRJ_ROOT)/core/kmque.o \
+				 $(HI_PRJ_ROOT)/core/kstr.o \
+				 $(HI_PRJ_ROOT)/core/netif.o \
+				 $(HI_PRJ_ROOT)/core/opt.o \
+				 $(HI_PRJ_ROOT)/core/opt-rpc-client.o \
+				 $(HI_PRJ_ROOT)/core/opt-rpc-common.o \
+				 $(HI_PRJ_ROOT)/core/opt-rpc-server.o \
+				 $(HI_PRJ_ROOT)/core/pflock.o \
+				 $(HI_PRJ_ROOT)/core/sdlist.o \
+				 $(HI_PRJ_ROOT)/core/trace.o \
+				 $(HI_PRJ_ROOT)/core/xmldoc.o \
+				 $(HI_PRJ_ROOT)/core/kmisc.o \
+				 $(HI_PRJ_ROOT)/core/strbuf.o \
+				 $(HI_PRJ_ROOT)/xtcool/linux.o 
 
-LOCAL_INCDIRS = -I $(CLOUD_PRJ_ROOT)/inc
+LOCAL_INCDIRS = -I $(HI_PRJ_ROOT)/inc
 LOCAL_OUT_OBJS = $(SUB_OBJS_hilda)
 LOCAL_OUT_LIB = hilda.a
 LOCAL_SHARE_LIB = libhilda.so
@@ -38,4 +37,4 @@ LOCAL_SHARE_LIB = libhilda.so
 
 all: BUILD_SUB_DIRS $(LOCAL_OUT_LIB) $(LOCAL_SHARE_LIB)
 
--include $(CLOUD_PRJ_ROOT)/Makefile.rules
+-include $(HI_PRJ_ROOT)/Makefile.rules

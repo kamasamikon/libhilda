@@ -1,4 +1,4 @@
-include $(CLOUD_PRJ_ROOT)/.configure
+include $(HI_PRJ_ROOT)/.configure
 
 ifeq ($(FAINT_DEBUG),yes)
 	CFLAGS += -g3

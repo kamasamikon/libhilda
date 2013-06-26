@@ -179,13 +179,7 @@ cnode_foreach_stop                              @179
 cnode_foreach_pause                             @180
 cnode_foreach_resume                            @181
 wlog                                            @182
-data_queue_destroy                              @183    
-data_queue_clear                                @184
-data_queue_create                               @185
 kmem_move                                       @186
-data_queue_push_head                            @187
-data_queue_pop_back                             @188
-data_queue_is_empty                             @189
 mentry_dpc_add                                  @190
 mentry_dpc_kill                                 @191
 kmodu_init                                      @192
