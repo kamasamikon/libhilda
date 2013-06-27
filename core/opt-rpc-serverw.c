@@ -599,7 +599,6 @@ static int process_connect(int new_fd)
 			char *pass = buf + ofsarr[5];
 
 			wlogf("---------------------------\n");
-			wlogf("\tSupported client: webserver, cloud, snmp, telnet\n");
 			wlogf("\tsocket: %d\n", new_fd);
 			wlogf("\tclient_mode: %s\n", mode == 'o' ? "Opt" : "Wch");
 			wlogf("\tclient_name: %s\n", rpc_client);
