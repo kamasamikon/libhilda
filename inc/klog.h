@@ -17,6 +17,8 @@ extern "C" {
 /*----------------------------------------------------------------------------
  * debug message mask
  */
+#define LOG_ALL         0xffffffff
+
 #define LOG_LOG         0x00000001
 #define LOG_ERR         0x00000002
 #define LOG_FAT         0x00000004
