@@ -22,6 +22,7 @@ extern "C" {
 #define LOG_LOG         0x00000001
 #define LOG_ERR         0x00000002
 #define LOG_FAT         0x00000004
+#define LOG_TYPE_ALL    0x0000000f
 
 #define LOG_RTM		0x00000100 /* Relative Time */
 #define LOG_ATM		0x00000200 /* ABS Time, in MS */
