@@ -436,6 +436,7 @@ int klogf(unsigned char type, unsigned int flg, const char *modu, const char *fi
 	}
 	va_end(ap);
 
+	ret += ofs;
 	for (i = 0; i < cc->nlogger_cnt; i++)
 		if (cc->nloggers[i])
 			cc->nloggers[i](bufptr, ret);

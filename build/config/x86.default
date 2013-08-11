@@ -11,7 +11,6 @@ INCDIR += -I /usr/include
 LIBS += -L /usr/lib -lpthread -lrt -ldl -lexpat 
  
 # DEFINES += -DAAA -DBBB
-DEFINES += -DCHIP_TYPE_hi3716cv101 -DBOARD_TYPE_hi3716cdmoverb
 DEFINES += -D_REENTRANT -D_LARGEFILE64_SOURCE
 
 CFLAGS += -fno-strict-aliasing 
