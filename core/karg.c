@@ -117,16 +117,16 @@ int arg_find(int argc, char **argv, const char *opt, int fullmatch)
 	int i;
 
 	if (fullmatch) {
-		for (i = 1; i < argc; i++)
+		for (i = 0; i < argc; i++)
 			if (argv[i] && !strcmp(argv[i], opt))
 				return i;
 	} else {
 		int slen = strlen(opt);
-		for (i = 1; i < argc; i++)
+		for (i = 0; i < argc; i++)
 			if (argv[i] && !strncmp(argv[i], opt, slen))
 				return i;
 	}
-	return 0;
+	return -1;
 }
 
 #ifdef KARG_TEST
