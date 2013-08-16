@@ -1,0 +1,27 @@
+# => -DPLATFORM_marvell
+FAINT_PLATFORM := marvell
+# yes => -g3, no => -O3
+FAINT_DEBUG := yes
+
+# Will Add the $PATH
+GCC_PATH += /eoe/opentv/neyu_nemopc_2331/OTV_OS/Opentv5/MAIN/toolchains/stbgcc-4.5.3-2.4/bin
+
+INCDIR += -I /eoe/opentv/neyu_nemopc_2331/OTV_OS/Opentv5/MAIN/toolchains/stbgcc-4.5.3-2.4/mipsel-linux-uclibc/include
+
+LIBS += -L /opt/MV88DE3010_SDK/Linux/rootfs/rootfs_release/rootfs_packages/marvell_tools-0.1/usr/local/lib
+LIBS += -L /opt/MV88DE3010_SDK/Linux/rootfs/rootfs_release/rootfs_packages/expat-2.0.1/usr/lib
+
+LIBS += -lpthread -lrt -ldl
+ 
+DEFINES += -D_REENTRANT -D_LARGEFILE64_SOURCE
+
+CFLAGS += -fno-strict-aliasing 
+LDFLAGS +=
+
+CROSS_COMPILE := mipsel-linux-uclibc-
+CC := $(CROSS_COMPILE)gcc
+AR := $(CROSS_COMPILE)ar
+LD := $(CROSS_COMPILE)ld
+RM = rm
+OS = linux
+

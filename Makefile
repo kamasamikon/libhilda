@@ -49,6 +49,10 @@ arch.hisi: clean
 arch.x86: clean
 	cp -f $(HI_PRJ_ROOT)/build/config/$(shell echo $@ | sed 's/arch.//g') $(HI_PRJ_ROOT)/.configure
 
+.PHONY: arch.7231
+arch.7231: clean
+	cp -f $(HI_PRJ_ROOT)/build/config/$(shell echo $@ | sed 's/arch.//g') $(HI_PRJ_ROOT)/.configure
+
 #########################################################################
 # Architecture of target board
 #

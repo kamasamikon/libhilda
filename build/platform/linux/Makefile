@@ -23,10 +23,13 @@ SUB_OBJS_hilda = \
 				 $(HI_PRJ_ROOT)/core/pflock.o \
 				 $(HI_PRJ_ROOT)/core/sdlist.o \
 				 $(HI_PRJ_ROOT)/core/trace.o \
-				 $(HI_PRJ_ROOT)/core/xmldoc.o \
 				 $(HI_PRJ_ROOT)/core/kmisc.o \
 				 $(HI_PRJ_ROOT)/core/strbuf.o \
 				 $(HI_PRJ_ROOT)/xtcool/linux.o 
+
+ifdef NEVER
+SUB_OBJS_hilda += $(HI_PRJ_ROOT)/core/xmldoc.o
+endif
 
 LOCAL_INCDIRS = -I $(HI_PRJ_ROOT)/inc
 LOCAL_OUT_OBJS = $(SUB_OBJS_hilda)
