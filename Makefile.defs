@@ -1,6 +1,6 @@
 include $(HI_PRJ_ROOT)/.configure
 
-ifeq ($(FAINT_DEBUG),yes)
+ifeq ($(HILDA_DEBUG),yes)
 	CFLAGS += -g3
 else
 	CFLAGS += -O3
