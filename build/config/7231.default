@@ -1,7 +1,7 @@
 # => -DPLATFORM_marvell
-FAINT_PLATFORM := marvell
+HILDA_PLATFORM := 7231
 # yes => -g3, no => -O3
-FAINT_DEBUG := yes
+HILDA_DEBUG := yes
 
 # Will Add the $PATH
 GCC_PATH += /eoe/opentv/neyu_nemopc_2331/OTV_OS/Opentv5/MAIN/toolchains/stbgcc-4.5.3-2.4/bin

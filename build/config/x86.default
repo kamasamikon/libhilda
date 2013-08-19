@@ -1,7 +1,7 @@
 # => -DPLATFORM_X86
-FAINT_PLATFORM := x86
+HILDA_PLATFORM := x86
 # yes => -g3, no => -O3
-FAINT_DEBUG := yes
+HILDA_DEBUG := yes
 
 # Will Add the $PATH
 GCC_PATH +=

@@ -15,8 +15,8 @@ clean: hilda.clean
 banner:
 	@echo
 	@echo "***************************************************************"
-	@echo "* Architecture: $(FAINT_PLATFORM)"
-	@echo "* Debug: $(FAINT_DEBUG)"
+	@echo "* Architecture: $(HILDA_PLATFORM)"
+	@echo "* Debug: $(HILDA_DEBUG)"
 	@echo "***************************************************************"
 	@echo
 
@@ -58,11 +58,11 @@ arch.7231: clean
 #
 .PHONY: debug.yes
 debug.yes: clean
-	@sed -i "s/export FAINT_DEBUG=no/export FAINT_DEBUG=yes/g" $(HI_PRJ_ROOT)/.configure
+	@sed -i "s/export HILDA_DEBUG=no/export HILDA_DEBUG=yes/g" $(HI_PRJ_ROOT)/.configure
 
 .PHONY: debug.no
 debug.no: clean
-	@sed -i "s/export FAINT_DEBUG=yes/export FAINT_DEBUG=no/g" $(HI_PRJ_ROOT)/.configure
+	@sed -i "s/export HILDA_DEBUG=yes/export HILDA_DEBUG=no/g" $(HI_PRJ_ROOT)/.configure
 
 #########################################################################
 # $(HI_PRJ_ROOT)/hilda
@@ -80,4 +80,4 @@ hilda.clean: amust
 #
 .PHONY: install install.test
 install: hilda
-	@./build/install/${FAINT_PLATFORM}
+	@./build/install/${HILDA_PLATFORM}

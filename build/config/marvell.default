@@ -1,7 +1,7 @@
 # => -DPLATFORM_marvell
-FAINT_PLATFORM := marvell
+HILDA_PLATFORM := marvell
 # yes => -g3, no => -O3
-FAINT_DEBUG := yes
+HILDA_DEBUG := yes
 
 # Will Add the $PATH
 GCC_PATH += /usr/local/arm-marvell-linux-gnueabi/bin
