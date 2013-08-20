@@ -397,6 +397,12 @@ int spl_process_kill(SPL_HANDLE h, int signo)
 	int pid = (int)h;
 	return kill(pid, signo);
 }
+
+SPL_HANDLE spl_process_currrent()
+{
+	return (SPL_HANDLE)getpid();
+}
+
 /**
  * \brief Other support
  */

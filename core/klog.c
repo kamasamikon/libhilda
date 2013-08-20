@@ -148,8 +148,6 @@ kinline int klog_touches(void)
 
 /* opt setting should has the same format as argv */
 /* just like a raw command line */
-/* --klog-la=leftTLFM --klog-lf=left=:werw:wer: */
-/* --klog-fa=leftTLFM --klog-ff=left=:werw:wer: */
 void klog_setflg(const char *cmd)
 {
 	int argc;
@@ -190,6 +188,10 @@ static void set_fa_str(const char *arg)
 				kflg_clr(cc->flg, LOG_FILE);
 			else if (c == 'M')
 				kflg_clr(cc->flg, LOG_MODU);
+			else if (c == 'i')
+				kflg_clr(cc->flg, LOG_PID);
+			else if (c == 'I')
+				kflg_clr(cc->flg, LOG_TID);
 		} else if (c == 'l')
 			kflg_set(cc->flg, LOG_LOG);
 		else if (c == 'e')
@@ -206,6 +208,10 @@ static void set_fa_str(const char *arg)
 			kflg_set(cc->flg, LOG_FILE);
 		else if (c == 'M')
 			kflg_set(cc->flg, LOG_MODU);
+		else if (c == 'i')
+			kflg_set(cc->flg, LOG_PID);
+		else if (c == 'I')
+			kflg_set(cc->flg, LOG_TID);
 	}
 }
 
@@ -249,10 +255,23 @@ void *klog_init(kuint flg, int argc, char **argv)
 
 	if (arg_find(argc, argv, "--klog-help", 1) > 0) {
 		wlogf("klog-help:\n");
-		wlogf("\t--klog-fa=leftTLFM --klog-ff=leftTLFM=:file1.c:fileX.c:\n");
-		wlogf("\n\t--klog-fa: fa = Flags for All\n");
+		wlogf("\t--klog-fa=<switch> --klog-ff=<switch>=:file1.c:fileX.c:\n");
+		wlogf("\n");
+		wlogf("\t--klog-fa: fa = Flags for All\n");
 		wlogf("\t--klog-ff: fa = Flags for File\n");
-		wlogf("\n\tA - in leftTLFM can hide the show, e.g. --klog-fa=-le will hide ALL LOG.\n");
+		wlogf("\n");
+		wlogf("\tswitches:\n");
+		wlogf("\tl: Log\n");
+		wlogf("\te: Error\n");
+		wlogf("\tf: Fatal Error\n");
+		wlogf("\tt: Relative Time\n");
+		wlogf("\tT: ABS Time, in MS\n");
+		wlogf("\ti: Process ID\n");
+		wlogf("\tI: Thread ID\n");
+		wlogf("\tN: Line Number\n");
+		wlogf("\tF: File Name\n");
+		wlogf("\tM: Module Name\n");
+		wlogf("\n");
 
 		exit(0);
 	}
@@ -400,6 +419,10 @@ int klogf(unsigned char type, unsigned int flg, const char *modu, const char *fi
 		strftime(tmbuf, sizeof(tmbuf), "%Y/%m/%d %H:%M:%S", tmp);
 		ofs += sprintf(bufptr + ofs, "%s.%03d|", tmbuf, (kuint)(tick % 1000));
 	}
+	if (flg & LOG_PID)
+		ofs += sprintf(bufptr + ofs, "%d|", (int)spl_process_currrent());
+	if (flg & LOG_TID)
+		ofs += sprintf(bufptr + ofs, "%x|", (int)spl_thread_current());
 	if ((flg & LOG_MODU) && modu)
 		ofs += sprintf(bufptr + ofs, "%s|", modu);
 	if ((flg & LOG_FILE) && file)
@@ -423,6 +446,10 @@ int klogf(unsigned char type, unsigned int flg, const char *modu, const char *fi
 			ofs += sprintf(bufptr + ofs, "%lu|", tick);
 		if (flg & LOG_ATM)
 			ofs += sprintf(bufptr + ofs, "%s.%03d|", tmbuf, (kuint)(tick % 1000));
+		if (flg & LOG_PID)
+			ofs += sprintf(bufptr + ofs, "%d|", (int)spl_process_currrent());
+		if (flg & LOG_TID)
+			ofs += sprintf(bufptr + ofs, "%x|", (int)spl_thread_current());
 		if ((flg & LOG_MODU) && modu)
 			ofs += sprintf(bufptr + ofs, "%s|", modu);
 		if ((flg & LOG_FILE) && file)
