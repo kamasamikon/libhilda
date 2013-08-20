@@ -11,7 +11,8 @@
 
 #include <karg.h>
 
-#define ISBLANK(ch) ((ch) == ' ' || (ch) == '\t')
+#define ISNUL(c) ((c) == '\0')
+#define ISBLANK(c) ((c) == ' ' || (c) == '\t')
 #define INITIAL_MAXARGC 16
 
 void free_argv(char **vector)
@@ -25,6 +26,7 @@ void free_argv(char **vector)
 	}
 }
 
+/* XXX: Normal command line, NUL as end, SP as delimiters */
 char **build_argv(const char *input, int *arg_c, char ***arg_v)
 {
 	int squote = 0, dquote = 0, bsquote = 0, argc = 0, maxargc = 0;
@@ -100,9 +102,87 @@ char **build_argv(const char *input, int *arg_c, char ***arg_v)
 		argc++;
 		argv[argc] = NULL;
 
-		while (ISBLANK (*input))
+		while (ISBLANK(*input))
 			input++;
 	} while (*input != '\0');
+
+	kmem_free_s(copybuf);
+
+	*arg_c = argc;
+	*arg_v = argv;
+
+	return argv;
+}
+
+/* XXX: NUL as delimiters */
+char **build_argv_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v)
+{
+	int argc = 0, maxargc = 0;
+	char c, *arg, *copybuf, **argv = NULL, **nargv;
+	const char *input = ibuf;
+
+	*arg_c = argc;
+	if (input == NULL)
+		return NULL;
+
+	copybuf = (char *)kmem_alloc(ilen, char);
+
+	do {
+		while (input - ibuf < ilen) {
+			c = *input;
+			if (ISNUL(c))
+				input++;
+			else
+				break;
+		}
+
+		if ((maxargc == 0) || (argc >= (maxargc - 1))) {
+			if (argv == NULL)
+				maxargc = INITIAL_MAXARGC;
+			else
+				maxargc *= 2;
+
+			nargv = (char **)kmem_realloc(argv,
+					maxargc * sizeof(char*));
+			if (nargv == NULL) {
+				if (argv != NULL) {
+					free_argv(argv);
+					argv = NULL;
+				}
+				break;
+			}
+			argv = nargv;
+			argv[argc] = NULL;
+		}
+
+		arg = copybuf;
+		while (input - ibuf < ilen) {
+			c = *input;
+			if (ISNUL(c))
+				break;
+
+			*arg++ = c;
+			input++;
+		}
+
+		*arg = '\0';
+		argv[argc] = kstr_dup(copybuf);
+		if (argv[argc] == NULL) {
+			free_argv(argv);
+			argv = NULL;
+			break;
+		}
+		argc++;
+		argv[argc] = NULL;
+
+		while (input - ibuf < ilen) {
+			c = *input;
+			if (ISNUL(c))
+				input++;
+			else
+				break;
+		}
+	} while (input - ibuf < ilen);
 
 	kmem_free_s(copybuf);
 

@@ -9,6 +9,7 @@ extern "C" {
 
 #include <sysdeps.h>
 
+char **build_argv_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v);
 char **build_argv(const char *input, int *arg_c, char ***arg_v);
 void free_argv(char **vector);
 
