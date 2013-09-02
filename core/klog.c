@@ -395,10 +395,6 @@ int klogf(unsigned char type, unsigned int flg, const char *modu, const char *fi
 
 	unsigned long tick = 0;
 
-	t = time(NULL);
-	tmp = localtime(&t);
-	strftime(tmbuf, sizeof(tmbuf), "%Y/%m/%d %H:%M:%S", tmp);
-
 	va_start(ap, fmt);
 
 	for (i = 0; i < cc->rlogger_cnt; i++)
