@@ -21,7 +21,7 @@ struct _klogcc_t {
 	kuint flg;
 
 	/** command line for application, seperate by '\0' */
-	kchar ff[2048];
+	kchar ff[4096];
 
 	/** touches is a ref count user change klog arg */
 	kint touches;
@@ -97,7 +97,7 @@ int klog_add_rlogger(KRLOGGER logger)
 			return 0;
 		}
 
-	wlogf("klog_add_logger: Only up to %d logger supported.\n", MAX_RLOGGER);
+	wlogf("klog_add_rlogger: Only up to %d logger supported.\n", MAX_RLOGGER);
 	return -1;
 }
 
@@ -133,13 +133,53 @@ void *klog_attach(void *logcc)
 	return (void*)cc;
 }
 
+static int load_boot_args(int *argc, char ***argv)
+{
+	FILE *fp = fopen("/proc/cmdline", "rt");
+	char buffer[4096];
+	int bytes;
+
+	if (fp) {
+		bytes = fread(buffer, sizeof(char), sizeof(buffer), fp);
+		fclose(fp);
+
+		if (bytes <= 0)
+			return -1;
+
+		buffer[bytes] = '\0';
+		kstr_trim(buffer);
+
+		build_argv(buffer, argc, argv);
+		return 0;
+	}
+	return -1;
+}
+
 kinline void *klog_cc(void)
 {
-	/* XXX: If user don't call klog_init, call it for them */
+	int argc;
+	char **argv, *cmdline;
+	void *cc;
+
 	if (__g_klogcc)
 		return (void*)__g_klogcc;
-	else
-		return klog_init(LOG_ALL, 0, NULL);
+
+	/*
+	 * klog_init not called, load args by myself
+	 */
+	argc = 0;
+	argv = NULL;
+
+	cmdline = spl_get_cmdline();
+	if (cmdline)
+		build_argv(cmdline, argc, argv);
+
+	cc = klog_init(LOG_ALL, argc, argv);
+
+	kmem_free(cmdline);
+	free_argv(argv);
+
+	return cc;
 }
 
 kinline void klog_touch(void)
