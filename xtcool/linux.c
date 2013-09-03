@@ -12,7 +12,6 @@
 #include <dirent.h>
 #include <unistd.h>
 
-#include <klog.h>
 #include <kmem.h>
 
 #include <xtcool.h>
@@ -448,6 +447,28 @@ unsigned long long int spl_time_get_usec(void)
 	struct timespec ts;
 	clock_gettime(CLOCK_REALTIME, &ts);
 	return (ts.tv_sec * 1000000) + (ts.tv_nsec / 1000);
+}
+
+char *spl_get_cmdline()
+{
+	FILE *fp;
+	char buffer[4096];
+	int bytes;
+
+	sprintf(buffer, "/proc/%d/cmdline", getpid());
+	fp = fopen(buffer, "rt");
+	if (fp) {
+		bytes = fread(buffer, sizeof(char), sizeof(buffer), fp);
+		fclose(fp);
+
+		if (bytes <= 0)
+			return NULL;
+
+		buffer[bytes] = '\0';
+		kstr_trim(buffer);
+		return kstr_dup(buffer);
+	}
+	return NULL;
 }
 
 /**
