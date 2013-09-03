@@ -466,7 +466,7 @@ char *spl_get_cmdline()
 
 		buffer[bytes] = '\0';
 		kstr_trim(buffer);
-		return kstr_dup(buffer);
+		return (char*)kstr_dup(buffer);
 	}
 	return NULL;
 }
