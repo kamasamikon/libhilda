@@ -10,12 +10,13 @@ extern "C" {
 #define ARR_INC(STEP, ARR, LEN, TYPE) \
 	do { \
 		void *arr; \
-		(LEN) += STEP; \
+		(LEN) += (STEP); \
 		\
-		arr = kmem_get_z((LEN) * sizeof(TYPE)); \
+		arr = kmem_get((LEN) * sizeof(TYPE)); \
 		if (ARR) { \
-			memcpy(arr, (ARR), ((LEN) - STEP) * sizeof(TYPE)); \
+			memcpy(arr, (ARR), ((LEN) - (STEP)) * sizeof(TYPE)); \
 			kmem_rel((void*)ARR); \
+			memset(((char*)arr) + (((LEN) - (STEP)) * sizeof(TYPE)), 0, (STEP) * sizeof(TYPE)); \
 		} \
 		ARR = (TYPE*)arr; \
 	} while (0)
