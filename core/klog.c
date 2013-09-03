@@ -38,7 +38,7 @@ static void set_ff_arg(int argc, char **argv);
 
 int klog_add_logger(KNLOGGER logger)
 {
-	klogcc_t *cc = __g_klogcc;
+	klogcc_t *cc = (klogcc_t*)klog_cc();
 	int i;
 
 	if (!logger)
@@ -61,7 +61,7 @@ int klog_add_logger(KNLOGGER logger)
 
 int klog_del_logger(KNLOGGER logger)
 {
-	klogcc_t *cc = __g_klogcc;
+	klogcc_t *cc = (klogcc_t*)klog_cc();
 	int i;
 
 	if (!logger)
@@ -80,7 +80,7 @@ int klog_del_logger(KNLOGGER logger)
 
 int klog_add_rlogger(KRLOGGER logger)
 {
-	klogcc_t *cc = __g_klogcc;
+	klogcc_t *cc = (klogcc_t*)klog_cc();
 	int i;
 
 	if (!logger)
@@ -103,7 +103,7 @@ int klog_add_rlogger(KRLOGGER logger)
 
 int klog_del_rlogger(KRLOGGER logger)
 {
-	klogcc_t *cc = __g_klogcc;
+	klogcc_t *cc = (klogcc_t*)klog_cc();
 	int i;
 
 	if (!logger)
@@ -128,22 +128,31 @@ int klog_del_rlogger(KRLOGGER logger)
  */
 void *klog_attach(void *logcc)
 {
-	__g_klogcc = (klogcc_t*)logcc;
-	return (void*)__g_klogcc;
+	klogcc_t *cc = (klogcc_t*)klog_cc();
+
+	return (void*)cc;
 }
 
-void *klog_cc(void)
+kinline void *klog_cc(void)
 {
-	return (void*)__g_klogcc;
+	/* XXX: If user don't call klog_init, call it for them */
+	if (__g_klogcc)
+		return (void*)__g_klogcc;
+	else
+		return klog_init(LOG_ALL, 0, NULL);
 }
 
 kinline void klog_touch(void)
 {
-	__g_klogcc->touches++;
+	klogcc_t *cc = (klogcc_t*)klog_cc();
+
+	cc->touches++;
 }
 kinline int klog_touches(void)
 {
-	return __g_klogcc->touches;
+	klogcc_t *cc = (klogcc_t*)klog_cc();
+
+	return cc->touches;
 }
 
 /* opt setting should has the same format as argv */
@@ -165,7 +174,7 @@ void klog_setflg(const char *cmd)
 
 static void set_fa_str(const char *arg)
 {
-	klogcc_t *cc = __g_klogcc;
+	klogcc_t *cc = (klogcc_t*)klog_cc();
 	char c;
 	const char *p = arg;
 
@@ -228,7 +237,7 @@ static void set_fa_arg(int argc, char **argv)
 /* Flag for Files */
 static void set_ff_arg(int argc, char **argv)
 {
-	klogcc_t *cc = __g_klogcc;
+	klogcc_t *cc = (klogcc_t*)klog_cc();
 	int i;
 	char *p = cc->ff;
 
@@ -301,7 +310,7 @@ void *klog_init(kuint flg, int argc, char **argv)
  */
 kuint klog_getflg(const kchar *file)
 {
-	klogcc_t *cc = __g_klogcc;
+	klogcc_t *cc = (klogcc_t*)klog_cc();
 	kchar pattern[256], *start;
 	kbool set;
 	kuint flg = cc->flg;
@@ -384,7 +393,7 @@ kuint klog_getflg(const kchar *file)
 
 int klogf(unsigned char type, unsigned int flg, const char *modu, const char *file, int ln, const char *fmt, ...)
 {
-	klogcc_t *cc = __g_klogcc;
+	klogcc_t *cc = (klogcc_t*)klog_cc();
 	va_list ap;
 	char buffer[2048], *bufptr = buffer;
 	int i, ret, ofs, bufsize = sizeof(buffer);
