@@ -133,28 +133,6 @@ void *klog_attach(void *logcc)
 	return (void*)cc;
 }
 
-static int load_boot_args(int *argc, char ***argv)
-{
-	FILE *fp = fopen("/proc/cmdline", "rt");
-	char buffer[4096];
-	int bytes;
-
-	if (fp) {
-		bytes = fread(buffer, sizeof(char), sizeof(buffer), fp);
-		fclose(fp);
-
-		if (bytes <= 0)
-			return -1;
-
-		buffer[bytes] = '\0';
-		kstr_trim(buffer);
-
-		build_argv(buffer, argc, argv);
-		return 0;
-	}
-	return -1;
-}
-
 kinline void *klog_cc(void)
 {
 	int argc;
@@ -172,7 +150,7 @@ kinline void *klog_cc(void)
 
 	cmdline = spl_get_cmdline();
 	if (cmdline)
-		build_argv(cmdline, argc, argv);
+		build_argv(cmdline, &argc, &argv);
 
 	cc = klog_init(LOG_ALL, argc, argv);
 
