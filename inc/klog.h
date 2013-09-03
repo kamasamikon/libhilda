@@ -1,4 +1,6 @@
-/* vim:set noet ts=8 sw=8 sts=8 ff=unix: */ #ifndef __K_LOG_H__
+/* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
+
+#ifndef __K_LOG_H__
 #define __K_LOG_H__
 
 #ifdef __cplusplus
@@ -22,11 +24,11 @@ extern "C" {
 #define LOG_FAT         0x00000004 /* f: Fatal Error */
 #define LOG_TYPE_ALL    0x0000000f
 
-#define LOG_RTM		0x00000100 /* t: Relative Time */
-#define LOG_ATM		0x00000200 /* T: ABS Time, in MS */
+#define LOG_RTM         0x00000100 /* t: Relative Time, in MS */
+#define LOG_ATM         0x00000200 /* T: ABS Time, in MS */
 
-#define LOG_PID		0x00001000 /* p: Process ID */
-#define LOG_TID		0x00002000 /* P: Thread ID */
+#define LOG_PID         0x00001000 /* p: Process ID */
+#define LOG_TID         0x00002000 /* P: Thread ID */
 
 #define LOG_LINE        0x00010000 /* N: Line Number */
 #define LOG_FILE        0x00020000 /* F: File Name */
@@ -52,7 +54,7 @@ typedef int (*KRLOGGER)(unsigned char type, unsigned int flg, const char *modu, 
 
 #else
 void *klog_init(kuint deflev, int argc, char **argv);
-void *klog_cc(void);
+kinline void *klog_cc(void);
 void *klog_attach(void *logcc);
 
 int klog_add_logger(KNLOGGER logger);
