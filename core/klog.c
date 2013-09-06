@@ -570,6 +570,8 @@ void klog_rule_add(const char *rule)
 	s_line = strtok(NULL, " |=");
 	s_pid = strtok(NULL, " |=");
 
+	if (!s_prog || !s_modu || !s_file || !s_func || !s_line || !s_pid)
+		return;
 
 	i_prog = klog_prog_name_add(s_prog);
 	i_modu = klog_modu_name_add(s_modu);
