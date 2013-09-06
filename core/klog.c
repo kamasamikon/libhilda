@@ -135,26 +135,22 @@ void *klog_attach(void *logcc)
 
 kinline void *klog_cc(void)
 {
-	int argc;
-	char **argv, *cmdline;
+	int argc, cl_size = 0;
+	char **argv, *cl_buf;
 	void *cc;
 
 	if (__g_klogcc)
 		return (void*)__g_klogcc;
 
-	/*
-	 * klog_init not called, load args by myself
-	 */
+	/* klog_init not called, load args by myself */
 	argc = 0;
 	argv = NULL;
 
-	cmdline = spl_get_cmdline();
-	if (cmdline)
-		build_argv(cmdline, &argc, &argv);
+	cl_buf = spl_get_cmdline(&cl_size);
+	build_argv_nul(cl_buf, cl_size, &argc, &argv);
+	kmem_free(cl_buf);
 
 	cc = klog_init(LOG_ALL, argc, argv);
-
-	kmem_free(cmdline);
 	free_argv(argv);
 
 	return cc;

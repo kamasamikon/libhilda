@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include <kmem.h>
+#include <strbuf.h>
 
 #include <xtcool.h>
 
@@ -449,24 +450,30 @@ unsigned long long int spl_time_get_usec(void)
 	return (ts.tv_sec * 1000000) + (ts.tv_nsec / 1000);
 }
 
-char *spl_get_cmdline()
+/*
+ * buf: IN user provided buffer to put the cmdline data. if NULL, a new will allocated.
+ * size[INOUT]: IN sizeof buf, OUT bytes of all the cmdline.
+ *
+ * return: a pointer to command line, if not equal to buf, caller should free it by free();
+ */
+char *spl_get_cmdline(int *size)
 {
 	FILE *fp;
-	char buffer[4096];
-	int bytes;
+	char path[256];
 
-	sprintf(buffer, "/proc/%d/cmdline", getpid());
-	fp = fopen(buffer, "rt");
+	sprintf(path, "/proc/%d/cmdline", getpid());
+	fp = fopen(path, "rt");
 	if (fp) {
-		bytes = fread(buffer, sizeof(char), sizeof(buffer), fp);
+		struct strbuf sb = STRBUF_INIT;
+
+		while (strbuf_fread(&sb, 2048, fp) > 0)
+			;
 		fclose(fp);
 
-		if (bytes <= 0)
-			return NULL;
+		*size = sb.len;
+		sb.buf[sb.len] = '\0';
 
-		buffer[bytes] = '\0';
-		kstr_trim(buffer);
-		return (char*)kstr_dup(buffer);
+		return (char*)sb.buf;
 	}
 	return NULL;
 }
