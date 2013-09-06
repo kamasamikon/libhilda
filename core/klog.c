@@ -300,7 +300,7 @@ void *klog_init(unsigned int mask, int argc, char **argv)
 	return (void*)__g_klogcc;
 }
 
-int kvlogf(unsigned char type, unsigned int mask,
+int klog_vf(unsigned char type, unsigned int mask,
 		const char *prog, const char *modu,
 		const char *file, const char *func, int ln,
 		const char *fmt, va_list ap)
@@ -423,7 +423,7 @@ int kvlogf(unsigned char type, unsigned int mask,
 
 }
 
-int klogf(unsigned char type, unsigned int mask,
+int klog_f(unsigned char type, unsigned int mask,
 		const char *prog, const char *modu,
 		const char *file, const char *func, int ln,
 		const char *fmt, ...)
@@ -432,7 +432,7 @@ int klogf(unsigned char type, unsigned int mask,
 	int ret;
 
 	va_start(ap, fmt);
-	ret = kvlogf(type, mask, prog, modu, file, func, ln, fmt, ap);
+	ret = klog_vf(type, mask, prog, modu, file, func, ln, fmt, ap);
 	va_end(ap);
 
 	return ret;
