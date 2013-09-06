@@ -95,7 +95,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
  * ktrace, klog, kerror, kfatal etc
  */
 #define klogs(fmt, ...) do { \
-	klogf(0, 0, NULL, NULL, NULL, NULL, 0, fmt, ##__VA_ARGS__); \
+	klog_f(0, 0, NULL, NULL, NULL, NULL, 0, fmt, ##__VA_ARGS__); \
 } while (0)
 
 #define ktrace(fmt, ...) do { \
@@ -108,7 +108,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 			mask = 0; \
 	} \
 	if (mask) \
-		klogf('T', mask, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
+		klog_f('T', mask, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
 } while (0)
 
 #define klog(fmt, ...) do { \
@@ -121,7 +121,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 			mask = 0; \
 	} \
 	if (mask) \
-		klogf('L', mask, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
+		klog_f('L', mask, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
 } while (0)
 
 #define kerror(fmt, ...) do { \
@@ -134,7 +134,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 			mask = 0; \
 	} \
 	if (mask) \
-		klogf('E', mask, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
+		klog_f('E', mask, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
 } while (0)
 
 #define kfatal(fmt, ...) do { \
@@ -147,7 +147,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 			mask = 0; \
 	} \
 	if (mask) \
-		klogf('F', mask, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
+		klog_f('F', mask, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
 } while (0)
 
 #define kassert(_x_) do { \
@@ -157,7 +157,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 			ver_sav = ver_get; \
 			KLOG_SETUP_NAME_AND_ID(); \
 		} \
-		klogf('A', KLOG_ALL, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, \
+		klog_f('A', KLOG_ALL, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, \
 				"\n\t ASSERT NG: \"%s\"\n\n", #_x_); \
 	} \
 } while (0)
@@ -185,8 +185,8 @@ void klog_rule_add(const char *rule);
 
 unsigned int klog_calc_mask(int prog, int modu, int file, int func, int line, int pid);
 
-int klogf(unsigned char type, unsigned int mask, const char *prog, const char *modu, const char *file, const char *func, int ln, const char *fmt, ...);
-int kvlogf(unsigned char type, unsigned int mask, const char *prog, const char *modu, const char *file, const char *func, int ln, const char *fmt, va_list ap);
+int klog_f(unsigned char type, unsigned int mask, const char *prog, const char *modu, const char *file, const char *func, int ln, const char *fmt, ...);
+int klog_vf(unsigned char type, unsigned int mask, const char *prog, const char *modu, const char *file, const char *func, int ln, const char *fmt, va_list ap);
 
 int klog_add_logger(KNLOGGER logger);
 int klog_del_logger(KNLOGGER logger);
