@@ -1,71 +1,110 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
 #include <stdio.h>
-#include <time.h>
+#include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
+#include <libgen.h>
+#include <unistd.h>
+#include <time.h>
 
-#include <klog.h>
-#include <kflg.h>
-#include <karg.h>
+#include <helper.h>
 #include <kmem.h>
+#include <kflg.h>
+#include <xtcool.h>
+#include <karg.h>
 
-#ifndef CFG_KLOG_DO_NOTHING
+#include "klog.h"
 
+/*-----------------------------------------------------------------------
+ * Local definition:
+ */
+
+/* STRing ARRay to save programe name, module name, file name etc */
+typedef struct _strarr_t strarr_t;
+struct _strarr_t {
+	int size;
+	int cnt;
+	char **arr;
+};
+
+typedef struct _rule_t rule_t;
+struct _rule_t {
+	/* XXX: Don't filter ThreadID, it need the getflg called every log */
+
+	/* 0 is know care */
+	/* -1 is all */
+
+	int prog;	/* Program command line */
+	int modu;	/* Module name */
+	int file;	/* File name */
+	int func;	/* Function name */
+
+	int line;	/* Line number */
+
+	int pid;	/* Process ID */
+
+	/* Which flag to be set or clear */
+	unsigned int set, clr;
+};
+
+typedef struct _rulearr_t rulearr_t;
+struct _rulearr_t {
+	int size;
+	int cnt;
+	rule_t *arr;
+};
+
+
+/* How many logger slot */
 #define MAX_NLOGGER 8
 #define MAX_RLOGGER 8
 
 /* Control Center for klog */
 typedef struct _klogcc_t klogcc_t;
 struct _klogcc_t {
-	/** Global flags, set by klog_init, default is no message */
-	kuint flg;
+	/** version is a ref count user change klog arg */
+	int touches;
 
-	/** command line for application, seperate by '\0' */
-	kchar ff[4096];
+	strarr_t arr_file_name;
+	strarr_t arr_modu_name;
+	strarr_t arr_prog_name;
+	strarr_t arr_func_name;
 
-	/** touches is a ref count user change klog arg */
-	kint touches;
+	rulearr_t arr_rule;
 
-	kuchar nlogger_cnt, rlogger_cnt;
+	unsigned char nlogger_cnt, rlogger_cnt;
 	KNLOGGER nloggers[MAX_NLOGGER];
 	KRLOGGER rloggers[MAX_RLOGGER];
 };
 
 static klogcc_t *__g_klogcc = NULL;
 
-static void set_fa_arg(int argc, char **argv);
-static void set_ff_arg(int argc, char **argv);
-
+/*-----------------------------------------------------------------------
+ * klog-logger
+ */
 int klog_add_logger(KNLOGGER logger)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 	int i;
 
-	if (!logger)
-		return -1;
-
 	for (i = 0; i < MAX_NLOGGER; i++)
 		if (cc->nloggers[i] == logger)
 			return 0;
 
-	for (i = 0; i < MAX_NLOGGER; i++)
-		if (!cc->nloggers[i]) {
-			cc->nloggers[i] = logger;
-			cc->nlogger_cnt++;
-			return 0;
-		}
+	if (cc->nlogger_cnt >= MAX_NLOGGER) {
+		wlogf("klog_add_logger: Only up to %d logger supported.\n", MAX_NLOGGER);
+		return -1;
+	}
 
-	wlogf("klog_add_logger: Only up to %d logger supported.\n", MAX_NLOGGER);
-	return -1;
+	cc->nloggers[cc->nlogger_cnt++] = logger;
+	return 0;
 }
 
 int klog_del_logger(KNLOGGER logger)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 	int i;
-
-	if (!logger)
-		return -1;
 
 	for (i = 0; i < cc->nlogger_cnt; i++)
 		if (cc->nloggers[i] == logger) {
@@ -83,31 +122,23 @@ int klog_add_rlogger(KRLOGGER logger)
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 	int i;
 
-	if (!logger)
-		return -1;
-
 	for (i = 0; i < MAX_RLOGGER; i++)
 		if (cc->rloggers[i] == logger)
 			return 0;
 
-	for (i = 0; i < MAX_RLOGGER; i++)
-		if (!cc->rloggers[i]) {
-			cc->rloggers[i] = logger;
-			cc->rlogger_cnt++;
-			return 0;
-		}
+	if (cc->rlogger_cnt >= MAX_RLOGGER) {
+		wlogf("klog_add_logger: Only up to %d logger supported.\n", MAX_RLOGGER);
+		return -1;
+	}
 
-	wlogf("klog_add_rlogger: Only up to %d logger supported.\n", MAX_RLOGGER);
-	return -1;
+	cc->rloggers[cc->rlogger_cnt++] = logger;
+	return 0;
 }
 
 int klog_del_rlogger(KRLOGGER logger)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 	int i;
-
-	if (!logger)
-		return -1;
 
 	for (i = 0; i < cc->rlogger_cnt; i++)
 		if (cc->rloggers[i] == logger) {
@@ -120,6 +151,11 @@ int klog_del_rlogger(KRLOGGER logger)
 	return -1;
 }
 
+
+/*-----------------------------------------------------------------------
+ * implementation
+ */
+static void klog_parse_mask(const char *mask, unsigned int *set, unsigned int *clr);
 
 /**
  * \brief Other module call this to use already inited CC
@@ -150,10 +186,11 @@ kinline void *klog_cc(void)
 	build_argv_nul(cl_buf, cl_size, &argc, &argv);
 	kmem_free(cl_buf);
 
-	cc = klog_init(LOG_ALL, argc, argv);
+	cc = klog_init(KLOG_DFT, argc, argv);
 	free_argv(argv);
 
 	return cc;
+
 }
 
 kinline void klog_touch(void)
@@ -169,135 +206,82 @@ kinline int klog_touches(void)
 	return cc->touches;
 }
 
-/* opt setting should has the same format as argv */
-/* just like a raw command line */
-void klog_setflg(const char *cmd)
+static void load_cfg_file(const char *path)
 {
-	int argc;
-	char **argv;
+	char buf[4096];
+	FILE *fp;
 
-	if ((argv = build_argv(cmd, &argc, &argv)) == NULL)
+	fp = fopen(path, "rt");
+	if (!fp)
 		return;
 
-	set_fa_arg(argc, argv);
-	set_ff_arg(argc, argv);
-	klog_touch();
+	while (fgets(buf, sizeof(buf), fp))
+		klog_rule_add(buf);
 
-	free_argv(argv);
+	fclose(fp);
 }
 
-static void set_fa_str(const char *arg)
+static void load_cfg(int argc, char *argv[])
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
-	char c;
-	const char *p = arg;
-
-	while (c = *p++) {
-		if (c == '-') {
-			c = *p++;
-			if (c == 'l')
-				kflg_clr(cc->flg, LOG_LOG);
-			else if (c == 'e')
-				kflg_clr(cc->flg, LOG_ERR);
-			else if (c == 'f')
-				kflg_clr(cc->flg, LOG_FAT);
-			else if (c == 't')
-				kflg_clr(cc->flg, LOG_RTM);
-			else if (c == 'T')
-				kflg_clr(cc->flg, LOG_ATM);
-			else if (c == 'L')
-				kflg_clr(cc->flg, LOG_LINE);
-			else if (c == 'F')
-				kflg_clr(cc->flg, LOG_FILE);
-			else if (c == 'M')
-				kflg_clr(cc->flg, LOG_MODU);
-			else if (c == 'i')
-				kflg_clr(cc->flg, LOG_PID);
-			else if (c == 'I')
-				kflg_clr(cc->flg, LOG_TID);
-		} else if (c == 'l')
-			kflg_set(cc->flg, LOG_LOG);
-		else if (c == 'e')
-			kflg_set(cc->flg, LOG_ERR);
-		else if (c == 'f')
-			kflg_set(cc->flg, LOG_FAT);
-		else if (c == 't')
-			kflg_set(cc->flg, LOG_RTM);
-		else if (c == 'T')
-			kflg_set(cc->flg, LOG_ATM);
-		else if (c == 'L')
-			kflg_set(cc->flg, LOG_LINE);
-		else if (c == 'F')
-			kflg_set(cc->flg, LOG_FILE);
-		else if (c == 'M')
-			kflg_set(cc->flg, LOG_MODU);
-		else if (c == 'i')
-			kflg_set(cc->flg, LOG_PID);
-		else if (c == 'I')
-			kflg_set(cc->flg, LOG_TID);
-	}
-}
-
-/* Flag for All files */
-static void set_fa_arg(int argc, char **argv)
-{
+	char *cfgpath;
 	int i;
 
-	for (i = 0; i < argc && argv[i]; i++)
-		if (!strncmp(argv[i], "--klog-fa=", 10))
-			set_fa_str(argv[i] + 10);
+	/* Load configure from env */
+	cfgpath = getenv("KLOG_CFGFILE");
+	if (cfgpath)
+		load_cfg_file(cfgpath);
+
+	/* Load configure from command line */
+	i = arg_find(argc, argv, "--klog-cfgfile", 1);
+	if (i > 1)
+		load_cfg_file(argv[i + 1]);
 }
 
-/* Flag for Files */
-static void set_ff_arg(int argc, char **argv)
+static void rule_add_from_mask(unsigned int mask)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	char rule[256];
 	int i;
-	char *p = cc->ff;
 
-	/* XXX: tricky */
-	strcat(p, " = ");
+	strcpy(rule, "0|0|0|0|0|0|=");
+	i = 13;
 
-	for (i = 0; i < argc && argv[i]; i++)
-		if (!strncmp(argv[i], "--klog-ff=", 10)) {
-			p = strcat(p, argv[i] + 10);
-			p = strcat(p, " ");
-		}
+	if (mask & KLOG_TRC)
+		rule[i++] = 't';
+	if (mask & KLOG_LOG)
+		rule[i++] = 'l';
+	if (mask & KLOG_ERR)
+		rule[i++] = 'e';
+	if (mask & KLOG_FAT)
+		rule[i++] = 'f';
+
+	if (mask & KLOG_RTM)
+		rule[i++] = 's';
+	if (mask & KLOG_ATM)
+		rule[i++] = 'S';
+
+	if (mask & KLOG_PID)
+		rule[i++] = 'j';
+	if (mask & KLOG_TID)
+		rule[i++] = 'x';
+
+	if (mask & KLOG_LINE)
+		rule[i++] = 'N';
+	if (mask & KLOG_FILE)
+		rule[i++] = 'F';
+	if (mask & KLOG_MODU)
+		rule[i++] = 'M';
+	if (mask & KLOG_FUNC)
+		rule[i++] = 'H';
+	if (mask & KLOG_PROG)
+		rule[i++] = 'P';
+
+	rule[i++] = '\0';
+	klog_rule_add(rule);
 }
 
-/**
- * \brief Set parameters for debug message, should be called once in main
- * --klog-fa=lef-t --klog-ff=<left>=:file1:file2:
- *
- * \param flg ored of LOG_LOG, LOG_ERR and LOG_FAT
- * \return Debug message flag after set.
- */
-void *klog_init(kuint flg, int argc, char **argv)
+void *klog_init(unsigned int mask, int argc, char **argv)
 {
 	klogcc_t *cc;
-
-	if (arg_find(argc, argv, "--klog-help", 1) > 0) {
-		wlogf("klog-help:\n");
-		wlogf("\t--klog-fa=<switch> --klog-ff=<switch>=:file1.c:fileX.c:\n");
-		wlogf("\n");
-		wlogf("\t--klog-fa: fa = Flags for All\n");
-		wlogf("\t--klog-ff: fa = Flags for File\n");
-		wlogf("\n");
-		wlogf("\tswitches:\n");
-		wlogf("\tl: Log\n");
-		wlogf("\te: Error\n");
-		wlogf("\tf: Fatal Error\n");
-		wlogf("\tt: Relative Time\n");
-		wlogf("\tT: ABS Time, in MS\n");
-		wlogf("\ti: Process ID\n");
-		wlogf("\tI: Thread ID\n");
-		wlogf("\tN: Line Number\n");
-		wlogf("\tF: File Name\n");
-		wlogf("\tM: Module Name\n");
-		wlogf("\n");
-
-		exit(0);
-	}
 
 	if (__g_klogcc)
 		return (void*)__g_klogcc;
@@ -305,110 +289,24 @@ void *klog_init(kuint flg, int argc, char **argv)
 	cc = (klogcc_t*)kmem_alloz(1, klogcc_t);
 	__g_klogcc = cc;
 
-	cc->flg = flg;
+	/* Set default before configure file */
+	if (mask)
+		rule_add_from_mask(mask);
 
-	set_fa_arg(argc, argv);
-	set_ff_arg(argc, argv);
+	load_cfg(argc, argv);
+
 	klog_touch();
 
 	return (void*)__g_klogcc;
 }
 
-/**
- * \brief Current debug message flag.
- *
- * This will check the command line to do more on each file.
- *
- * The command line format is --klog-ff=<left> :file1.ext:file2.ext:file:
- *      file.ext is the file name. If exist dup name file, the flag set to all.
- */
-kuint klog_getflg(const kchar *file)
+int kvlogf(unsigned char type, unsigned int mask,
+		const char *prog, const char *modu,
+		const char *file, const char *func, int ln,
+		const char *fmt, va_list ap)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
-	kchar pattern[256], *start;
-	kbool set;
-	kuint flg = cc->flg;
 
-	sprintf(pattern, ":%s:", file);
-
-	start = strstr(cc->ff, pattern);
-	if (start) {
-		while (*start-- != '=')
-			;
-
-		while (*start != ' ') {
-			if (*(start - 1) == '-')
-				set = kfalse;
-			else
-				set = ktrue;
-
-			switch(*start) {
-			case 'l':
-				if (set)
-					kflg_set(flg, LOG_LOG);
-				else
-					kflg_clr(flg, LOG_LOG);
-				break;
-			case 'e':
-				if (set)
-					kflg_set(flg, LOG_ERR);
-				else
-					kflg_clr(flg, LOG_ERR);
-				break;
-			case 'f':
-				if (set)
-					kflg_set(flg, LOG_FAT);
-				else
-					kflg_clr(flg, LOG_FAT);
-				break;
-			case 't':
-				if (set)
-					kflg_set(flg, LOG_RTM);
-				else
-					kflg_clr(flg, LOG_RTM);
-				break;
-			case 'T':
-				if (set)
-					kflg_set(flg, LOG_ATM);
-				else
-					kflg_clr(flg, LOG_ATM);
-				break;
-			case 'N':
-				if (set)
-					kflg_set(flg, LOG_LINE);
-				else
-					kflg_clr(flg, LOG_LINE);
-				break;
-			case 'F':
-				if (set)
-					kflg_set(flg, LOG_FILE);
-				else
-					kflg_clr(flg, LOG_FILE);
-				break;
-			case 'M':
-				if (set)
-					kflg_set(flg, LOG_MODU);
-				else
-					kflg_clr(flg, LOG_MODU);
-				break;
-			default:
-				break;
-			}
-
-			if (set)
-				start--;
-			else
-				start -= 2;
-		}
-	}
-
-	return flg;
-}
-
-int klogf(unsigned char type, unsigned int flg, const char *modu, const char *file, int ln, const char *fmt, ...)
-{
-	klogcc_t *cc = (klogcc_t*)klog_cc();
-	va_list ap;
 	char buffer[2048], *bufptr = buffer;
 	int i, ret, ofs, bufsize = sizeof(buffer);
 
@@ -416,38 +314,53 @@ int klogf(unsigned char type, unsigned int flg, const char *modu, const char *fi
 	time_t t;
 	struct tm *tmp;
 
-	unsigned long tick = 0;
-
-	va_start(ap, fmt);
+	unsigned long tick;
 
 	for (i = 0; i < cc->rlogger_cnt; i++)
 		if (cc->rloggers[i])
-			cc->rloggers[i](type, flg, modu, file, ln, fmt, ap);
+			cc->rloggers[i](type, mask, prog, modu, file, func, ln, fmt, ap);
 
-	if (flg & (LOG_RTM | LOG_ATM))
+	if (mask & (KLOG_RTM | KLOG_ATM))
 		tick = spl_get_ticks();
 
 	ofs = 0;
+
+	/* Type */
 	if (type)
 		ofs += sprintf(bufptr, "|%c|", type);
-	if (flg & LOG_RTM)
-		ofs += sprintf(bufptr + ofs, "%lu|", tick);
-	if (flg & LOG_ATM) {
+
+	/* Time */
+	if (mask & KLOG_RTM)
+		ofs += sprintf(bufptr + ofs, "s:%lu|", tick);
+	if (mask & KLOG_ATM) {
 		t = time(NULL);
 		tmp = localtime(&t);
 		strftime(tmbuf, sizeof(tmbuf), "%Y/%m/%d %H:%M:%S", tmp);
-		ofs += sprintf(bufptr + ofs, "%s.%03d|", tmbuf, (kuint)(tick % 1000));
+		ofs += sprintf(bufptr + ofs, "S:%s.%03d|", tmbuf, (unsigned int)(tick % 1000));
 	}
-	if (flg & LOG_PID)
-		ofs += sprintf(bufptr + ofs, "%d|", (int)spl_process_currrent());
-	if (flg & LOG_TID)
-		ofs += sprintf(bufptr + ofs, "%x|", (int)spl_thread_current());
-	if ((flg & LOG_MODU) && modu)
-		ofs += sprintf(bufptr + ofs, "%s|", modu);
-	if ((flg & LOG_FILE) && file)
-		ofs += sprintf(bufptr + ofs, "%s|", file);
-	if (flg & LOG_LINE)
-		ofs += sprintf(bufptr + ofs, "%d|", ln);
+
+	/* ID */
+	if (mask & KLOG_PID)
+		ofs += sprintf(bufptr + ofs, "j:%d|", (int)spl_process_currrent());
+	if (mask & KLOG_TID)
+		ofs += sprintf(bufptr + ofs, "x:%x|", (int)spl_thread_current());
+
+	/* Name and LINE */
+	if ((mask & KLOG_PROG) && prog)
+		ofs += sprintf(bufptr + ofs, "P:%s|", prog);
+
+	if ((mask & KLOG_MODU) && modu)
+		ofs += sprintf(bufptr + ofs, "M:%s|", modu);
+
+	if ((mask & KLOG_FILE) && file)
+		ofs += sprintf(bufptr + ofs, "F:%s|", file);
+
+	if ((mask & KLOG_FUNC) && func)
+		ofs += sprintf(bufptr + ofs, "H:%s|", func);
+
+	if (mask & KLOG_LINE)
+		ofs += sprintf(bufptr + ofs, "L:%d|", ln);
+
 	if (ofs)
 		ofs += sprintf(bufptr + ofs, " ");
 
@@ -459,30 +372,47 @@ int klogf(unsigned char type, unsigned int flg, const char *modu, const char *fi
 		bufptr = kmem_get(bufsize);
 
 		ofs = 0;
+
+		/* Type */
 		if (type)
 			ofs += sprintf(bufptr, "|%c|", type);
-		if (flg & LOG_RTM)
-			ofs += sprintf(bufptr + ofs, "%lu|", tick);
-		if (flg & LOG_ATM)
-			ofs += sprintf(bufptr + ofs, "%s.%03d|", tmbuf, (kuint)(tick % 1000));
-		if (flg & LOG_PID)
-			ofs += sprintf(bufptr + ofs, "%d|", (int)spl_process_currrent());
-		if (flg & LOG_TID)
-			ofs += sprintf(bufptr + ofs, "%x|", (int)spl_thread_current());
-		if ((flg & LOG_MODU) && modu)
-			ofs += sprintf(bufptr + ofs, "%s|", modu);
-		if ((flg & LOG_FILE) && file)
-			ofs += sprintf(bufptr + ofs, "%s|", file);
-		if (flg & LOG_LINE)
-			ofs += sprintf(bufptr + ofs, "%d|", ln);
+
+		/* Time */
+		if (mask & KLOG_RTM)
+			ofs += sprintf(bufptr + ofs, "s:%lu|", tick);
+		if (mask & KLOG_ATM)
+			ofs += sprintf(bufptr + ofs, "%s.%03d|", tmbuf, (unsigned int)(tick % 1000));
+
+		/* ID */
+		if (mask & KLOG_PID)
+			ofs += sprintf(bufptr + ofs, "j:%d|", (int)spl_process_currrent());
+		if (mask & KLOG_TID)
+			ofs += sprintf(bufptr + ofs, "x:%x|", (int)spl_thread_current());
+
+		/* Name and LINE */
+		if ((mask & KLOG_PROG) && prog)
+			ofs += sprintf(bufptr + ofs, "P:%s|", prog);
+
+		if ((mask & KLOG_MODU) && modu)
+			ofs += sprintf(bufptr + ofs, "M:%s|", modu);
+
+		if ((mask & KLOG_FILE) && file)
+			ofs += sprintf(bufptr + ofs, "F:%s|", file);
+
+		if ((mask & KLOG_FUNC) && func)
+			ofs += sprintf(bufptr + ofs, "H:%s|", func);
+
+		if (mask & KLOG_LINE)
+			ofs += sprintf(bufptr + ofs, "L:%d|", ln);
+
 		if (ofs)
 			ofs += sprintf(bufptr + ofs, " ");
 
 		ret = vsnprintf(bufptr + ofs, bufsize - ofs, fmt, ap);
 	}
-	va_end(ap);
 
 	ret += ofs;
+
 	for (i = 0; i < cc->nlogger_cnt; i++)
 		if (cc->nloggers[i])
 			cc->nloggers[i](bufptr, ret);
@@ -490,6 +420,250 @@ int klogf(unsigned char type, unsigned int flg, const char *modu, const char *fi
 	if (bufptr != buffer)
 		kmem_free(bufptr);
 	return ret;
+
 }
 
-#endif /* CFG_KLOG_DO_NOTHING */
+int klogf(unsigned char type, unsigned int mask,
+		const char *prog, const char *modu,
+		const char *file, const char *func, int ln,
+		const char *fmt, ...)
+{
+	va_list ap;
+	int ret;
+
+	va_start(ap, fmt);
+	ret = kvlogf(type, mask, prog, modu, file, func, ln, fmt, ap);
+	va_end(ap);
+
+	return ret;
+
+}
+
+char *klog_get_name_part(char *name)
+{
+	char *dup = strdup(name);
+	char *bn = basename(dup);
+
+	bn = bn ? strdup(bn) : strdup("");
+
+	free(dup);
+
+	return bn;
+}
+
+char *klog_get_prog_name()
+{
+	static char *pname = NULL;
+	char buf[256];
+	FILE *fp;
+
+	if (!pname) {
+		sprintf(buf, "/proc/%d/cmdline", getpid());
+		fp = fopen(buf, "rt");
+		if (fp) {
+			fread(buf, sizeof(char), sizeof(buf), fp);
+			fclose(fp);
+			pname = klog_get_name_part(buf);
+		}
+	}
+	return pname;
+}
+
+static int strarr_find(strarr_t *sa, const char *str)
+{
+	int i;
+
+	for (i = 0; i < sa->cnt; i++)
+		if (!strcmp(sa->arr[i], str))
+			return i;
+	return -1;
+}
+
+static int strarr_add(strarr_t *sa, const char *str)
+{
+	int pos = strarr_find(sa, str);
+
+	if (pos != -1)
+		return pos;
+
+	if (sa->cnt >= sa->size)
+		ARR_INC(10, sa->arr, sa->size, char*);
+
+	sa->arr[sa->cnt] = strdup(str);
+	sa->cnt++;
+
+	/* Return the position been inserted */
+	return sa->cnt - 1;
+}
+
+int klog_file_name_add(const char *name)
+{
+	klogcc_t *cc = (klogcc_t*)klog_cc();
+
+	return strarr_add(&cc->arr_file_name, name);
+}
+int klog_modu_name_add(const char *name)
+{
+	klogcc_t *cc = (klogcc_t*)klog_cc();
+
+	return strarr_add(&cc->arr_modu_name, name);
+}
+int klog_prog_name_add(const char *name)
+{
+	klogcc_t *cc = (klogcc_t*)klog_cc();
+
+	return strarr_add(&cc->arr_prog_name, name);
+}
+int klog_func_name_add(const char *name)
+{
+	klogcc_t *cc = (klogcc_t*)klog_cc();
+
+	return strarr_add(&cc->arr_func_name, name);
+}
+
+static int rulearr_add(rulearr_t *ra, int prog, int modu,
+		int file, int func, int line, int pid,
+		unsigned int fset, unsigned int fclr)
+{
+	if (ra->cnt >= ra->size)
+		ARR_INC(1, ra->arr, ra->size, rule_t);
+
+	rule_t *rule = &ra->arr[ra->cnt];
+
+	rule->prog = prog;
+	rule->modu = modu;
+	rule->file = file;
+	rule->func = func;
+	rule->line = line;
+	rule->pid = pid;
+
+	rule->set = fset;
+	rule->clr = fclr;
+
+	ra->cnt++;
+
+	/* Return the position been inserted */
+	return ra->cnt - 1;
+}
+
+/*
+ * rule =
+ * prog | modu | file | func | line | pid = left
+ */
+void klog_rule_add(const char *rule)
+{
+	klogcc_t *cc = (klogcc_t*)klog_cc();
+	int i_prog, i_modu, i_file, i_func, i_line, i_pid;
+	char *s_prog, *s_modu, *s_file, *s_func, *s_line, *s_pid;
+	const char *tmp = rule;
+	char buf[4096];
+
+	/* TODO: split the rule first */
+	/* strtok or strsplit */
+
+	strcpy(buf, rule);
+
+	s_prog = strtok(buf, " |=");
+	s_modu = strtok(NULL, " |=");
+	s_file = strtok(NULL, " |=");
+	s_func = strtok(NULL, " |=");
+	s_line = strtok(NULL, " |=");
+	s_pid = strtok(NULL, " |=");
+
+
+	i_prog = klog_prog_name_add(s_prog);
+	i_modu = klog_modu_name_add(s_modu);
+	i_file = klog_file_name_add(s_file);
+	i_func = klog_func_name_add(s_func);
+
+	i_line = atoi(s_line);
+	i_pid = atoi(s_pid);
+
+	tmp = strchr(rule, '=') + 1;
+
+	/* OK, parse the flag into int */
+	unsigned int set = 0, clr = 0;
+	klog_parse_mask(tmp, &set, &clr);
+
+	if (set || clr)
+		rulearr_add(&cc->arr_rule, i_prog, i_modu, i_file, i_func, i_line, i_pid, set, clr);
+}
+
+static unsigned int get_mask(char c)
+{
+	int i;
+
+	static struct {
+		char code;
+		unsigned int bit;
+	} flagmap[] = {
+		{ 't', KLOG_TRC },
+		{ 'l', KLOG_LOG },
+		{ 'e', KLOG_ERR },
+		{ 'f', KLOG_FAT },
+
+		{ 's', KLOG_RTM },
+		{ 'S', KLOG_ATM },
+
+		{ 'j', KLOG_PID },
+		{ 'x', KLOG_TID },
+
+		{ 'N', KLOG_LINE },
+		{ 'F', KLOG_FILE },
+		{ 'M', KLOG_MODU },
+		{ 'H', KLOG_FUNC },
+		{ 'P', KLOG_PROG },
+	};
+
+	for (i = 0; i < sizeof(flagmap) / sizeof(flagmap[0]); i++)
+		if (flagmap[i].code == c)
+			return flagmap[i].bit;
+	return 0;
+}
+
+static void klog_parse_mask(const char *mask, unsigned int *set, unsigned int *clr)
+{
+	int i = 0, len = strlen(mask);
+	char c;
+
+	*set = 0;
+	*clr = 0;
+
+	for (i = 0; i < len; i++) {
+		c = mask[i];
+		if (c == '-') {
+			c = mask[++i];
+			*clr |= get_mask(c);
+		} else
+			*set |= get_mask(c);
+	}
+}
+
+unsigned int klog_calc_mask(int prog, int modu, int file, int func, int line, int pid)
+{
+	klogcc_t *cc = (klogcc_t*)klog_cc();
+	unsigned int i, all = 0;
+
+	for (i = 0; i < cc->arr_rule.cnt; i++) {
+		rule_t *rule = &cc->arr_rule.arr[i];
+
+		if (rule->prog && rule->prog != prog)
+			continue;
+		if (rule->modu && rule->modu != modu)
+			continue;
+		if (rule->file && rule->file != file)
+			continue;
+		if (rule->func && rule->func != func)
+			continue;
+		if (rule->line && rule->line != line)
+			continue;
+		if (rule->pid && rule->pid != pid)
+			continue;
+
+		kflg_clr(all, rule->clr);
+		kflg_set(all, rule->set);
+	}
+
+	return all;
+}
+
