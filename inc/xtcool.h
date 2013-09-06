@@ -125,7 +125,7 @@ void spl_sleep(int ms);
 unsigned long spl_get_ticks();
 unsigned long long int spl_time_get_usec(void);
 
-char *spl_get_cmdline();
+char *spl_get_cmdline(int *size);
 
 kchar kvfs_path_sep(kvoid);
 kbool kvfs_exist(const kchar *a_path);
