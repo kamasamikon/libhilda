@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				UseUnicodeResponseFiles="false"
-				AdditionalOptions="/DKLOG_MODU=\&quot;hilda\&quot;"
+				AdditionalOptions="/KMODU_NAME=\&quot;hilda\&quot;"
 				Optimization="0"
 				FavorSizeOrSpeed="0"
 				WholeProgramOptimization="false"
@@ -121,7 +121,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				UseUnicodeResponseFiles="false"
-				AdditionalOptions="/DKLOG_MODU=\&quot;hilda\&quot;"
+				AdditionalOptions="/KMODU_NAME=\&quot;hilda\&quot;"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
