@@ -398,7 +398,7 @@ int spl_process_kill(SPL_HANDLE h, int signo)
 	return kill(pid, signo);
 }
 
-SPL_HANDLE spl_process_currrent()
+SPL_HANDLE spl_process_current()
 {
 	return (SPL_HANDLE)getpid();
 }
@@ -470,7 +470,8 @@ char *spl_get_cmdline(int *size)
 			;
 		fclose(fp);
 
-		*size = sb.len;
+		if (size)
+			*size = sb.len;
 		sb.buf[sb.len] = '\0';
 
 		return (char*)sb.buf;
