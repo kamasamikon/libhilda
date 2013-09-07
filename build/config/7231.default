@@ -1,4 +1,4 @@
-# => -DPLATFORM_marvell
+# => -DPLATFORM_7231
 HILDA_PLATFORM := 7231
 # yes => -g3, no => -O3
 HILDA_DEBUG := yes
