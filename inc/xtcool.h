@@ -105,7 +105,7 @@ SPL_HANDLE spl_process_create(int prio, char *const argv[]);
 int spl_process_set_priority(SPL_HANDLE h, int prio);
 int spl_process_wait(SPL_HANDLE h);
 int spl_process_kill(SPL_HANDLE h, int signo);
-SPL_HANDLE spl_process_currrent();
+SPL_HANDLE spl_process_current();
 
 /**
  * \brief Other support

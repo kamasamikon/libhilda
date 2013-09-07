@@ -341,7 +341,7 @@ int klog_vf(unsigned char type, unsigned int mask,
 
 	/* ID */
 	if (mask & KLOG_PID)
-		ofs += sprintf(bufptr + ofs, "j:%d|", (int)spl_process_currrent());
+		ofs += sprintf(bufptr + ofs, "j:%d|", (int)spl_process_current());
 	if (mask & KLOG_TID)
 		ofs += sprintf(bufptr + ofs, "x:%x|", (int)spl_thread_current());
 
@@ -385,7 +385,7 @@ int klog_vf(unsigned char type, unsigned int mask,
 
 		/* ID */
 		if (mask & KLOG_PID)
-			ofs += sprintf(bufptr + ofs, "j:%d|", (int)spl_process_currrent());
+			ofs += sprintf(bufptr + ofs, "j:%d|", (int)spl_process_current());
 		if (mask & KLOG_TID)
 			ofs += sprintf(bufptr + ofs, "x:%x|", (int)spl_thread_current());
 
@@ -454,17 +454,15 @@ char *klog_get_name_part(char *name)
 char *klog_get_prog_name()
 {
 	static char *pname = NULL;
-	char buf[256];
-	FILE *fp;
+	char *cl;
 
-	if (!pname) {
-		sprintf(buf, "/proc/%d/cmdline", getpid());
-		fp = fopen(buf, "rt");
-		if (fp) {
-			fread(buf, sizeof(char), sizeof(buf), fp);
-			fclose(fp);
-			pname = klog_get_name_part(buf);
-		}
+	if (pname)
+		return pname;
+
+	cl = spl_get_cmdline(NULL);
+	if (cl) {
+		pname = klog_get_name_part(cl);
+		kmem_free(cl);
 	}
 	return pname;
 }

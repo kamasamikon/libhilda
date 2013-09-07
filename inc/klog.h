@@ -11,6 +11,7 @@ extern "C" {
 #include <stdarg.h>
 
 #include <sysdeps.h>
+#include <xtcool.h>
 
 /*-----------------------------------------------------------------------
  * Embedded variable used by ktrace, klog, kerror, kfatal etc
@@ -103,7 +104,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 	if (ver_get > ver_sav) { \
 		ver_sav = ver_get; \
 		KLOG_SETUP_NAME_AND_ID(); \
-		mask = klog_calc_mask(__prog_name_id, __modu_name_id, __file_name_id, func_name_id, __LINE__, getpid()); \
+		mask = klog_calc_mask(__prog_name_id, __modu_name_id, __file_name_id, func_name_id, __LINE__, (int)spl_process_current()); \
 		if (!(mask & KLOG_TRC)) \
 			mask = 0; \
 	} \
@@ -116,7 +117,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 	if (ver_get > ver_sav) { \
 		ver_sav = ver_get; \
 		KLOG_SETUP_NAME_AND_ID(); \
-		mask = klog_calc_mask(__prog_name_id, __modu_name_id, __file_name_id, func_name_id, __LINE__, getpid()); \
+		mask = klog_calc_mask(__prog_name_id, __modu_name_id, __file_name_id, func_name_id, __LINE__, (int)spl_process_current()); \
 		if (!(mask & KLOG_LOG)) \
 			mask = 0; \
 	} \
@@ -129,7 +130,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 	if (ver_get > ver_sav) { \
 		ver_sav = ver_get; \
 		KLOG_SETUP_NAME_AND_ID(); \
-		mask = klog_calc_mask(__prog_name_id, __modu_name_id, __file_name_id, func_name_id, __LINE__, getpid()); \
+		mask = klog_calc_mask(__prog_name_id, __modu_name_id, __file_name_id, func_name_id, __LINE__, (int)spl_process_current()); \
 		if (!(mask & KLOG_ERR)) \
 			mask = 0; \
 	} \
@@ -142,7 +143,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 	if (ver_get > ver_sav) { \
 		ver_sav = ver_get; \
 		KLOG_SETUP_NAME_AND_ID(); \
-		mask = klog_calc_mask(__prog_name_id, __modu_name_id, __file_name_id, func_name_id, __LINE__, getpid()); \
+		mask = klog_calc_mask(__prog_name_id, __modu_name_id, __file_name_id, func_name_id, __LINE__, (int)spl_process_current()); \
 		if (!(mask & KLOG_FAT)) \
 			mask = 0; \
 	} \
