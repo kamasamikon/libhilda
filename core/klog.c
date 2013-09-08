@@ -609,8 +609,10 @@ void klog_rule_add(const char *rule)
 
 	klog_parse_mask(s_mask, &set, &clr);
 
-	if (set || clr)
+	if (set || clr) {
 		rulearr_add(&cc->arr_rule, i_prog, i_modu, i_file, i_func, i_line, i_pid, set, clr);
+		klog_touch();
+	}
 }
 void klog_rule_del(int index)
 {
@@ -622,6 +624,7 @@ void klog_rule_del(int index)
 
 	memcpy(&cc->arr_rule.arr[index], &cc->arr_rule.arr[index + 1],
 			(cc->arr_rule.cnt - index - 1) * sizeof(rule_t));
+	klog_touch();
 }
 char *klog_rule_all()
 {
