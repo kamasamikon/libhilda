@@ -183,6 +183,7 @@ int klog_prog_name_add(const char *name);
 int klog_func_name_add(const char *name);
 
 void klog_rule_add(const char *rule);
+void klog_rule_del(int index);
 
 unsigned int klog_calc_mask(int prog, int modu, int file, int func, int line, int pid);
 
