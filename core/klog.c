@@ -164,9 +164,8 @@ static void klog_parse_mask(const char *mask, unsigned int *set, unsigned int *c
  */
 void *klog_attach(void *logcc)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
-
-	return (void*)cc;
+	__g_klogcc = (klogcc_t*)logcc;
+	return (void*)__g_klogcc;
 }
 
 kinline void *klog_cc(void)
@@ -190,7 +189,6 @@ kinline void *klog_cc(void)
 	free_argv(argv);
 
 	return cc;
-
 }
 
 kinline void klog_touch(void)
@@ -242,8 +240,8 @@ static void rule_add_from_mask(unsigned int mask)
 	char rule[256];
 	int i;
 
-	strcpy(rule, "0|0|0|0|0|0|=");
-	i = 13;
+	strcpy(rule, "mask=");
+	i = 5;
 
 	if (mask & KLOG_TRC)
 		rule[i++] = 't';
@@ -494,29 +492,35 @@ static int strarr_add(strarr_t *sa, const char *str)
 	return sa->cnt - 1;
 }
 
+/*
+ * XXX: About return strarr_add(xyz, name) + 1;
+ *
+ * The name index 0 means don't care, it conflict with
+ * array index 0, so here add ONE to skip the value zero
+ */
 int klog_file_name_add(const char *name)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 
-	return strarr_add(&cc->arr_file_name, name);
+	return strarr_add(&cc->arr_file_name, name) + 1;
 }
 int klog_modu_name_add(const char *name)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 
-	return strarr_add(&cc->arr_modu_name, name);
+	return strarr_add(&cc->arr_modu_name, name) + 1;
 }
 int klog_prog_name_add(const char *name)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 
-	return strarr_add(&cc->arr_prog_name, name);
+	return strarr_add(&cc->arr_prog_name, name) + 1;
 }
 int klog_func_name_add(const char *name)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 
-	return strarr_add(&cc->arr_func_name, name);
+	return strarr_add(&cc->arr_func_name, name) + 1;
 }
 
 static int rulearr_add(rulearr_t *ra, int prog, int modu,
@@ -546,47 +550,85 @@ static int rulearr_add(rulearr_t *ra, int prog, int modu,
 
 /*
  * rule =
- * prog | modu | file | func | line | pid = left
+ * prog=xxx,modu=xxx,file=xxx,func=xxx,line=xxx,pid=xxx,mask=left
  */
 void klog_rule_add(const char *rule)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 	int i_prog, i_modu, i_file, i_func, i_line, i_pid;
-	char *s_prog, *s_modu, *s_file, *s_func, *s_line, *s_pid;
-	const char *tmp = rule;
-	char buf[4096];
+	char *s_prog, *s_modu, *s_file, *s_func, *s_line, *s_pid, *s_mask;
+	char buf[1024];
+	int i, blen;
 
-	/* TODO: split the rule first */
-	/* strtok or strsplit */
-
-	strcpy(buf, rule);
-
-	s_prog = strtok(buf, " |=");
-	s_modu = strtok(NULL, " |=");
-	s_file = strtok(NULL, " |=");
-	s_func = strtok(NULL, " |=");
-	s_line = strtok(NULL, " |=");
-	s_pid = strtok(NULL, " |=");
-
-	if (!s_prog || !s_modu || !s_file || !s_func || !s_line || !s_pid)
-		return;
-
-	i_prog = klog_prog_name_add(s_prog);
-	i_modu = klog_modu_name_add(s_modu);
-	i_file = klog_file_name_add(s_file);
-	i_func = klog_func_name_add(s_func);
-
-	i_line = atoi(s_line);
-	i_pid = atoi(s_pid);
-
-	tmp = strchr(rule, '=') + 1;
-
-	/* OK, parse the flag into int */
 	unsigned int set = 0, clr = 0;
-	klog_parse_mask(tmp, &set, &clr);
+
+	buf[0] = ',';
+	strncpy(buf + 1, rule, sizeof(buf) - 2);
+
+	s_mask = strstr(buf, ",mask=");
+	if (!s_mask || !s_mask[6])
+		return;
+	s_mask += 6;
+
+	s_prog = strstr(buf, ",prog=");
+	s_modu = strstr(buf, ",modu=");
+	s_file = strstr(buf, ",file=");
+	s_func = strstr(buf, ",func=");
+	s_line = strstr(buf, ",line=");
+	s_pid = strstr(buf, ",pid=");
+
+	blen = strlen(buf);
+	for (i = 0; i < blen; i++)
+		if (buf[i] == ',')
+			buf[i] = '\0';
+
+	if (!s_prog || !s_prog[6])
+		i_prog = 0;
+	else
+		i_prog = klog_prog_name_add(s_prog + 6);
+	if (!s_modu || !s_modu[6])
+		i_modu = 0;
+	else
+		i_modu = klog_modu_name_add(s_modu + 6);
+	if (!s_file || !s_file[6])
+		i_file = 0;
+	else
+		i_file = klog_file_name_add(s_file + 6);
+	if (!s_func || !s_func[6])
+		i_func = 0;
+	else
+		i_func = klog_func_name_add(s_func + 6);
+	if (!s_line || !s_line[6])
+		i_line = 0;
+	else
+		i_line = atoi(s_line + 6);
+	if (!s_pid || !s_pid[5])
+		i_pid = 0;
+	else
+		i_pid = atoi(s_pid + 6);
+
+	klog_parse_mask(s_mask, &set, &clr);
 
 	if (set || clr)
 		rulearr_add(&cc->arr_rule, i_prog, i_modu, i_file, i_func, i_line, i_pid, set, clr);
+}
+void klog_rule_del(int index)
+{
+	klogcc_t *cc = (klogcc_t*)klog_cc();
+	int i;
+
+	if (index < 0 || index >= cc->arr_rule.cnt)
+		return;
+
+	memcpy(&cc->arr_rule.arr[index], &cc->arr_rule.arr[index + 1],
+			(cc->arr_rule.cnt - index - 1) * sizeof(rule_t));
+}
+char *klog_rule_all()
+{
+	klogcc_t *cc = (klogcc_t*)klog_cc();
+
+	/* TODO: return all the rule */
+	return NULL;
 }
 
 static unsigned int get_mask(char c)
