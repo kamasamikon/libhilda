@@ -16,13 +16,13 @@ extern "C" {
 /*-----------------------------------------------------------------------
  * Embedded variable used by ktrace, klog, kerror, kfatal etc
  */
-static int VAR_UNUSED __file_name_id = -1;
-static char VAR_UNUSED *__file_name = NULL;
+static int VAR_UNUSED __kl_file_name_id_ = -1;
+static char VAR_UNUSED *__kl_file_name_ = NULL;
 
-static int VAR_UNUSED __prog_name_id = -1;
-static char VAR_UNUSED *__prog_name = NULL;
+static int VAR_UNUSED __kl_prog_name_id_ = -1;
+static char VAR_UNUSED *__kl_prog_name_ = NULL;
 
-static int VAR_UNUSED __modu_name_id = -1;
+static int VAR_UNUSED __kl_modu_name_id_ = -1;
 
 
 /*-----------------------------------------------------------------------
@@ -69,25 +69,25 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
  * Embedded variable used by ktrace, klog, kerror, kfatal etc
  */
 #define KLOG_INNER_VAR_DEF() \
-	static int ver_sav = -1; \
-	static int func_name_id = -1; \
-	static int mask = 0; \
-	int ver_get = klog_touches()
+	static int VAR_UNUSED __kl_ver_sav = -1; \
+	static int VAR_UNUSED __kl_func_name_id = -1; \
+	static int VAR_UNUSED __kl_mask = 0; \
+	int VAR_UNUSED __kl_ver_get = klog_touches()
 
 #define KLOG_SETUP_NAME_AND_ID() do { \
-	if (__file_name_id == -1) { \
-		__file_name = klog_get_name_part(__FILE__); \
-		__file_name_id = klog_file_name_add(__file_name); \
+	if (__kl_file_name_id_ == -1) { \
+		__kl_file_name_ = klog_get_name_part(__FILE__); \
+		__kl_file_name_id_ = klog_file_name_add(__kl_file_name_); \
 	} \
-	if (__prog_name_id == -1) { \
-		__prog_name = klog_get_prog_name(); \
-		__prog_name_id = klog_prog_name_add(__prog_name); \
+	if (__kl_prog_name_id_ == -1) { \
+		__kl_prog_name_ = klog_get_prog_name(); \
+		__kl_prog_name_id_ = klog_prog_name_add(__kl_prog_name_); \
 	} \
-	if (__modu_name_id == -1) { \
-		__modu_name_id = klog_modu_name_add(KMODU_NAME); \
+	if (__kl_modu_name_id_ == -1) { \
+		__kl_modu_name_id_ = klog_modu_name_add(KMODU_NAME); \
 	} \
-	if (func_name_id == -1) { \
-		func_name_id = klog_func_name_add(__func__); \
+	if (__kl_func_name_id == -1) { \
+		__kl_func_name_id = klog_func_name_add(__func__); \
 	} \
 } while (0)
 
@@ -101,64 +101,64 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 
 #define ktrace(fmt, ...) do { \
 	KLOG_INNER_VAR_DEF(); \
-	if (ver_get > ver_sav) { \
-		ver_sav = ver_get; \
+	if (__kl_ver_get > __kl_ver_sav) { \
+		__kl_ver_sav = __kl_ver_get; \
 		KLOG_SETUP_NAME_AND_ID(); \
-		mask = klog_calc_mask(__prog_name_id, __modu_name_id, __file_name_id, func_name_id, __LINE__, (int)spl_process_current()); \
-		if (!(mask & KLOG_TRC)) \
-			mask = 0; \
+		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id_, __kl_file_name_id_, __kl_func_name_id, __LINE__, (int)spl_process_current()); \
+		if (!(__kl_mask & KLOG_TRC)) \
+			__kl_mask = 0; \
 	} \
-	if (mask) \
-		klog_f('T', mask, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
+	if (__kl_mask) \
+		klog_f('T', __kl_mask, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
 } while (0)
 
 #define klog(fmt, ...) do { \
 	KLOG_INNER_VAR_DEF(); \
-	if (ver_get > ver_sav) { \
-		ver_sav = ver_get; \
+	if (__kl_ver_get > __kl_ver_sav) { \
+		__kl_ver_sav = __kl_ver_get; \
 		KLOG_SETUP_NAME_AND_ID(); \
-		mask = klog_calc_mask(__prog_name_id, __modu_name_id, __file_name_id, func_name_id, __LINE__, (int)spl_process_current()); \
-		if (!(mask & KLOG_LOG)) \
-			mask = 0; \
+		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id_, __kl_file_name_id_, __kl_func_name_id, __LINE__, (int)spl_process_current()); \
+		if (!(__kl_mask & KLOG_LOG)) \
+			__kl_mask = 0; \
 	} \
-	if (mask) \
-		klog_f('L', mask, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
+	if (__kl_mask) \
+		klog_f('L', __kl_mask, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
 } while (0)
 
 #define kerror(fmt, ...) do { \
 	KLOG_INNER_VAR_DEF(); \
-	if (ver_get > ver_sav) { \
-		ver_sav = ver_get; \
+	if (__kl_ver_get > __kl_ver_sav) { \
+		__kl_ver_sav = __kl_ver_get; \
 		KLOG_SETUP_NAME_AND_ID(); \
-		mask = klog_calc_mask(__prog_name_id, __modu_name_id, __file_name_id, func_name_id, __LINE__, (int)spl_process_current()); \
-		if (!(mask & KLOG_ERR)) \
-			mask = 0; \
+		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id_, __kl_file_name_id_, __kl_func_name_id, __LINE__, (int)spl_process_current()); \
+		if (!(__kl_mask & KLOG_ERR)) \
+			__kl_mask = 0; \
 	} \
-	if (mask) \
-		klog_f('E', mask, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
+	if (__kl_mask) \
+		klog_f('E', __kl_mask, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
 } while (0)
 
 #define kfatal(fmt, ...) do { \
 	KLOG_INNER_VAR_DEF(); \
-	if (ver_get > ver_sav) { \
-		ver_sav = ver_get; \
+	if (__kl_ver_get > __kl_ver_sav) { \
+		__kl_ver_sav = __kl_ver_get; \
 		KLOG_SETUP_NAME_AND_ID(); \
-		mask = klog_calc_mask(__prog_name_id, __modu_name_id, __file_name_id, func_name_id, __LINE__, (int)spl_process_current()); \
-		if (!(mask & KLOG_FAT)) \
-			mask = 0; \
+		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id_, __kl_file_name_id_, __kl_func_name_id, __LINE__, (int)spl_process_current()); \
+		if (!(__kl_mask & KLOG_FAT)) \
+			__kl_mask = 0; \
 	} \
-	if (mask) \
-		klog_f('F', mask, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
+	if (__kl_mask) \
+		klog_f('F', __kl_mask, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
 } while (0)
 
 #define kassert(_x_) do { \
 	if (!(_x_)) { \
 		KLOG_INNER_VAR_DEF(); \
-		if (ver_get > ver_sav) { \
-			ver_sav = ver_get; \
+		if (__kl_ver_get > __kl_ver_sav) { \
+			__kl_ver_sav = __kl_ver_get; \
 			KLOG_SETUP_NAME_AND_ID(); \
 		} \
-		klog_f('A', KLOG_ALL, __prog_name, KMODU_NAME, __file_name, __FUNCTION__, __LINE__, \
+		klog_f('A', KLOG_ALL, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, \
 				"\n\t ASSERT NG: \"%s\"\n\n", #_x_); \
 	} \
 } while (0)
@@ -168,11 +168,11 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
  * Functions:
  */
 void *klog_init(unsigned int deflev, int argc, char **argv);
-kinline void *klog_cc(void);
+kinline void *klog_cc(void) VAR_UNUSED;
 void *klog_attach(void *logcc);
 
-kinline void klog_touch(void);
-kinline int klog_touches(void);
+kinline void klog_touch(void) VAR_UNUSED;
+kinline int klog_touches(void) VAR_UNUSED;
 
 char *klog_get_name_part(char *name);
 char *klog_get_prog_name();
