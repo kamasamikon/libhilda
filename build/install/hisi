@@ -7,4 +7,4 @@ rm -fr ${TARGETDIR}
 mkdir -p ${TARGETDIR}
 
 cp -frvL build/platform/linux/libhilda.so ${TARGETDIR}
-cp -frvL build/platform/linux/hilda.a ${TARGETDIR}
+cp -frvL build/platform/linux/libhilda.a ${TARGETDIR}
