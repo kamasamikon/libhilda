@@ -33,7 +33,7 @@ endif
 
 LOCAL_INCDIRS = -I $(HI_PRJ_ROOT)/inc
 LOCAL_OUT_OBJS = $(SUB_OBJS_hilda)
-LOCAL_OUT_LIB = hilda.a
+LOCAL_OUT_LIB = libhilda.a
 LOCAL_SHARE_LIB = libhilda.so
 
 .PHONY: all clean
