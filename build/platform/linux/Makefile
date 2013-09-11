@@ -2,6 +2,7 @@ export HI_PRJ_ROOT = ../../..
 -include $(HI_PRJ_ROOT)/Makefile.defs
 
 SUB_OBJS_hilda_core = \
+				 $(HI_PRJ_ROOT)/algorithm/md5sum.o \
 				 $(HI_PRJ_ROOT)/core/knode.o \
 				 $(HI_PRJ_ROOT)/core/karg.o \
 				 $(HI_PRJ_ROOT)/core/kcfg.o \
