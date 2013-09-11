@@ -198,7 +198,7 @@
 				Name="core"
 				>
 				<File
-					RelativePath=".\core\cnode.c"
+					RelativePath=".\core\knode.c"
 					>
 				</File>
 				<File

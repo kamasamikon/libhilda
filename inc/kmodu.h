@@ -13,11 +13,11 @@ extern "C" {
 #define kmodu_setup_env(cc) \
 	do { \
 		void *pv; \
-		opt_attach(cc); \
-		opt_getptr("p:/env/log/cc", &pv); \
+		kopt_attach(cc); \
+		kopt_getptr("p:/env/log/cc", &pv); \
 		klog_attach(pv); \
-		opt_getptr("p:/env/cnode/cc", &pv); \
-		cnode_attach(pv); \
+		kopt_getptr("p:/env/knode/cc", &pv); \
+		knode_attach(pv); \
 	} while (0)
 
 

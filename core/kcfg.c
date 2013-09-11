@@ -13,7 +13,7 @@
 #include <sdlist.h>
 
 #include <helper.h>
-#include <opt.h>
+#include <kopt.h>
 #include <kmque.h>
 #include <kcfg.h>
 
@@ -53,8 +53,8 @@ static int setup_skipped_target()
 	int argc;
 	char **argv;
 
-	opt_getint("i:/prog/argc", &argc);
-	opt_getptr("p:/prog/argv", (void**)&argv);
+	kopt_getint("i:/prog/argc", &argc);
+	kopt_getptr("p:/prog/argv", (void**)&argv);
 
 	for (i = 0; i < argc; i++) {
 		if (!argv[i])
@@ -237,7 +237,7 @@ int kcfg_target_opt_add(const char *name, const char *opt)
 	if (-1 != i)
 		err = target_opt_add(__g_cfg->target.arr[i], opt);
 	if (!err)
-		opt_awch(opt, ow_opt_dirty);
+		kopt_awch(opt, ow_opt_dirty);
 	return err;
 }
 
@@ -268,7 +268,7 @@ static void make_save_buffer(kcfg_target_t *ct, char **dat, int *len)
 			continue;
 
 		v = NULL;
-		if (EC_OK == opt_getini(opt, &v)) {
+		if (EC_OK == kopt_getini(opt, &v)) {
 			if (!v)
 				continue;
 
@@ -318,7 +318,7 @@ static int og_targets(void *opt, void *pa, void *pb)
 		strcat(targets, ";");
 	}
 
-	opt_set_cur_str(opt, targets);
+	kopt_set_cur_str(opt, targets);
 	return 0;
 }
 
@@ -344,7 +344,7 @@ static int og_target(void *opt, void *pa, void *pb)
 
 	ct = __g_cfg->target.arr[i];
 	make_save_buffer(ct, &dat, &len);
-	opt_set_cur_str(opt, dat);
+	kopt_set_cur_str(opt, dat);
 	return 0;
 }
 
@@ -363,28 +363,28 @@ static void ow_session_done(int ses, void *opt, void *wch)
 {
 	int error = 0, cancel;
 
-	cancel = opt_get_new_int(opt);
+	cancel = kopt_get_new_int(opt);
 	if (cancel)
 		klog("Cancelled.\n");
 	else
-		opt_session_set_err(opt, error);
+		kopt_session_set_err(opt, error);
 }
 
 static void setup_opt()
 {
-	opt_add_s("s:/k/cfg/targets", OA_GET, NULL, og_targets);
-	opt_add_s("s:/k/cfg/target", OA_GET, NULL, og_target);
+	kopt_add_s("s:/k/cfg/targets", OA_GET, NULL, og_targets);
+	kopt_add_s("s:/k/cfg/target", OA_GET, NULL, og_target);
 
-	opt_add_s("e:/k/cfg/save", OA_SET, NULL, NULL);
-	opt_awch("e:/k/cfg/save", ow_save);
+	kopt_add_s("e:/k/cfg/save", OA_SET, NULL, NULL);
+	kopt_awch("e:/k/cfg/save", ow_save);
 
-	opt_add_s("e:/k/cfg/load/start", OA_DFT, NULL, NULL);
-	opt_add_s("e:/k/cfg/load/done", OA_DFT, NULL, NULL);
+	kopt_add_s("e:/k/cfg/load/start", OA_DFT, NULL, NULL);
+	kopt_add_s("e:/k/cfg/load/done", OA_DFT, NULL, NULL);
 
-	opt_awch("e:/prog/sync", ow_sync);
+	kopt_awch("e:/prog/sync", ow_sync);
 
-	opt_awch("i:/k/opt/session/start", ow_session_start);
-	opt_awch("i:/k/opt/session/done", ow_session_done);
+	kopt_awch("i:/k/opt/session/start", ow_session_start);
+	kopt_awch("i:/k/opt/session/done", ow_session_done);
 }
 
 int kcfg_init()
@@ -396,7 +396,7 @@ int kcfg_init()
 
 	__g_cfg = (kcfg_t*)kmem_alloz(1, kcfg_t);
 
-	opt_getptr("p:/env/mque", (void**)&__g_mque_main);
+	kopt_getptr("p:/env/mque", (void**)&__g_mque_main);
 
 	target_file();
 
@@ -509,7 +509,7 @@ static void apply_opt(char ***kvarrarr, int *kvcntarr, int kvcnt)
 	int i, j;
 	for (i = 0; i < kvcnt; i++)
 		for (j = 0; j < kvcntarr[i]; j++)
-			opt_setkv(0, kvarrarr[i][(j * 2) + 0],
+			kopt_setkv(0, kvarrarr[i][(j * 2) + 0],
 					kvarrarr[i][(j * 2) + 1]);
 }
 
@@ -517,7 +517,7 @@ static void free_kvarrarr(char ***kvarrarr, int *kvcntarr, int kvcnt)
 {
 	int i;
 	for (i = 0; i < kvcnt; i++)
-		opt_free_kv(kvarrarr[i], kvcntarr[i]);
+		kopt_free_kv(kvarrarr[i], kvcntarr[i]);
 }
 
 static int load_targets()
@@ -540,7 +540,7 @@ static int load_targets()
 
 		kvarrarr[kvcnt] = NULL;
 		kvcntarr[kvcnt] = 0;
-		if (opt_make_kv(dat, len, &kvarrarr[kvcnt], &kvcntarr[kvcnt]))
+		if (kopt_make_kv(dat, len, &kvarrarr[kvcnt], &kvcntarr[kvcnt]))
 			continue;
 
 		for (j = 0; j < kvcntarr[kvcnt]; j++)
@@ -572,7 +572,7 @@ static int load_targets()
 int kcfg_load()
 {
 	if (__g_cfg_loaded == 0)
-		opt_setint("e:/k/cfg/load/start", 1);
+		kopt_setint("e:/k/cfg/load/start", 1);
 	/*
 	 * XXX: target_file already loaded in kcfg_init,
 	 * The argv should be the last target, because
@@ -583,7 +583,7 @@ int kcfg_load()
 	load_targets();
 
 	if (__g_cfg_loaded == 0)
-		opt_setint("e:/k/cfg/load/done", 1);
+		kopt_setint("e:/k/cfg/load/done", 1);
 
 	__g_cfg_loaded++;
 	return 0;
@@ -620,8 +620,8 @@ static int target_argv()
 	char **argv, name[1024], *path;
 	kcfg_target_t *ct;
 
-	opt_getint("i:/prog/argc", &argc);
-	opt_getptr("p:/prog/argv", (void**)&argv);
+	kopt_getint("i:/prog/argc", &argc);
+	kopt_getptr("p:/prog/argv", (void**)&argv);
 
 	for (i = 0; i < argc; i++) {
 		if (!argv[i])
@@ -671,7 +671,7 @@ static int file_load(kcfg_target_t *ct, char **dat,
 
 static int os_cfg_target_file_add(int ses, void *opt, void *pa, void *pb)
 {
-	char *file = opt_get_new_str(opt);
+	char *file = kopt_get_new_str(opt);
 	char name[1024];
 	kcfg_target_t *ct;
 
@@ -684,7 +684,7 @@ static int os_cfg_target_file_add(int ses, void *opt, void *pa, void *pb)
 
 static int target_file()
 {
-	opt_add_s("s:/k/cfg/target/file/add", OA_SET,
+	kopt_add_s("s:/k/cfg/target/file/add", OA_SET,
 			os_cfg_target_file_add, NULL);
 	return 0;
 }

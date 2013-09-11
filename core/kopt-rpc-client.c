@@ -7,7 +7,7 @@
  *
  * Because \c pa and \c pb may contain some pointer, and
  * pointer can not be delived between program, so only NONE
- * parameter mode, call with \c opt_setbat() supported.
+ * parameter mode, call with \c kopt_setbat() supported.
  *
  * Watch also diffent from what it is in opt.c, because the
  * inter-process watch can cause program slow down. User,
@@ -42,12 +42,12 @@
 
 #include <xtcool.h>
 #include <helper.h>
-#include <opt.h>
+#include <kopt.h>
 
-#include <opt-rpc-common.h>
-#include <opt-rpc-client.h>
+#include <kopt-rpc-common.h>
+#include <kopt-rpc-client.h>
 
-typedef struct _opt_rpc_t opt_rpc_t;
+typedef struct _opt_rpc_t kopt_rpc_t;
 struct _opt_rpc_t {
 	/* connection id */
 	char connhash[33];
@@ -62,7 +62,7 @@ struct _opt_rpc_t {
 
 	char server[1024];
 	unsigned short port;
-	int opt_socket, wch_socket;
+	int kopt_socket, wch_socket;
 
 	char errmsg[2048];
 	int prompt_len;
@@ -75,7 +75,7 @@ struct _opt_rpc_t {
 static int __g_epoll_fd = -1;
 static struct epoll_event __g_epoll_events[__g_epoll_max];
 
-static int connect_and_hey(opt_rpc_t *or, unsigned short port,
+static int connect_and_hey(kopt_rpc_t *or, unsigned short port,
 		int isopt, int *retsock);
 static void ignore_pipe();
 static void config_socket(int s);
@@ -95,7 +95,7 @@ static void config_socket(int s);
 
 static void *watch_thread_or_client(void *userdata)
 {
-	opt_rpc_t *or = (opt_rpc_t*)userdata;
+	kopt_rpc_t *or = (kopt_rpc_t*)userdata;
 	char *buf;
 
 	struct epoll_event ev, *e;
@@ -252,12 +252,12 @@ static int rpc_disconnect(int sockfd, kbool opt)
 	return err;
 }
 
-static void set_errmsg(opt_rpc_t *or, const char *err)
+static void set_errmsg(kopt_rpc_t *or, const char *err)
 {
 	strcpy(or->errmsg, err ? : "");
 }
 
-static int process_resp(opt_rpc_t *or, char *resp, char *retbuf, int rblen)
+static int process_resp(kopt_rpc_t *or, char *resp, char *retbuf, int rblen)
 {
 	char *st_start, *st_end;
 	int ret;
@@ -280,18 +280,18 @@ static int process_resp(opt_rpc_t *or, char *resp, char *retbuf, int rblen)
 /* >>: CMD_WCH_ADD(unsigned char)+OPT_PATH(char*)
  * <<: ERR(char)+WCH_ID
  */
-int opt_rpc_watch(void *conn, const char *path, char *ebuf, int eblen)
+int kopt_rpc_watch(void *conn, const char *path, char *ebuf, int eblen)
 {
-	opt_rpc_t *or = (opt_rpc_t*)conn;
+	kopt_rpc_t *or = (kopt_rpc_t*)conn;
 	char iodat[2048];
 	int ret;
 
 	set_errmsg(or, NULL);
 
 	sprintf(iodat, "wa %s\r\n", path);
-	send(or->opt_socket, iodat, strlen(iodat) + 1, 0);
+	send(or->kopt_socket, iodat, strlen(iodat) + 1, 0);
 
-	if (recv(or->opt_socket, iodat, sizeof(iodat), 0) <= 0) {
+	if (recv(or->kopt_socket, iodat, sizeof(iodat), 0) <= 0) {
 		kerror("c:%s, e:%s\n", "recv", strerror(errno));
 		return EC_CONNECT;
 	}
@@ -306,18 +306,18 @@ int opt_rpc_watch(void *conn, const char *path, char *ebuf, int eblen)
 /* >>: CMD_WCH_DEL(unsigned char)+OPT_PATH(char*)
  * <<: ERR(char)+WCH_ID
  */
-int opt_rpc_unwatch(void *conn, const char *path, char *ebuf, int eblen)
+int kopt_rpc_unwatch(void *conn, const char *path, char *ebuf, int eblen)
 {
-	opt_rpc_t *or = (opt_rpc_t*)conn;
+	kopt_rpc_t *or = (kopt_rpc_t*)conn;
 	char iodat[2048];
 	int ret;
 
 	set_errmsg(or, NULL);
 
 	sprintf(iodat, "wd %s\r\n", path);
-	send(or->opt_socket, iodat, strlen(iodat) + 1, 0);
+	send(or->kopt_socket, iodat, strlen(iodat) + 1, 0);
 
-	if (recv(or->opt_socket, iodat, sizeof(iodat), 0) <= 0) {
+	if (recv(or->kopt_socket, iodat, sizeof(iodat), 0) <= 0) {
 		kerror("c:%s, e:%s\n", "recv", strerror(errno));
 		return EC_CONNECT;
 	}
@@ -332,18 +332,18 @@ int opt_rpc_unwatch(void *conn, const char *path, char *ebuf, int eblen)
 /* >>: CMD_OPT_SET(unsigned char)+INI(char*)
  * <<: ERR(char)
  */
-int opt_rpc_setini(void *conn, const char *inibuf, char *ebuf, int eblen)
+int kopt_rpc_setini(void *conn, const char *inibuf, char *ebuf, int eblen)
 {
-	opt_rpc_t *or = (opt_rpc_t*)conn;
+	kopt_rpc_t *or = (kopt_rpc_t*)conn;
 	char iodat[8192];
 	int ret = -1;
 
 	set_errmsg(or, NULL);
 
 	sprintf(iodat, "os %s\r\n", inibuf);
-	send(or->opt_socket, iodat, strlen(iodat) + 1, 0);
+	send(or->kopt_socket, iodat, strlen(iodat) + 1, 0);
 
-	if (recv(or->opt_socket, iodat, eblen + 1024, 0) <= 0) {
+	if (recv(or->kopt_socket, iodat, eblen + 1024, 0) <= 0) {
 		kerror("c:%s, e:%s\n", "recv", strerror(errno));
 		return EC_CONNECT;
 	}
@@ -358,28 +358,28 @@ int opt_rpc_setini(void *conn, const char *inibuf, char *ebuf, int eblen)
 /* >>: CMD_OPT_SET(unsigned char)+INI(char*)
  * <<: ERR(char)
  */
-int opt_rpc_setkv(void *conn, const char *k, const char *v,
+int kopt_rpc_setkv(void *conn, const char *k, const char *v,
 		char *ebuf, int eblen)
 {
-	opt_rpc_t *or = (opt_rpc_t*)conn;
+	kopt_rpc_t *or = (kopt_rpc_t*)conn;
 	char buffer[8192];
 	sprintf(buffer, "%s=%s", k, v);
-	return opt_rpc_setini(or, buffer, ebuf, eblen);
+	return kopt_rpc_setini(or, buffer, ebuf, eblen);
 }
 
-char *opt_rpc_geterr(void *conn)
+char *kopt_rpc_geterr(void *conn)
 {
-	opt_rpc_t *or = (opt_rpc_t*)conn;
+	kopt_rpc_t *or = (kopt_rpc_t*)conn;
 	return or->errmsg;
 }
 
 /* >>: CMD_OPT_GET(unsigned char)+INI(char*)
  * <<: ERR(char)+len(unsigned int)+dat(void*)
  */
-int opt_rpc_getini(void *conn, const char *path,
+int kopt_rpc_getini(void *conn, const char *path,
 		char *retbuf, int rblen, char *ebuf, int eblen)
 {
-	opt_rpc_t *or = (opt_rpc_t*)conn;
+	kopt_rpc_t *or = (kopt_rpc_t*)conn;
 	char *iodat;
 	int ret = -1;
 
@@ -388,9 +388,9 @@ int opt_rpc_getini(void *conn, const char *path,
 	set_errmsg(or, NULL);
 
 	sprintf(iodat, "og %s\r\n", path);
-	send(or->opt_socket, iodat, strlen(iodat) + 1, 0);
+	send(or->kopt_socket, iodat, strlen(iodat) + 1, 0);
 
-	if (recv(or->opt_socket, iodat, rblen + 8192, 0) <= 0) {
+	if (recv(or->kopt_socket, iodat, rblen + 8192, 0) <= 0) {
 		kerror("c:%s, e:%s\n", "recv", strerror(errno));
 		kmem_free(iodat);
 		return EC_CONNECT;
@@ -404,13 +404,13 @@ int opt_rpc_getini(void *conn, const char *path,
 	return ret;
 }
 
-int opt_rpc_getint(void *conn, const char *path, int *val)
+int kopt_rpc_getint(void *conn, const char *path, int *val)
 {
 	int err;
 	char dat[8192], ebuf[1024];
-	opt_rpc_t *or = (opt_rpc_t*)conn;
+	kopt_rpc_t *or = (kopt_rpc_t*)conn;
 
-	err = opt_rpc_getini(or, path, dat, sizeof(dat), ebuf, sizeof(ebuf));
+	err = kopt_rpc_getini(or, path, dat, sizeof(dat), ebuf, sizeof(ebuf));
 	if (err != EC_OK)
 		return -1;
 
@@ -418,13 +418,13 @@ int opt_rpc_getint(void *conn, const char *path, int *val)
 	return 0;
 }
 
-int opt_rpc_getstr(void *conn, const char *path, char **val)
+int kopt_rpc_getstr(void *conn, const char *path, char **val)
 {
 	int err;
 	char dat[8192], ebuf[1024];
-	opt_rpc_t *or = (opt_rpc_t*)conn;
+	kopt_rpc_t *or = (kopt_rpc_t*)conn;
 
-	err = opt_rpc_getini(or, path, dat, sizeof(dat), ebuf, sizeof(ebuf));
+	err = kopt_rpc_getini(or, path, dat, sizeof(dat), ebuf, sizeof(ebuf));
 	if (err != EC_OK)
 		return err;
 
@@ -432,13 +432,13 @@ int opt_rpc_getstr(void *conn, const char *path, char **val)
 	return EC_OK;
 }
 
-int opt_rpc_getarr(void *conn, const char *path, void **arr, int *len)
+int kopt_rpc_getarr(void *conn, const char *path, void **arr, int *len)
 {
 	int err;
 	char dat[8192], ebuf[1024];
-	opt_rpc_t *or = (opt_rpc_t*)conn;
+	kopt_rpc_t *or = (kopt_rpc_t*)conn;
 
-	err = opt_rpc_getini(or, path, dat, sizeof(dat), ebuf, sizeof(ebuf));
+	err = kopt_rpc_getini(or, path, dat, sizeof(dat), ebuf, sizeof(ebuf));
 	if (err != EC_OK)
 		return err;
 
@@ -446,13 +446,13 @@ int opt_rpc_getarr(void *conn, const char *path, void **arr, int *len)
 	return EC_NG;
 }
 
-int opt_rpc_getbin(void *conn, const char *path, char **arr, int *len)
+int kopt_rpc_getbin(void *conn, const char *path, char **arr, int *len)
 {
 	int err;
 	char dat[8192], ebuf[1024];
-	opt_rpc_t *or = (opt_rpc_t*)conn;
+	kopt_rpc_t *or = (kopt_rpc_t*)conn;
 
-	err = opt_rpc_getini(or, path, dat, sizeof(dat), ebuf, sizeof(ebuf));
+	err = kopt_rpc_getini(or, path, dat, sizeof(dat), ebuf, sizeof(ebuf));
 	if (err != EC_OK)
 		return err;
 
@@ -460,7 +460,7 @@ int opt_rpc_getbin(void *conn, const char *path, char **arr, int *len)
 	return EC_NG;
 }
 
-static int connect_and_hey(opt_rpc_t *or, unsigned short port,
+static int connect_and_hey(kopt_rpc_t *or, unsigned short port,
 		int isopt, int *retsock)
 {
 	char respbuf[4096];
@@ -482,14 +482,14 @@ static int connect_and_hey(opt_rpc_t *or, unsigned short port,
 	return -1;
 }
 
-static int connect_opt(opt_rpc_t *or)
+static int connect_opt(kopt_rpc_t *or)
 {
 	int err;
-	err = connect_and_hey(or, or->port, 1, &or->opt_socket);
+	err = connect_and_hey(or, or->port, 1, &or->kopt_socket);
 	return err;
 }
 
-static int connect_wch(opt_rpc_t *or)
+static int connect_wch(kopt_rpc_t *or)
 {
 	int err;
 	if (!or->wch_func)
@@ -525,7 +525,7 @@ static void config_socket(int s)
 	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 }
 
-void *opt_rpc_connect(const char *server, unsigned short port,
+void *kopt_rpc_connect(const char *server, unsigned short port,
 		void (*wfunc)(void *conn, const char *path, void *ua, void *ub),
 		void *wfunc_ua, void *wfunc_ub,
 		const char *client_name, const char *user_name,
@@ -534,13 +534,13 @@ void *opt_rpc_connect(const char *server, unsigned short port,
 	char connstr[256];
 	static int callref = 0;
 	pid_t pid = getpid();
-	opt_rpc_t *or = (opt_rpc_t*)kmem_alloz(1, opt_rpc_t);
+	kopt_rpc_t *or = (kopt_rpc_t*)kmem_alloz(1, kopt_rpc_t);
 
 	or->wch_func = wfunc;
 	or->ua = wfunc_ua;
 	or->ub = wfunc_ub;
 
-	or->opt_socket = -1;
+	or->kopt_socket = -1;
 	or->wch_socket = -1;
 	strcpy(or->client_name, client_name);
 	strcpy(or->user_name, user_name);
@@ -559,14 +559,14 @@ void *opt_rpc_connect(const char *server, unsigned short port,
 	if (!connect_opt(or) && !connect_wch(or))
 		return (void*)or;
 
-	kerror("opt_rpc_connect\n");
-	opt_rpc_disconnect(or);
+	kerror("kopt_rpc_connect\n");
+	kopt_rpc_disconnect(or);
 	return NULL;
 }
 
-int opt_rpc_disconnect(void *conn)
+int kopt_rpc_disconnect(void *conn)
 {
-	opt_rpc_t *or = (opt_rpc_t*)conn;
+	kopt_rpc_t *or = (kopt_rpc_t*)conn;
 
 	if (!or)
 		return -1;
@@ -574,8 +574,8 @@ int opt_rpc_disconnect(void *conn)
 	or->quit = ktrue;
 
 	/* XXX: opt disconnect can cause wch_thread quit */
-	if ((or->opt_socket != -1) && (!rpc_disconnect(or->opt_socket, ktrue)))
-		or->opt_socket = -1;
+	if ((or->kopt_socket != -1) && (!rpc_disconnect(or->kopt_socket, ktrue)))
+		or->kopt_socket = -1;
 
 	if (or->wch_thread)
 		spl_thread_wait(or->wch_thread);

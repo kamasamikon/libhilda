@@ -8,29 +8,29 @@
 #include <klog.h>
 #include <kstr.h>
 #include <kmem.h>
-#include <opt.h>
+#include <kopt.h>
 
 #include <xtcool.h>
 #include <strbuf.h>
 
-#include <cnode.h>
+#include <knode.h>
 #include <helper.h>
 
-/* Control Center for cnode */
-typedef struct _cnodecc_t cnodecc_t;
-struct _cnodecc_t {
-	cnode_t **arr;
+/* Control Center for knode */
+typedef struct _knodecc_t knodecc_t;
+struct _knodecc_t {
+	knode_t **arr;
 	int cnt;
 };
 
-static cnodecc_t *__g_cnodecc = NULL;
+static knodecc_t *__g_knodecc = NULL;
 
 /* foreach of down stream nodes */
-void cnode_data_ready(cnode_t *node, void *dat, int len)
+void knode_data_ready(knode_t *node, void *dat, int len)
 {
 	int i;
 	dstr_node_t *tmp;
-	cnode_t *tnode;
+	knode_t *tnode;
 
 	for (i = 0; i < node->dstr.cnt; i++) {
 		tmp = &node->dstr.arr[i];
@@ -47,7 +47,7 @@ void cnode_data_ready(cnode_t *node, void *dat, int len)
 }
 
 /* caller can be NULL or a dummy root for head of chain */
-int cnode_link_add(cnode_t *unode, cnode_t *dnode, void *link_dat)
+int knode_link_add(knode_t *unode, knode_t *dnode, void *link_dat)
 {
 	int i;
 	dstr_node_t *tmp;
@@ -58,7 +58,7 @@ int cnode_link_add(cnode_t *unode, cnode_t *dnode, void *link_dat)
 	for (i = 0; i < unode->dstr.cnt; i++) {
 		tmp = &unode->dstr.arr[i];
 		if (tmp->node == dnode) {
-			kerror("cnode_link_add: %s already there\n",
+			kerror("knode_link_add: %s already there\n",
 						dnode->name);
 			return 0;
 		}
@@ -77,7 +77,7 @@ int cnode_link_add(cnode_t *unode, cnode_t *dnode, void *link_dat)
 	return 0;
 }
 
-int cnode_link_del(cnode_t *unode, cnode_t *dnode)
+int knode_link_del(knode_t *unode, knode_t *dnode)
 {
 	int i;
 	dstr_node_t *tmp;
@@ -97,7 +97,7 @@ int cnode_link_del(cnode_t *unode, cnode_t *dnode)
 	return -1;
 }
 
-int cnode_link_clr(cnode_t *node)
+int knode_link_clr(knode_t *node)
 {
 	int i;
 
@@ -112,11 +112,11 @@ int cnode_link_clr(cnode_t *node)
 	return 0;
 }
 
-int cnode_reg(cnode_t *node)
+int knode_reg(knode_t *node)
 {
 	int i;
-	cnode_t *tmp;
-	cnodecc_t *cc = __g_cnodecc;
+	knode_t *tmp;
+	knodecc_t *cc = __g_knodecc;
 
 	node->dstr.arr = 0;
 	node->dstr.cnt = 0;
@@ -137,17 +137,17 @@ int cnode_reg(cnode_t *node)
 			return 0;
 		}
 
-	ARR_INC(1, cc->arr, cc->cnt, cnode_t*);
+	ARR_INC(1, cc->arr, cc->cnt, knode_t*);
 	cc->arr[i] = node;
 	klog("%s success.\n", node->name);
 	return 0;
 }
 
-int cnode_unreg(cnode_t *node)
+int knode_unreg(knode_t *node)
 {
 	int i;
-	cnode_t *tmp;
-	cnodecc_t *cc = __g_cnodecc;
+	knode_t *tmp;
+	knodecc_t *cc = __g_knodecc;
 
 	for (i = 0; i < cc->cnt; i++) {
 		tmp = cc->arr[i];
@@ -161,11 +161,11 @@ int cnode_unreg(cnode_t *node)
 	return -1;
 }
 
-int cnode_link(cnode_t *node)
+int knode_link(knode_t *node)
 {
 	int i;
-	cnode_t *dstr;
-	cnodecc_t *cc = __g_cnodecc;
+	knode_t *dstr;
+	knodecc_t *cc = __g_knodecc;
 	void *link_dat;
 
 	/* setup the chain */
@@ -174,25 +174,25 @@ int cnode_link(cnode_t *node)
 		if (dstr && node && (dstr != node) && dstr->link_query)
 			if (kflg_chk_bit(dstr->attr, CNAT_INPUT))
 				if (!dstr->link_query(node, dstr, &link_dat))
-					cnode_link_add(node, dstr, link_dat);
+					knode_link_add(node, dstr, link_dat);
 
 		if (!node)
-			cnode_link(dstr);
+			knode_link(dstr);
 	}
 
 	return 0;
 }
 
 /**
- * \brief Find cnode by given name.
+ * \brief Find knode by given name.
  * Name can be reguler name for index name #ddd,
  * e.g #1 or #-2 etc.
  */
-cnode_t *cnode_find(const char *name)
+knode_t *knode_find(const char *name)
 {
 	int i, index;
-	cnode_t *tmp;
-	cnodecc_t *cc = __g_cnodecc;
+	knode_t *tmp;
+	knodecc_t *cc = __g_knodecc;
 
 	if (!name || !cc->cnt)
 		return NULL;
@@ -210,11 +210,11 @@ cnode_t *cnode_find(const char *name)
 	return NULL;
 }
 
-static int cnode_foreach(CNODE_FOREACH foreach, void *ua, void *ub)
+static int knode_foreach(knode_FOREACH foreach, void *ua, void *ub)
 {
 	int i;
-	cnode_t *tmp;
-	cnodecc_t *cc = __g_cnodecc;
+	knode_t *tmp;
+	knodecc_t *cc = __g_knodecc;
 
 	for (i = 0; i < cc->cnt; i++) {
 		tmp = cc->arr[i];
@@ -225,7 +225,7 @@ static int cnode_foreach(CNODE_FOREACH foreach, void *ua, void *ub)
 	return 0;
 }
 
-static int do_dump(cnode_t *node, void *ua, void *ub)
+static int do_dump(knode_t *node, void *ua, void *ub)
 {
 	int i;
 	struct strbuf *sb = (struct strbuf*)ua;
@@ -241,55 +241,55 @@ static int do_dump(cnode_t *node, void *ua, void *ub)
 	return 0;
 }
 
-static int og_cnode_diag_dump(void *opt, void *pa, void *pb)
+static int og_knode_diag_dump(void *opt, void *pa, void *pb)
 {
 	struct strbuf sb;
 
 	strbuf_init(&sb, 4096);
-	cnode_foreach(do_dump, (void*)&sb, NULL);
-	opt_set_cur_str(opt, sb.buf);
+	knode_foreach(do_dump, (void*)&sb, NULL);
+	kopt_set_cur_str(opt, sb.buf);
 	strbuf_release(&sb);
 
 	return EC_OK;
 }
 
-static int os_cnode_cmd(int ses, void *opt, void *pa, void *pb)
+static int os_knode_cmd(int ses, void *opt, void *pa, void *pb)
 {
-	char *name = opt_get_new_str(opt);
-	char type = (char)(int)opt_ua(opt);
-	cnode_t *node;
+	char *name = kopt_get_new_str(opt);
+	char type = (char)(int)kopt_ua(opt);
+	knode_t *node;
 	int ret;
 
 	if (name && !strcmp(name, "*")) {
 		if (type == 'S')
-			ret = cnode_foreach_start();
+			ret = knode_foreach_start();
 		else if (type == 's')
-			ret = cnode_foreach_stop();
+			ret = knode_foreach_stop();
 		else if (type == 'p')
-			ret = cnode_foreach_pause();
+			ret = knode_foreach_pause();
 		else if (type == 'r')
-			ret = cnode_foreach_resume();
+			ret = knode_foreach_resume();
 		else if (type == 'l')
-			ret = cnode_link(NULL);
+			ret = knode_link(NULL);
 		else
 			return EC_OK;
 		return ret;
 	}
 
-	node = cnode_find(name);
+	node = knode_find(name);
 	if (!node)
 		return EC_NG;
 
 	if (type == 'S')
-		ret = cnode_call_start(node);
+		ret = knode_call_start(node);
 	else if (type == 's')
-		ret = cnode_call_stop(node);
+		ret = knode_call_stop(node);
 	else if (type == 'p')
-		ret = cnode_call_pause(node);
+		ret = knode_call_pause(node);
 	else if (type == 'r')
-		ret = cnode_call_resume(node);
+		ret = knode_call_resume(node);
 	else if (type == 'l')
-		ret = cnode_link(node);
+		ret = knode_link(node);
 	else
 		ret = EC_NG;
 
@@ -298,55 +298,55 @@ static int os_cnode_cmd(int ses, void *opt, void *pa, void *pb)
 	return EC_OK;
 }
 
-void *cnode_attach(void *cnodecc)
+void *knode_attach(void *knodecc)
 {
-	__g_cnodecc = (cnodecc_t*)cnodecc;
+	__g_knodecc = (knodecc_t*)knodecc;
 
-	return (void*)__g_cnodecc;
+	return (void*)__g_knodecc;
 }
 
-void *cnode_cc()
+void *knode_cc()
 {
-	return (void*)__g_cnodecc;
+	return (void*)__g_knodecc;
 }
 
 static void setup_opt()
 {
-	opt_add_s("s:/k/cnode/diag/dump", OA_GET, NULL,
-			og_cnode_diag_dump);
+	kopt_add_s("s:/k/knode/diag/dump", OA_GET, NULL,
+			og_knode_diag_dump);
 
-	opt_add("s:/k/cnode/cmd/start", NULL, OA_SET,
-			os_cnode_cmd, NULL, NULL, 'S', NULL);
-	opt_add("s:/k/cnode/cmd/stop", NULL, OA_SET,
-			os_cnode_cmd, NULL, NULL, 's', NULL);
-	opt_add("s:/k/cnode/cmd/pause", NULL, OA_SET,
-			os_cnode_cmd, NULL, NULL, 'p', NULL);
-	opt_add("s:/k/cnode/cmd/resume", NULL, OA_SET,
-			os_cnode_cmd, NULL, NULL, 'r', NULL);
-	opt_add("s:/k/cnode/cmd/link", NULL, OA_SET,
-			os_cnode_cmd, NULL, NULL, 'l', NULL);
+	kopt_add("s:/k/knode/cmd/start", NULL, OA_SET,
+			os_knode_cmd, NULL, NULL, 'S', NULL);
+	kopt_add("s:/k/knode/cmd/stop", NULL, OA_SET,
+			os_knode_cmd, NULL, NULL, 's', NULL);
+	kopt_add("s:/k/knode/cmd/pause", NULL, OA_SET,
+			os_knode_cmd, NULL, NULL, 'p', NULL);
+	kopt_add("s:/k/knode/cmd/resume", NULL, OA_SET,
+			os_knode_cmd, NULL, NULL, 'r', NULL);
+	kopt_add("s:/k/knode/cmd/link", NULL, OA_SET,
+			os_knode_cmd, NULL, NULL, 'l', NULL);
 }
 
-void *cnode_init(int argc, char *argv[])
+void *knode_init(int argc, char *argv[])
 {
-	if (__g_cnodecc)
-		return (void*)__g_cnodecc;
+	if (__g_knodecc)
+		return (void*)__g_knodecc;
 
-	__g_cnodecc = (cnodecc_t*)kmem_alloz(1, cnodecc_t);
+	__g_knodecc = (knodecc_t*)kmem_alloz(1, knodecc_t);
 	setup_opt();
-	return (void*)__g_cnodecc;
+	return (void*)__g_knodecc;
 }
 
-int cnode_final()
+int knode_final()
 {
-	if (!__g_cnodecc)
+	if (!__g_knodecc)
 		return 0;
-	kmem_free_s(__g_cnodecc->arr);
-	kmem_free_sz(__g_cnodecc);
+	kmem_free_s(__g_knodecc->arr);
+	kmem_free_sz(__g_knodecc);
 	return 0;
 }
 
-int cnode_call_start(cnode_t *node)
+int knode_call_start(knode_t *node)
 {
 	int ret = 0;
 
@@ -359,17 +359,17 @@ int cnode_call_start(cnode_t *node)
 	}
 	return ret;
 }
-static int do_start(cnode_t *node, void *ua, void *ub)
+static int do_start(knode_t *node, void *ua, void *ub)
 {
-	return cnode_call_start(node);
+	return knode_call_start(node);
 }
-int cnode_foreach_start()
+int knode_foreach_start()
 {
-	cnode_foreach(do_start, NULL, NULL);
+	knode_foreach(do_start, NULL, NULL);
 	return 0;
 }
 
-int cnode_call_stop(cnode_t *node)
+int knode_call_stop(knode_t *node)
 {
 	int ret = 0;
 
@@ -382,17 +382,17 @@ int cnode_call_stop(cnode_t *node)
 	}
 	return ret;
 }
-static int do_stop(cnode_t *node, void *ua, void *ub)
+static int do_stop(knode_t *node, void *ua, void *ub)
 {
-	return cnode_call_stop(node);
+	return knode_call_stop(node);
 }
-int cnode_foreach_stop()
+int knode_foreach_stop()
 {
-	cnode_foreach(do_stop, NULL, NULL);
+	knode_foreach(do_stop, NULL, NULL);
 	return 0;
 }
 
-int cnode_call_pause(cnode_t *node)
+int knode_call_pause(knode_t *node)
 {
 	int ret = 0;
 
@@ -405,17 +405,17 @@ int cnode_call_pause(cnode_t *node)
 	}
 	return ret;
 }
-static int do_pause(cnode_t *node, void *ua, void *ub)
+static int do_pause(knode_t *node, void *ua, void *ub)
 {
-	return cnode_call_pause(node);
+	return knode_call_pause(node);
 }
-int cnode_foreach_pause()
+int knode_foreach_pause()
 {
-	cnode_foreach(do_pause, NULL, NULL);
+	knode_foreach(do_pause, NULL, NULL);
 	return 0;
 }
 
-int cnode_call_resume(cnode_t *node)
+int knode_call_resume(knode_t *node)
 {
 	int ret = 0;
 
@@ -428,13 +428,13 @@ int cnode_call_resume(cnode_t *node)
 	}
 	return ret;
 }
-static int do_resume(cnode_t *node, void *ua, void *ub)
+static int do_resume(knode_t *node, void *ua, void *ub)
 {
-	return cnode_call_resume(node);
+	return knode_call_resume(node);
 }
-int cnode_foreach_resume()
+int knode_foreach_resume()
 {
-	cnode_foreach(do_resume, NULL, NULL);
+	knode_foreach(do_resume, NULL, NULL);
 	return 0;
 }
 
