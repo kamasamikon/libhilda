@@ -6,7 +6,7 @@
 #include <kmem.h>
 #include <klog.h>
 
-#include <opt-rpc-common.h>
+#include <kopt-rpc-common.h>
 
 /**
  * \brief Parse the command line and return a offset array

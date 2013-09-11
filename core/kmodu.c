@@ -8,9 +8,9 @@
 
 #include <klog.h>
 #include <kflg.h>
-#include <opt.h>
+#include <kopt.h>
 #include <kstr.h>
-#include <cnode.h>
+#include <knode.h>
 #include <sdlist.h>
 #include <xtcool.h>
 #include <strbuf.h>
@@ -44,7 +44,7 @@ static int manual_layout();
 
 static int og_kmodu_diag_dump(void *opt, void *pa, void *pb)
 {
-	kmoducc_t *cc = (kmoducc_t*)opt_ua(opt);
+	kmoducc_t *cc = (kmoducc_t*)kopt_ua(opt);
 	kmodu_t *mod;
 	K_dlist_entry *entry;
 	struct strbuf sb;
@@ -62,7 +62,7 @@ static int og_kmodu_diag_dump(void *opt, void *pa, void *pb)
 				mod->path, mod->name, mod->version, mod->type,
 				mod->handle, mod->hey, mod->bye);
 	}
-	opt_set_cur_str(opt, sb.buf);
+	kopt_set_cur_str(opt, sb.buf);
 	strbuf_release(&sb);
 
 	return EC_OK;
@@ -70,22 +70,22 @@ static int og_kmodu_diag_dump(void *opt, void *pa, void *pb)
 
 static void setup_opt(kmoducc_t *cc)
 {
-	opt_add("s:/k/modu/diag/dump", NULL, OA_GET, NULL,
+	kopt_add("s:/k/modu/diag/dump", NULL, OA_GET, NULL,
 			og_kmodu_diag_dump, NULL, (void*)cc, NULL);
-	opt_add("b:/k/modu/layout/manual", NULL, OA_DFT, NULL,
+	kopt_add("b:/k/modu/layout/manual", NULL, OA_DFT, NULL,
 			NULL, NULL, (void*)cc, NULL);
-	opt_add("s:/k/modu/layout/path", NULL, OA_DFT, NULL,
+	kopt_add("s:/k/modu/layout/path", NULL, OA_DFT, NULL,
 			NULL, NULL, (void*)cc, NULL);
 
 	/* pa => module_scan_dir */
-	opt_add_s("e:/k/modu/load/start", OA_DFT, NULL, NULL);
+	kopt_add_s("e:/k/modu/load/start", OA_DFT, NULL, NULL);
 	/* pa => module_scan_dir, pb => err */
-	opt_add_s("e:/k/modu/load/done", OA_DFT, NULL, NULL);
+	kopt_add_s("e:/k/modu/load/done", OA_DFT, NULL, NULL);
 
 	/* pa => mod_path */
-	opt_add_s("e:/k/modu/load/mod/start", OA_DFT, NULL, NULL);
+	kopt_add_s("e:/k/modu/load/mod/start", OA_DFT, NULL, NULL);
 	/* pa => mod_path, pb => err */
-	opt_add_s("e:/k/modu/load/mod/done", OA_DFT, NULL, NULL);
+	kopt_add_s("e:/k/modu/load/mod/done", OA_DFT, NULL, NULL);
 }
 
 static void add_config_file(kmoducc_t *cc)
@@ -96,7 +96,7 @@ static void add_config_file(kmoducc_t *cc)
 		return;
 
 	sprintf(path, "%s%c%s", cc->path.root, kvfs_path_sep(), cc->path.opt);
-	opt_setstr("s:/k/cfg/target/file/add", path);
+	kopt_setstr("s:/k/cfg/target/file/add", path);
 }
 
 int kmodu_init(const char *rootdir, const char *dllname,
@@ -210,7 +210,7 @@ static int module_load(kmoducc_t *cc, const char *path)
 	strcpy(mod->name, name);
 	mod->version = version;
 
-	if (mod->hey(opt_cc())) {
+	if (mod->hey(kopt_cc())) {
 		kmem_free(mod);
 		kerror("Error when say hey: <%s>\n", path);
 		return -1;
@@ -220,7 +220,7 @@ static int module_load(kmoducc_t *cc, const char *path)
 
 	sprintf(tmp, "%s%c%s", path, ps, cc->path.opt);
 	if (kvfs_exist(tmp))
-		opt_setstr("s:/k/cfg/target/file/add", tmp);
+		kopt_setstr("s:/k/cfg/target/file/add", tmp);
 
 	return 0;
 }
@@ -233,11 +233,11 @@ int kmodu_load()
 	KVFS_FINDDATA fdat;
 	int err;
 
-	opt_setint_p("e:/k/modu/load/start", cc->path.root, NULL, 1);
+	kopt_setint_p("e:/k/modu/load/start", cc->path.root, NULL, 1);
 
 	fd = kvfs_findfirst(cc->path.root, &fdat);
 	if (!fd) {
-		opt_setint_p("e:/k/modu/load/done", cc->path.root, 1, 1);
+		kopt_setint_p("e:/k/modu/load/done", cc->path.root, 1, 1);
 		kerror("Scan module dir failed. <%s>\n", cc->path.root);
 		return -1;
 	}
@@ -247,13 +247,13 @@ int kmodu_load()
 		if (!kflg_chk_bit(fdat.attrib, KVFS_A_DIR))
 			continue;
 		sprintf(path, "%s%c%s", cc->path.root, ps, fdat.name);
-		opt_setint_p("e:/k/modu/load/mod/start", path, NULL, 1);
+		kopt_setint_p("e:/k/modu/load/mod/start", path, NULL, 1);
 		err = module_load(cc, path);
-		opt_setint_p("e:/k/modu/load/mod/done", path, err, 1);
+		kopt_setint_p("e:/k/modu/load/mod/done", path, err, 1);
 	} while (-1 != kvfs_findnext(fd, &fdat));
 	kvfs_findclose(fd);
 
-	opt_setint_p("e:/k/modu/load/done", cc->path.root, 0, 1);
+	kopt_setint_p("e:/k/modu/load/done", cc->path.root, 0, 1);
 	return 0;
 }
 
@@ -291,10 +291,10 @@ static int manual_layout()
 {
 	FILE *fp;
 	char *sv = NULL, buf[8192], *uname, *arrow, *dname;
-	cnode_t *unode, *dnode;
+	knode_t *unode, *dnode;
 	void *link_dat;
 
-	opt_getstr("s:/k/modu/layout/path", &sv);
+	kopt_getstr("s:/k/modu/layout/path", &sv);
 	if (!sv) {
 		kerror("kmodu: Manual: Cannot get layout path.\n");
 		return -1;
@@ -317,16 +317,16 @@ static int manual_layout()
 		klog("LinkMap: {%s} >> {%s}\n", uname, dname);
 		if (strcmp(uname, "NULL"))
 			continue;
-		unode = cnode_find(uname);
+		unode = knode_find(uname);
 
 		if (!strcmp(dname, "NULL"))
 			continue;
-		dnode = cnode_find(dname);
+		dnode = knode_find(dname);
 
 		if (dnode && unode && (dnode != unode) && dnode->link_query)
 			if (kflg_chk_bit(dnode->attr, CNAT_INPUT))
 				if (!dnode->link_query(unode, dnode, &link_dat))
-					cnode_link_add(unode, dnode, link_dat);
+					knode_link_add(unode, dnode, link_dat);
 	}
 	fclose(fp);
 	return 0;
@@ -334,14 +334,14 @@ static int manual_layout()
 
 static int auto_layout()
 {
-	return cnode_link(NULL);
+	return knode_link(NULL);
 }
 
 int kmodu_layout()
 {
 	int iv = 0, ret;
 
-	opt_getint("b:/k/modu/layout/manual", &iv);
+	kopt_getint("b:/k/modu/layout/manual", &iv);
 	ret = iv ? manual_layout() : auto_layout();
 	if (ret)
 		kerror("layout failed\n");

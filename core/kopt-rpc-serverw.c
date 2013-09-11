@@ -30,7 +30,7 @@
 #include <sdlist.h>
 
 #include <helper.h>
-#include <opt.h>
+#include <kopt.h>
 
 #include <xtcool.h>
 
@@ -72,7 +72,7 @@ static void close_client(rpc_client_t *c);
 
 static rpc_client_t __g_clients[BACKLOG];
 
-#define OPT_PORT 9000
+#define KOPT_PORT 9000
 
 #define close CloseHandle
 
@@ -253,7 +253,7 @@ static int rpc_client_wch_del(rpc_client_t *c, const char *path)
 		tmp = c->opts.arr[i].path;
 		if (tmp && (0 == strcmp(tmp, path))) {
 			kmem_free_sz(c->opts.arr[i].path);
-			opt_wch_del(c->opts.arr[i].wch);
+			kopt_wch_del(c->opts.arr[i].wch);
 			c->opts.arr[i].wch = NULL;
 			klog("rpc_client_wch_del: %s deleted\n", path);
 			return 0;
@@ -271,7 +271,7 @@ static int rpc_client_wch_clr(rpc_client_t *c)
 	for (i = 0; i < c->opts.cnt; i++) {
 		kmem_free_s(c->opts.arr[i].path);
 		if (c->opts.arr[i].wch)
-			opt_wch_del(c->opts.arr[i].wch);
+			kopt_wch_del(c->opts.arr[i].wch);
 		c->opts.arr[i].wch = NULL;
 	}
 	kmem_free_sz(c->opts.arr);
@@ -283,12 +283,12 @@ static int rpc_client_wch_clr(rpc_client_t *c)
 static void rpc_watch(int ses, void *opt, void *wch)
 {
 	void *ua = wch_ua(wch);
-	char msg[16384], *ini, *path = opt_path(wch);
+	char msg[16384], *ini, *path = kopt_path(wch);
 	int bytes;
 
 	klog("~rpc_watch:path:%s\n", path);
 
-	if (opt_getini_by_opt(opt, &ini))
+	if (kopt_getini_by_opt(opt, &ini))
 		return;
 
 	bytes = sprintf(msg, "wchnotify %s\r\n%s", path, ini);
@@ -325,7 +325,7 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 		else {
 			void *wch = NULL;
 			if ((c->wch_socket != -1))
-				wch = opt_awch_u(para, rpc_watch, (void*)c, NULL);
+				wch = kopt_awch_u(para, rpc_watch, (void*)c, NULL);
 			else
 				kerror("wchadd while on wfunc set in c side\n");
 			if (!wch)
@@ -341,8 +341,8 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 		sprintf(buf, "%s%s", mk_errline(ret, ebuf), c->prompt);
 	} else if (!strncmp("os ", buf, 3)) {
 		para = buf + 3;
-		ret = opt_setbat(para, 1);
-		if (ret && !opt_get_err(&errnum, &errmsg))
+		ret = kopt_setbat(para, 1);
+		if (ret && !kopt_get_err(&errnum, &errmsg))
 			sprintf(buf, "%x %s%s%s", errnum, errmsg, CRLF, c->prompt);
 		else
 			sprintf(buf, "%s%s", mk_errline(ret, ebuf), c->prompt);
@@ -350,8 +350,8 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 	} else if (!strncmp("og ", buf, 3)) {
 		char *iniret = NULL;
 		para = buf + 3;
-		ret = opt_getini(para, &iniret);
-		if (ret && !opt_get_err(&errnum, &errmsg))
+		ret = kopt_getini(para, &iniret);
+		if (ret && !kopt_get_err(&errnum, &errmsg))
 			sprintf(buf, "%x %s%s%s", errnum, errmsg, CRLF, c->prompt);
 		else
 			sprintf(buf, "%s%s%s", mk_errline(ret, ebuf), iniret ? iniret : "", c->prompt);
@@ -393,12 +393,12 @@ static void close_client(rpc_client_t *c)
 
 	if (c->opt_socket != -1) {
 		close((HANDLE)(c->opt_socket));
-		opt_setstr("s:/k/opt/rpc/o/disconnect", c->connhash);
+		kopt_setstr("s:/k/opt/rpc/o/disconnect", c->connhash);
 	}
 
 	if (c->wch_socket != -1) {
 		close((HANDLE)(c->wch_socket));
-		opt_setstr("s:/k/opt/rpc/w/disconnect", c->connhash);
+		kopt_setstr("s:/k/opt/rpc/w/disconnect", c->connhash);
 	}
 
 	rpc_client_wch_clr(c);
@@ -485,7 +485,7 @@ static void *worker_thread_or_server(void *userdata)
 	}
 }
 
-int opt_rpc_server_init(unsigned short port, int argc, char *argv[])
+int kopt_rpc_server_init(unsigned short port, int argc, char *argv[])
 {
 	int i;
 
@@ -502,7 +502,7 @@ int opt_rpc_server_init(unsigned short port, int argc, char *argv[])
 	return 0;
 }
 
-int opt_rpc_server_final()
+int kopt_rpc_server_final()
 {
 	return 0;
 }
@@ -543,14 +543,14 @@ static int check_authority(const char mode, const char *rpc_client,
 	char buffer[1024], *sv;
 
 	sprintf(buffer, "b:/sys/admin/%s/enable", rpc_client);
-	if (opt_getint(buffer, &enable) || !enable) {
+	if (kopt_getint(buffer, &enable) || !enable) {
 		kerror("Bad client <%s> or client disabled\n", rpc_client);
 		return -1;
 	}
 
 	sprintf(buffer, "s:/sys/usr/%s/passwd", user);
 	klog("\n\nFor remote administrator, must check user name and passwd\n");
-	if (!opt_getstr(buffer, &sv)) {
+	if (!kopt_getstr(buffer, &sv)) {
 		if (!strcmp(sv, pass))
 			return 0;
 		kerror("Get password for user '%s' failed\n", user);
@@ -615,9 +615,9 @@ static int process_connect(int new_fd)
 				sprintf(client->prompt, "\r\n(%s)%s", rpc_client, PROMPT);
 
 				if (mode == 'o')
-					opt_setstr("s:/k/opt/rpc/o/connect", connhash);
+					kopt_setstr("s:/k/opt/rpc/o/connect", connhash);
 				else
-					opt_setstr("s:/k/opt/rpc/w/connect", connhash);
+					kopt_setstr("s:/k/opt/rpc/w/connect", connhash);
 
 				/* XXX: w socket can be process insite */
 				if (mode == 'o') {
