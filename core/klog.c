@@ -55,7 +55,6 @@ struct _rulearr_t {
 	rule_t *arr;
 };
 
-
 /* How many logger slot */
 #define MAX_NLOGGER 8
 #define MAX_RLOGGER 8
@@ -224,8 +223,8 @@ static void load_cfg(int argc, char *argv[])
 	char *cfgpath;
 	int i;
 
-	/* Load configure from env */
-	cfgpath = getenv("KLOG_CFGFILE");
+	/* Load configure from env, DeFault ConFiGure */
+	cfgpath = getenv("KLOG_DFCFG");
 	if (cfgpath)
 		load_cfg_file(cfgpath);
 
@@ -626,6 +625,14 @@ void klog_rule_del(int index)
 			(cc->arr_rule.cnt - index - 1) * sizeof(rule_t));
 	klog_touch();
 }
+void klog_rule_clr()
+{
+	klogcc_t *cc = (klogcc_t*)klog_cc();
+
+	cc->arr_rule.cnt = 0;
+	klog_touch();
+}
+
 char *klog_rule_all()
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
