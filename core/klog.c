@@ -468,8 +468,11 @@ static int strarr_find(strarr_t *sa, const char *str)
 {
 	int i;
 
+	if (!str)
+		return -1;
+
 	for (i = 0; i < sa->cnt; i++)
-		if (!strcmp(sa->arr[i], str))
+		if (sa->arr[i] && !strcmp(sa->arr[i], str))
 			return i;
 	return -1;
 }
@@ -501,25 +504,25 @@ int klog_file_name_add(const char *name)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 
-	return strarr_add(&cc->arr_file_name, name) + 1;
+	return strarr_add(&cc->arr_file_name, name ? name : "unknown") + 1;
 }
 int klog_modu_name_add(const char *name)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 
-	return strarr_add(&cc->arr_modu_name, name) + 1;
+	return strarr_add(&cc->arr_modu_name, name ? name : "unknown") + 1;
 }
 int klog_prog_name_add(const char *name)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 
-	return strarr_add(&cc->arr_prog_name, name) + 1;
+	return strarr_add(&cc->arr_prog_name, name ? name : "unknown") + 1;
 }
 int klog_func_name_add(const char *name)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 
-	return strarr_add(&cc->arr_func_name, name) + 1;
+	return strarr_add(&cc->arr_func_name, name ? name : "unknown") + 1;
 }
 
 static int rulearr_add(rulearr_t *ra, int prog, int modu,
