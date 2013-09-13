@@ -237,7 +237,6 @@ def show_dialog():
 
 def str_to_bytes(input):
     input = bytes(input, "utf-8")
-    print("str_to_bytes: \"%s\"" % input)
     return input
 
 def bytes_to_str(input):
