@@ -184,6 +184,7 @@ def show_dialog():
     #   the button number for ButtonPress,
 
     lb_list.bind("<Double-Button-1>", do_get)
+    lb_list.bind("<Control-Double-Button-1>", do_set)
     lb_list.bind("<Return>", do_get)
     lb_list.bind("<Control-g>", do_get)
     lb_list.bind("<Control-s>", do_set)

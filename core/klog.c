@@ -65,6 +65,8 @@ struct _klogcc_t {
 	/** version is a ref count user change klog arg */
 	int touches;
 
+	SPL_HANDLE mutex;
+
 	strarr_t arr_file_name;
 	strarr_t arr_modu_name;
 	strarr_t arr_prog_name;
@@ -286,6 +288,8 @@ void *klog_init(unsigned int mask, int argc, char **argv)
 	cc = (klogcc_t*)kmem_alloz(1, klogcc_t);
 	__g_klogcc = cc;
 
+	cc->mutex = spl_mutex_create();
+
 	/* Set default before configure file */
 	if (mask)
 		rule_add_from_mask(mask);
@@ -503,26 +507,42 @@ static int strarr_add(strarr_t *sa, const char *str)
 int klog_file_name_add(const char *name)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
+	int pos;
 
-	return strarr_add(&cc->arr_file_name, name ? name : "unknown") + 1;
+	spl_mutex_lock(cc->mutex);
+	pos = strarr_add(&cc->arr_file_name, name ? name : "unknown") + 1;
+	spl_mutex_unlock(cc->mutex);
+	return pos;
 }
 int klog_modu_name_add(const char *name)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
+	int pos;
 
-	return strarr_add(&cc->arr_modu_name, name ? name : "unknown") + 1;
+	spl_mutex_lock(cc->mutex);
+	pos = strarr_add(&cc->arr_modu_name, name ? name : "unknown") + 1;
+	spl_mutex_unlock(cc->mutex);
+	return pos;
 }
 int klog_prog_name_add(const char *name)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
+	int pos;
 
-	return strarr_add(&cc->arr_prog_name, name ? name : "unknown") + 1;
+	spl_mutex_lock(cc->mutex);
+	pos = strarr_add(&cc->arr_prog_name, name ? name : "unknown") + 1;
+	spl_mutex_unlock(cc->mutex);
+	return pos;
 }
 int klog_func_name_add(const char *name)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
+	int pos;
 
-	return strarr_add(&cc->arr_func_name, name ? name : "unknown") + 1;
+	spl_mutex_lock(cc->mutex);
+	pos = strarr_add(&cc->arr_func_name, name ? name : "unknown") + 1;
+	spl_mutex_unlock(cc->mutex);
+	return pos;
 }
 
 static int rulearr_add(rulearr_t *ra, int prog, int modu,
@@ -612,7 +632,10 @@ void klog_rule_add(const char *rule)
 	klog_parse_mask(s_mask, &set, &clr);
 
 	if (set || clr) {
+		spl_mutex_lock(cc->mutex);
 		rulearr_add(&cc->arr_rule, i_prog, i_modu, i_file, i_func, i_line, i_pid, set, clr);
+		spl_mutex_unlock(cc->mutex);
+
 		klog_touch();
 	}
 }
