@@ -43,26 +43,31 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 /*-----------------------------------------------------------------------
  * KLog switch mask
  */
-#define KLOG_TRC         0x00000001 /* t: Trace */
-#define KLOG_LOG         0x00000002 /* l: Log */
-#define KLOG_ERR         0x00000004 /* e: Error */
-#define KLOG_FAT         0x00000008 /* f: Fatal Error */
-#define KLOG_TYPE_ALL    0x0000000f
+/* Copied from syslog */
+#define KLOG_FATAL      0x00000001 /* 0:f(fatal): system is unusable */
+#define KLOG_ALERT      0x00000002 /* 1:a: action must be taken immediately */
+#define KLOG_CRIT       0x00000004 /* 2:c: critical conditions */
+#define KLOG_ERR        0x00000008 /* 3:e: error conditions */
+#define KLOG_WARNING    0x00000010 /* 4:w: warning conditions */
+#define KLOG_NOTICE     0x00000020 /* 5:n: normal but significant condition */
+#define KLOG_INFO       0x00000040 /* 6:i:l(log): informational */
+#define KLOG_DEBUG      0x00000080 /* 7:d:t(trace): debug-level messages */
+#define KLOG_TYPE_ALL   0x000000ff
 
-#define KLOG_RTM         0x00000100 /* s: Relative Time, in MS, 'ShiJian' */
-#define KLOG_ATM         0x00000200 /* S: ABS Time, in MS, 'ShiJian' */
+#define KLOG_RTM        0x00000100 /* s: Relative Time, in MS, 'ShiJian' */
+#define KLOG_ATM        0x00000200 /* S: ABS Time, in MS, 'ShiJian' */
 
-#define KLOG_PID         0x00001000 /* j: Process ID, 'JinCheng' */
-#define KLOG_TID         0x00002000 /* x: Thread ID, 'XianCheng' */
+#define KLOG_PID        0x00001000 /* j: Process ID, 'JinCheng' */
+#define KLOG_TID        0x00002000 /* x: Thread ID, 'XianCheng' */
 
-#define KLOG_PROG        0x00010000 /* P: Process Name */
-#define KLOG_MODU        0x00020000 /* M: Module Name */
-#define KLOG_FILE        0x00040000 /* F: File Name */
-#define KLOG_FUNC        0x00080000 /* H: Function Name, 'HanShu' */
-#define KLOG_LINE        0x00100000 /* N: Line Number */
+#define KLOG_PROG       0x00010000 /* P: Process Name */
+#define KLOG_MODU       0x00020000 /* M: Module Name */
+#define KLOG_FILE       0x00040000 /* F: File Name */
+#define KLOG_FUNC       0x00080000 /* H: Function Name, 'HanShu' */
+#define KLOG_LINE       0x00100000 /* N: Line Number */
 
-#define KLOG_ALL         0xffffffff
-#define KLOG_DFT         (KLOG_LOG | KLOG_ERR | KLOG_FAT | KLOG_RTM | KLOG_FILE | KLOG_LINE)
+#define KLOG_ALL        0xffffffff
+#define KLOG_DFT        (KLOG_TYPE_ALL | KLOG_RTM | KLOG_FILE | KLOG_LINE)
 
 
 /*-----------------------------------------------------------------------
@@ -72,7 +77,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 	static int VAR_UNUSED __kl_ver_sav = -1; \
 	static int VAR_UNUSED __kl_func_name_id = -1; \
 	static int VAR_UNUSED __kl_mask = 0; \
-	int VAR_UNUSED __kl_ver_get = klog_touches()
+	int VAR_UNUSED __kl_ver_get = klog_touches();
 
 #define KLOG_SETUP_NAME_AND_ID() do { \
 	if (__kl_file_name_id_ == -1) { \
@@ -91,65 +96,36 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 	} \
 } while (0)
 
+#define KLOG_CHK_AND_CALL(mask, indi, fmt, ...) do { \
+	KLOG_INNER_VAR_DEF(); \
+	if (__kl_ver_get > __kl_ver_sav) { \
+		__kl_ver_sav = __kl_ver_get; \
+		KLOG_SETUP_NAME_AND_ID(); \
+		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id_, __kl_file_name_id_, __kl_func_name_id, __LINE__, (int)spl_process_current()); \
+		if (!(__kl_mask & (mask))) \
+		__kl_mask = 0; \
+	} \
+	if (__kl_mask) \
+	klog_f((indi), __kl_mask, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
+} while (0)
 
 /*-----------------------------------------------------------------------
- * ktrace, klog, kerror, kfatal etc
+ * klog, kerror, kfatal etc
  */
 #define klogs(fmt, ...) do { \
 	klog_f(0, 0, NULL, NULL, NULL, NULL, 0, fmt, ##__VA_ARGS__); \
 } while (0)
 
-#define ktrace(fmt, ...) do { \
-	KLOG_INNER_VAR_DEF(); \
-	if (__kl_ver_get > __kl_ver_sav) { \
-		__kl_ver_sav = __kl_ver_get; \
-		KLOG_SETUP_NAME_AND_ID(); \
-		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id_, __kl_file_name_id_, __kl_func_name_id, __LINE__, (int)spl_process_current()); \
-		if (!(__kl_mask & KLOG_TRC)) \
-			__kl_mask = 0; \
-	} \
-	if (__kl_mask) \
-		klog_f('T', __kl_mask, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
-} while (0)
-
-#define klog(fmt, ...) do { \
-	KLOG_INNER_VAR_DEF(); \
-	if (__kl_ver_get > __kl_ver_sav) { \
-		__kl_ver_sav = __kl_ver_get; \
-		KLOG_SETUP_NAME_AND_ID(); \
-		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id_, __kl_file_name_id_, __kl_func_name_id, __LINE__, (int)spl_process_current()); \
-		if (!(__kl_mask & KLOG_LOG)) \
-			__kl_mask = 0; \
-	} \
-	if (__kl_mask) \
-		klog_f('L', __kl_mask, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
-} while (0)
-
-#define kerror(fmt, ...) do { \
-	KLOG_INNER_VAR_DEF(); \
-	if (__kl_ver_get > __kl_ver_sav) { \
-		__kl_ver_sav = __kl_ver_get; \
-		KLOG_SETUP_NAME_AND_ID(); \
-		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id_, __kl_file_name_id_, __kl_func_name_id, __LINE__, (int)spl_process_current()); \
-		if (!(__kl_mask & KLOG_ERR)) \
-			__kl_mask = 0; \
-	} \
-	if (__kl_mask) \
-		klog_f('E', __kl_mask, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
-} while (0)
-
-#define kfatal(fmt, ...) do { \
-	KLOG_INNER_VAR_DEF(); \
-	if (__kl_ver_get > __kl_ver_sav) { \
-		__kl_ver_sav = __kl_ver_get; \
-		KLOG_SETUP_NAME_AND_ID(); \
-		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id_, __kl_file_name_id_, __kl_func_name_id, __LINE__, (int)spl_process_current()); \
-		if (!(__kl_mask & KLOG_FAT)) \
-			__kl_mask = 0; \
-	} \
-	if (__kl_mask) \
-		klog_f('F', __kl_mask, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, fmt, ##__VA_ARGS__); \
-} while (0)
+#define kfatal(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_INFO, 'F', fmt, ##__VA_ARGS__)
+#define kalert(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_INFO, 'A', fmt, ##__VA_ARGS__)
+#define kcritical(fmt, ...)     KLOG_CHK_AND_CALL(KLOG_INFO, 'C', fmt, ##__VA_ARGS__)
+#define kerror(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_INFO, 'E', fmt, ##__VA_ARGS__)
+#define kwarning(fmt, ...)      KLOG_CHK_AND_CALL(KLOG_INFO, 'W', fmt, ##__VA_ARGS__)
+#define knotice(fmt, ...)       KLOG_CHK_AND_CALL(KLOG_INFO, 'N', fmt, ##__VA_ARGS__)
+#define kinfo(fmt, ...)         KLOG_CHK_AND_CALL(KLOG_INFO, 'I', fmt, ##__VA_ARGS__)
+#define klog(fmt, ...)          KLOG_CHK_AND_CALL(KLOG_INFO, 'L', fmt, ##__VA_ARGS__)
+#define kdebug(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_INFO, 'D', fmt, ##__VA_ARGS__)
+#define ktrace(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_INFO, 'T', fmt, ##__VA_ARGS__)
 
 #define kassert(_x_) do { \
 	if (!(_x_)) { \
@@ -158,7 +134,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 			__kl_ver_sav = __kl_ver_get; \
 			KLOG_SETUP_NAME_AND_ID(); \
 		} \
-		klog_f('A', KLOG_ALL, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, \
+		klog_f('!', KLOG_ALL, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, \
 				"\n\t ASSERT NG: \"%s\"\n\n", #_x_); \
 	} \
 } while (0)

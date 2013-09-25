@@ -244,14 +244,22 @@ static void rule_add_from_mask(unsigned int mask)
 	strcpy(rule, "mask=");
 	i = 5;
 
-	if (mask & KLOG_TRC)
-		rule[i++] = 't';
-	if (mask & KLOG_LOG)
-		rule[i++] = 'l';
+	if (mask & KLOG_FATAL)
+		rule[i++] = 'f';
+	if (mask & KLOG_ALERT)
+		rule[i++] = 'a';
+	if (mask & KLOG_CRIT)
+		rule[i++] = 'c';
 	if (mask & KLOG_ERR)
 		rule[i++] = 'e';
-	if (mask & KLOG_FAT)
-		rule[i++] = 'f';
+	if (mask & KLOG_WARNING)
+		rule[i++] = 'w';
+	if (mask & KLOG_NOTICE)
+		rule[i++] = 'n';
+	if (mask & KLOG_INFO)
+		rule[i++] = 'i';
+	if (mask & KLOG_DEBUG)
+		rule[i++] = 'd';
 
 	if (mask & KLOG_RTM)
 		rule[i++] = 's';
@@ -675,10 +683,23 @@ static unsigned int get_mask(char c)
 		char code;
 		unsigned int bit;
 	} flagmap[] = {
-		{ 't', KLOG_TRC },
-		{ 'l', KLOG_LOG },
+		{ '0', KLOG_FATAL },
+		{ 'f', KLOG_FATAL },
+		{ '1', KLOG_ALERT },
+		{ 'a', KLOG_ALERT },
+		{ '2', KLOG_CRIT },
+		{ 'c', KLOG_CRIT },
+		{ '3', KLOG_ERR },
 		{ 'e', KLOG_ERR },
-		{ 'f', KLOG_FAT },
+		{ '4', KLOG_WARNING },
+		{ 'w', KLOG_WARNING },
+		{ '5', KLOG_NOTICE },
+		{ 'n', KLOG_NOTICE },
+		{ '6', KLOG_INFO },
+		{ 'i', KLOG_INFO },
+		{ 'l', KLOG_INFO },
+		{ '7', KLOG_DEBUG },
+		{ 'd', KLOG_DEBUG },
 
 		{ 's', KLOG_RTM },
 		{ 'S', KLOG_ATM },
