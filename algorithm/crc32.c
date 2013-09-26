@@ -11,7 +11,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "crc32.h"
+
+#include <hilda/crc32.h>
 
 static unsigned long const crctab[256] = {
     0x0,

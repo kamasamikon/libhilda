@@ -13,8 +13,7 @@
 #include <hilda/kflg.h>
 #include <hilda/xtcool.h>
 #include <hilda/karg.h>
-
-#include "hilda/klog.h"
+#include <hilda/klog.h>
 
 /*-----------------------------------------------------------------------
  * Local definition:
