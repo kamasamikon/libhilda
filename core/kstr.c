@@ -5,9 +5,9 @@
 #include <ctype.h>
 #include <errno.h>
 
-#include <kstr.h>
-#include <kmem.h>
-#include <kstr.h>
+#include <hilda/kstr.h>
+#include <hilda/kmem.h>
+#include <hilda/kstr.h>
 
 kint kstr_cmp(const kchar *a_str0, const kchar *a_str1, kint a_len)
 {

@@ -1,8 +1,8 @@
 #include <errno.h>
 #include <stdarg.h>
 
-#include <klog.h>
-#include <strbuf.h>
+#include <hilda/klog.h>
+#include <hilda/strbuf.h>
 
 /*
  * Used as the default ->buf value, so that people can always assume

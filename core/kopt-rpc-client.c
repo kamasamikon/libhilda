@@ -30,22 +30,22 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#include <ktypes.h>
+#include <hilda/ktypes.h>
 
-#include <karg.h>
-#include <klog.h>
-#include <kmem.h>
-#include <kstr.h>
-#include <sdlist.h>
+#include <hilda/karg.h>
+#include <hilda/klog.h>
+#include <hilda/kmem.h>
+#include <hilda/kstr.h>
+#include <hilda/sdlist.h>
 
-#include <md5sum.h>
+#include <hilda/md5sum.h>
 
-#include <xtcool.h>
-#include <helper.h>
-#include <kopt.h>
+#include <hilda/xtcool.h>
+#include <hilda/helper.h>
+#include <hilda/kopt.h>
 
-#include <kopt-rpc-common.h>
-#include <kopt-rpc-client.h>
+#include <hilda/kopt-rpc-common.h>
+#include <hilda/kopt-rpc-client.h>
 
 typedef struct _opt_rpc_t kopt_rpc_t;
 struct _opt_rpc_t {

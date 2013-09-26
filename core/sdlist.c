@@ -1,6 +1,6 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-#include <sdlist.h>
+#include <hilda/sdlist.h>
 
 kinline void init_dlist_head(K_dlist_entry *hdr)
 {

@@ -5,11 +5,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <kmem.h>
-#include <kstr.h>
-#include <klog.h>
+#include <hilda/kmem.h>
+#include <hilda/kstr.h>
+#include <hilda/klog.h>
 
-#include <karg.h>
+#include <hilda/karg.h>
 
 #define ISNUL(c) ((c) == '\0')
 #define ISBLANK(c) ((c) == ' ' || (c) == '\t')

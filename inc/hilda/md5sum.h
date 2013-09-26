@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
 void md5_calculate(char rethash[32], const char *dat, int len);
 

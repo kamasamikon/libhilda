@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
 kinline char *kopt_path(void *oe);
 kinline char *kopt_desc(void *oe);

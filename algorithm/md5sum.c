@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <ktypes.h>
-#include <md5sum.h>
+#include <hilda/ktypes.h>
+#include <hilda/md5sum.h>
 
 typedef kuchar *POINTER;
 typedef kushort UINT2;

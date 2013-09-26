@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <kmem.h>
-#include <klog.h>
+#include <hilda/kmem.h>
+#include <hilda/klog.h>
 
-#include <kopt-rpc-common.h>
+#include <hilda/kopt-rpc-common.h>
 
 /**
  * \brief Parse the command line and return a offset array

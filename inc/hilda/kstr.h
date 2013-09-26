@@ -7,9 +7,9 @@
 extern "C" {
 #endif
 
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
-#include <ktypes.h>
+#include <hilda/ktypes.h>
 
 kint kstr_cmp(const kchar *a_str0, const kchar *a_str1, kint a_len);
 kint kstr_icmp(const kchar *a_str0, const kchar *a_str1, kint a_len);

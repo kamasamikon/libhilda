@@ -7,9 +7,9 @@
 extern "C" {
 #endif
 
-#include <ktypes.h>
-#include <sdlist.h>
-#include <kmem.h>
+#include <hilda/ktypes.h>
+#include <hilda/sdlist.h>
+#include <hilda/kmem.h>
 
 #include <expat.h>
 

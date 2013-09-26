@@ -5,18 +5,18 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#include <ktypes.h>
+#include <hilda/ktypes.h>
 
-#include <kflg.h>
-#include <klog.h>
-#include <kmem.h>
-#include <kstr.h>
-#include <sdlist.h>
+#include <hilda/kflg.h>
+#include <hilda/klog.h>
+#include <hilda/kmem.h>
+#include <hilda/kstr.h>
+#include <hilda/sdlist.h>
 
-#include <xtcool.h>
-#include <strbuf.h>
+#include <hilda/xtcool.h>
+#include <hilda/strbuf.h>
 
-#include <kopt.h>
+#include <hilda/kopt.h>
 
 /**
  * Type:

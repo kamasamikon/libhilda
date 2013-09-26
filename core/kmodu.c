@@ -6,16 +6,16 @@
 
 #include <string.h>
 
-#include <klog.h>
-#include <kflg.h>
-#include <kopt.h>
-#include <kstr.h>
-#include <knode.h>
-#include <sdlist.h>
-#include <xtcool.h>
-#include <strbuf.h>
+#include <hilda/klog.h>
+#include <hilda/kflg.h>
+#include <hilda/kopt.h>
+#include <hilda/kstr.h>
+#include <hilda/knode.h>
+#include <hilda/sdlist.h>
+#include <hilda/xtcool.h>
+#include <hilda/strbuf.h>
 
-#include <kmodu.h>
+#include <hilda/kmodu.h>
 
 /* Control Center of K MODUles */
 typedef struct _kmoducc_t kmoducc_t;

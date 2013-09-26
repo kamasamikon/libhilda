@@ -6,12 +6,12 @@
 #include <ctype.h>
 #include <assert.h>
 
-#include <kmem.h>
-#include <klog.h>
-#include <kstr.h>
-#include <xtcool.h>
+#include <hilda/kmem.h>
+#include <hilda/klog.h>
+#include <hilda/kstr.h>
+#include <hilda/xtcool.h>
 
-#include <xmldoc.h>
+#include <hilda/xmldoc.h>
 
 /**
  * @name expatCallbacks

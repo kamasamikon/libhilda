@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
 unsigned long crc32_calc(unsigned char *buf, unsigned int len);
 

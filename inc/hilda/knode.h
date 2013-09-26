@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
 /* Chain Node, as a module */
 typedef struct _knode_t knode_t;

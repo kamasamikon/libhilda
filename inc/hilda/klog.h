@@ -10,8 +10,8 @@ extern "C" {
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include <sysdeps.h>
-#include <xtcool.h>
+#include <hilda/sysdeps.h>
+#include <hilda/xtcool.h>
 
 /*-----------------------------------------------------------------------
  * Embedded variable used by ktrace, klog, kerror, kfatal etc
@@ -53,6 +53,9 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 #define KLOG_INFO       0x00000040 /* 6:i:l(log): informational */
 #define KLOG_DEBUG      0x00000080 /* 7:d:t(trace): debug-level messages */
 #define KLOG_TYPE_ALL   0x000000ff
+
+#define KLOG_LOG        KLOG_INFO
+#define KLOG_TRC        KLOG_DEBUG
 
 #define KLOG_RTM        0x00000100 /* s: Relative Time, in MS, 'ShiJian' */
 #define KLOG_ATM        0x00000200 /* S: ABS Time, in MS, 'ShiJian' */
@@ -116,16 +119,16 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 	klog_f(0, 0, NULL, NULL, NULL, NULL, 0, fmt, ##__VA_ARGS__); \
 } while (0)
 
-#define kfatal(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_INFO, 'F', fmt, ##__VA_ARGS__)
-#define kalert(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_INFO, 'A', fmt, ##__VA_ARGS__)
-#define kcritical(fmt, ...)     KLOG_CHK_AND_CALL(KLOG_INFO, 'C', fmt, ##__VA_ARGS__)
-#define kerror(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_INFO, 'E', fmt, ##__VA_ARGS__)
-#define kwarning(fmt, ...)      KLOG_CHK_AND_CALL(KLOG_INFO, 'W', fmt, ##__VA_ARGS__)
-#define knotice(fmt, ...)       KLOG_CHK_AND_CALL(KLOG_INFO, 'N', fmt, ##__VA_ARGS__)
+#define kfatal(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_FATAL, 'F', fmt, ##__VA_ARGS__)
+#define kalert(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_ALERT, 'A', fmt, ##__VA_ARGS__)
+#define kcritical(fmt, ...)     KLOG_CHK_AND_CALL(KLOG_CRIT, 'C', fmt, ##__VA_ARGS__)
+#define kerror(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_ERR, 'E', fmt, ##__VA_ARGS__)
+#define kwarning(fmt, ...)      KLOG_CHK_AND_CALL(KLOG_WARNING, 'W', fmt, ##__VA_ARGS__)
+#define knotice(fmt, ...)       KLOG_CHK_AND_CALL(KLOG_NOTICE, 'N', fmt, ##__VA_ARGS__)
 #define kinfo(fmt, ...)         KLOG_CHK_AND_CALL(KLOG_INFO, 'I', fmt, ##__VA_ARGS__)
 #define klog(fmt, ...)          KLOG_CHK_AND_CALL(KLOG_INFO, 'L', fmt, ##__VA_ARGS__)
-#define kdebug(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_INFO, 'D', fmt, ##__VA_ARGS__)
-#define ktrace(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_INFO, 'T', fmt, ##__VA_ARGS__)
+#define kdebug(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_DEBUG, 'D', fmt, ##__VA_ARGS__)
+#define ktrace(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_DEBUG, 'T', fmt, ##__VA_ARGS__)
 
 #define kassert(_x_) do { \
 	if (!(_x_)) { \

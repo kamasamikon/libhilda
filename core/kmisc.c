@@ -5,8 +5,8 @@
 #include <ctype.h>
 #include <errno.h>
 
-#include <kstr.h>
-#include <kmem.h>
+#include <hilda/kstr.h>
+#include <hilda/kmem.h>
 
 /* 0 for success, 1 for v buffer too small, -1 for not found */
 int url_getv(const char *str, const char *k, int klen, char v[], int len)

@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
 #include <errno.h>
 #include <stdlib.h>
@@ -17,7 +17,7 @@ extern "C" {
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <kmem.h>
+#include <hilda/kmem.h>
 
 typedef void* SPL_HANDLE;
 
