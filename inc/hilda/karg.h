@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
 char **build_argv_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v);
 char **build_argv(const char *input, int *arg_c, char ***arg_v);

@@ -4,18 +4,18 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#include <ktypes.h>
+#include <hilda/ktypes.h>
 
-#include <klog.h>
-#include <kmem.h>
-#include <kstr.h>
-#include <md5sum.h>
-#include <sdlist.h>
+#include <hilda/klog.h>
+#include <hilda/kmem.h>
+#include <hilda/kstr.h>
+#include <hilda/md5sum.h>
+#include <hilda/sdlist.h>
 
-#include <helper.h>
-#include <kopt.h>
-#include <kmque.h>
-#include <kcfg.h>
+#include <hilda/helper.h>
+#include <hilda/kopt.h>
+#include <hilda/kmque.h>
+#include <hilda/kcfg.h>
 
 static kcfg_t *__g_cfg = NULL;
 static kmque_t *__g_mque_main = NULL;

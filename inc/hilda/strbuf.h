@@ -6,7 +6,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include <kmem.h>
+#include <hilda/kmem.h>
 
 extern char strbuf_slopbuf[];
 struct strbuf {

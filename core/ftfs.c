@@ -8,12 +8,12 @@
 
 #include <string.h>
 
-#include <ktypes.h>
-#include <md5sum.h>
-#include <klog.h>
-#include <kmem.h>
+#include <hilda/ktypes.h>
+#include <hilda/md5sum.h>
+#include <hilda/klog.h>
+#include <hilda/kmem.h>
 
-#include <ftfs.h>
+#include <hilda/ftfs.h>
 
 static char MAGIC[4] = { 'F', 'T', 'F', 'S' };
 

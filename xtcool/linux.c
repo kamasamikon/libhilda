@@ -12,10 +12,10 @@
 #include <dirent.h>
 #include <unistd.h>
 
-#include <kmem.h>
-#include <strbuf.h>
+#include <hilda/kmem.h>
+#include <hilda/strbuf.h>
 
-#include <xtcool.h>
+#include <hilda/xtcool.h>
 
 typedef struct _spl_event_t spl_event_t;
 struct _spl_event_t {

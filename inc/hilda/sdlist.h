@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
 typedef struct _K_dlist_entry {
 	struct _K_dlist_entry *next;

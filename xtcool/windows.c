@@ -9,7 +9,7 @@
 #include <direct.h>
 #include <time.h>
 
-#include <xtcool.h>
+#include <hilda/xtcool.h>
 
 typedef struct _spl_event_t spl_event_t;
 struct _spl_event_t {

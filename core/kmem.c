@@ -3,10 +3,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <memory.h>
-#include <kmem.h>
-#include <klog.h>
-#include <xtcool.h>
-#include <klog.h>
+#include <hilda/kmem.h>
+#include <hilda/klog.h>
+#include <hilda/xtcool.h>
+#include <hilda/klog.h>
 
 #ifdef MEM_STAT
 static kuint __g_mempeak = 0;

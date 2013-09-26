@@ -18,9 +18,9 @@
 #include <linux/sockios.h>
 #include <linux/ethtool.h>
 
-#include <netif.h>
+#include <hilda/netif.h>
 
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
 #ifdef CFG_NETIF_TEST
 int main(void)

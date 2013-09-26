@@ -7,11 +7,11 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include <klog.h>
-#include <kmem.h>
+#include <hilda/klog.h>
+#include <hilda/kmem.h>
 
-#include <xtcool.h>
-#include <kmque.h>
+#include <hilda/xtcool.h>
+#include <hilda/kmque.h>
 
 static int kmque_cleanup(kmque_t *mque);
 static void mentry_do(mentry_t *me);

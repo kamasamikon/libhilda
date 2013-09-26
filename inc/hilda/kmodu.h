@@ -7,8 +7,8 @@
 extern "C" {
 #endif
 
-#include <ktypes.h>
-#include <sdlist.h>
+#include <hilda/ktypes.h>
+#include <hilda/sdlist.h>
 
 #define kmodu_setup_env(cc) \
 	do { \

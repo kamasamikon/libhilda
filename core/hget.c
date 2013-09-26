@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <ktypes.h>
-#include <klog.h>
-#include <kmem.h>
+#include <hilda/ktypes.h>
+#include <hilda/klog.h>
+#include <hilda/kmem.h>
 
 #if (defined(__WIN32__) || defined(__WINCE__))
 #include <winsock2.h>
@@ -22,7 +22,7 @@
 #include <signal.h>
 #include <errno.h>
 
-#include <hget.h>
+#include <hilda/hget.h>
 
 #if (defined(__WIN32__) || defined(__WINCE__))
 #define CAN_CONTI() ((WSAETIMEDOUT == socket_last_error()) || \

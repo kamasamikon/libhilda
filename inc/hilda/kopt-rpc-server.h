@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
 int kopt_rpc_server_init(unsigned short port, int argc, char *argv[]);
 int kopt_rpc_server_final();

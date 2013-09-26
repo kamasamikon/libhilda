@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
 int kopt_rpc_watch(void *conn, const char *path, char *errbuf, int eblen);
 int kopt_rpc_unwatch(void *conn, const char *path, char *errbuf, int eblen);

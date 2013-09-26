@@ -24,23 +24,23 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#include <ktypes.h>
+#include <hilda/ktypes.h>
 
-#include <karg.h>
-#include <klog.h>
-#include <kmem.h>
-#include <kstr.h>
-#include <sdlist.h>
+#include <hilda/karg.h>
+#include <hilda/klog.h>
+#include <hilda/kmem.h>
+#include <hilda/kstr.h>
+#include <hilda/sdlist.h>
 
-#include <helper.h>
-#include <kopt.h>
+#include <hilda/helper.h>
+#include <hilda/kopt.h>
 
-#include <xtcool.h>
-#include <strbuf.h>
+#include <hilda/xtcool.h>
+#include <hilda/strbuf.h>
 
-#include <kopt-rpc-common.h>
-#include <kopt-rpc-server.h>
-#include <kmque.h>
+#include <hilda/kopt-rpc-common.h>
+#include <hilda/kopt-rpc-server.h>
+#include <hilda/kmque.h>
 
 typedef struct _rpc_client_t rpc_client_t;
 typedef struct _rpc_wch_t rpc_wch_t;

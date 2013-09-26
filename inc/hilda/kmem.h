@@ -8,9 +8,9 @@ extern "C" {
 #endif
 
 #include <stdio.h>
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
-#include <ktypes.h>
+#include <hilda/ktypes.h>
 
 kint kmem_init(kuint a_flg);
 kint kmem_final(kvoid);

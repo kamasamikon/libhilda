@@ -7,10 +7,10 @@
 extern "C" {
 #endif
 
-#include <sysdeps.h>
+#include <hilda/sysdeps.h>
 
-#include <sdlist.h>
-#include <xtcool.h>
+#include <hilda/sdlist.h>
+#include <hilda/xtcool.h>
 
 typedef struct _mentry_t mentry_t;
 typedef struct _kmque_t kmque_t;

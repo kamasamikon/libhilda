@@ -7,8 +7,8 @@
 extern "C" {
 #endif
 
-#include <sysdeps.h>
-#include <ktypes.h>
+#include <hilda/sysdeps.h>
+#include <hilda/ktypes.h>
 
 /* 0 for success, 1 for v buffer too small, -1 for not found */
 int url_getv(const char *str, const char *k, int klen, char v[], int len);
