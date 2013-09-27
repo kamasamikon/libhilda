@@ -5,7 +5,7 @@
  * pflock, Pid File Lock, is used as single instance detector.
  */
 
-#include <pflock.h>
+#include <hilda/pflock.h>
 
 /**
  * \brief Try lock a file.

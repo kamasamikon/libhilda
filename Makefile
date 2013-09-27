@@ -58,11 +58,11 @@ arch.7231: clean
 #
 .PHONY: debug.yes
 debug.yes: clean
-	@sed -i "s/export HILDA_DEBUG=no/export HILDA_DEBUG=yes/g" $(HI_PRJ_ROOT)/.configure
+	@sed -i "s/HILDA_DEBUG := no/HILDA_DEBUG := yes/g" $(HI_PRJ_ROOT)/.configure
 
 .PHONY: debug.no
 debug.no: clean
-	@sed -i "s/export HILDA_DEBUG=yes/export HILDA_DEBUG=no/g" $(HI_PRJ_ROOT)/.configure
+	@sed -i "s/HILDA_DEBUG := yes/HILDA_DEBUG := no/g" $(HI_PRJ_ROOT)/.configure
 
 #########################################################################
 # $(HI_PRJ_ROOT)/hilda
