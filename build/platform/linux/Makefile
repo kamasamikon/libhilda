@@ -2,17 +2,11 @@ export HI_PRJ_ROOT = ../../..
 -include $(HI_PRJ_ROOT)/Makefile.defs
 
 SUB_OBJS_hilda_core = \
-				 $(HI_PRJ_ROOT)/algorithm/md5sum.o \
-				 $(HI_PRJ_ROOT)/core/knode.o \
 				 $(HI_PRJ_ROOT)/core/karg.o \
-				 $(HI_PRJ_ROOT)/core/kcfg.o \
 				 $(HI_PRJ_ROOT)/core/klog.o \
 				 $(HI_PRJ_ROOT)/core/kmem.o \
-				 $(HI_PRJ_ROOT)/core/kmodu.o \
-				 $(HI_PRJ_ROOT)/core/kmque.o \
 				 $(HI_PRJ_ROOT)/core/kstr.o \
 				 $(HI_PRJ_ROOT)/core/kopt.o \
-				 $(HI_PRJ_ROOT)/core/kopt-rpc-client.o \
 				 $(HI_PRJ_ROOT)/core/kopt-rpc-common.o \
 				 $(HI_PRJ_ROOT)/core/kopt-rpc-server.o \
 				 $(HI_PRJ_ROOT)/core/sdlist.o \
@@ -21,8 +15,6 @@ SUB_OBJS_hilda_core = \
 				 $(HI_PRJ_ROOT)/xtcool/linux.o 
 
 SUB_OBJS_hilda_all = \
-				 $(HI_PRJ_ROOT)/algorithm/crc16.o \
-				 $(HI_PRJ_ROOT)/algorithm/crc32.o \
 				 $(HI_PRJ_ROOT)/algorithm/md5sum.o \
 				 $(HI_PRJ_ROOT)/core/knode.o \
 				 $(HI_PRJ_ROOT)/core/ftfs.o \
