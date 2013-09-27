@@ -282,7 +282,7 @@ static int rpc_client_wch_clr(rpc_client_t *c)
 
 static void rpc_watch(int ses, void *opt, void *wch)
 {
-	void *ua = wch_ua(wch);
+	void *ua = kopt_wch_ua(wch);
 	char msg[16384], *ini, *path = kopt_path(wch);
 	int bytes;
 
