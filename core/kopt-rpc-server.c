@@ -470,7 +470,7 @@ int kopt_rpc_server_init(unsigned short port, int argc, char *argv[])
 	if (port == 0)
 		port = 9000;
 
-	i = arg_find(argc, argv, "--or-port", 1);
+	i = karg_find(argc, argv, "--or-port", 1);
 	if (i > 0 && (i + 1) < argc) {
 		int tmp;
 		if (!kstr_toint(argv[i + 1], &tmp))

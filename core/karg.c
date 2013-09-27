@@ -15,7 +15,7 @@
 #define ISBLANK(c) ((c) == ' ' || (c) == '\t')
 #define INITIAL_MAXARGC 16
 
-void free_argv(char **vector)
+void karg_free(char **vector)
 {
 	char **scan;
 
@@ -27,7 +27,7 @@ void free_argv(char **vector)
 }
 
 /* XXX: Normal command line, NUL as end, SP as delimiters */
-char **build_argv(const char *input, int *arg_c, char ***arg_v)
+char **karg_build(const char *input, int *arg_c, char ***arg_v)
 {
 	int squote = 0, dquote = 0, bsquote = 0, argc = 0, maxargc = 0;
 	char c, *arg, *copybuf, **argv = NULL, **nargv;
@@ -52,7 +52,7 @@ char **build_argv(const char *input, int *arg_c, char ***arg_v)
 						maxargc * sizeof(char*));
 			if (nargv == NULL) {
 				if (argv != NULL) {
-					free_argv(argv);
+					karg_free(argv);
 					argv = NULL;
 				}
 				break;
@@ -95,7 +95,7 @@ char **build_argv(const char *input, int *arg_c, char ***arg_v)
 		*arg = '\0';
 		argv[argc] = kstr_dup(copybuf);
 		if (argv[argc] == NULL) {
-			free_argv(argv);
+			karg_free(argv);
 			argv = NULL;
 			break;
 		}
@@ -115,7 +115,7 @@ char **build_argv(const char *input, int *arg_c, char ***arg_v)
 }
 
 /* XXX: NUL as delimiters */
-char **build_argv_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v)
+char **karg_build_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v)
 {
 	int argc = 0, maxargc = 0;
 	char c, *arg, *copybuf, **argv = NULL, **nargv;
@@ -146,7 +146,7 @@ char **build_argv_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v)
 					maxargc * sizeof(char*));
 			if (nargv == NULL) {
 				if (argv != NULL) {
-					free_argv(argv);
+					karg_free(argv);
 					argv = NULL;
 				}
 				break;
@@ -168,7 +168,7 @@ char **build_argv_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v)
 		*arg = '\0';
 		argv[argc] = kstr_dup(copybuf);
 		if (argv[argc] == NULL) {
-			free_argv(argv);
+			karg_free(argv);
 			argv = NULL;
 			break;
 		}
@@ -192,7 +192,7 @@ char **build_argv_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v)
 	return argv;
 }
 
-int arg_find(int argc, char **argv, const char *opt, int fullmatch)
+int karg_find(int argc, char **argv, const char *opt, int fullmatch)
 {
 	int i;
 
@@ -241,16 +241,16 @@ int main()
 	short ofsarr[222];
 
 	for (test = tests; *test != NULL; test++) {
-		printf ("build_argv(\"%s\")\n", *test);
+		printf ("karg_build(\"%s\")\n", *test);
 
-		if ((argv = build_argv(*test, &arg_c, &arg_v)) == NULL)
+		if ((argv = karg_build(*test, &arg_c, &arg_v)) == NULL)
 			printf ("failed!\n\n");
 		else {
 			for (i = 0; i < arg_c; i++)
 				printf("\t\"%s\"\n", arg_v[i]);
 		}
 
-		free_argv(argv);
+		karg_free(argv);
 	}
 
 	return 0;

@@ -182,11 +182,11 @@ kinline void *klog_cc(void)
 	argv = NULL;
 
 	cl_buf = spl_get_cmdline(&cl_size);
-	build_argv_nul(cl_buf, cl_size, &argc, &argv);
+	karg_build_nul(cl_buf, cl_size, &argc, &argv);
 	kmem_free(cl_buf);
 
 	cc = klog_init(KLOG_DFT, argc, argv);
-	free_argv(argv);
+	karg_free(argv);
 
 	return cc;
 }
@@ -230,7 +230,7 @@ static void load_cfg(int argc, char *argv[])
 		load_cfg_file(cfgpath);
 
 	/* Load configure from command line */
-	i = arg_find(argc, argv, "--klog-cfgfile", 1);
+	i = karg_find(argc, argv, "--klog-cfgfile", 1);
 	if (i > 1)
 		load_cfg_file(argv[i + 1]);
 }

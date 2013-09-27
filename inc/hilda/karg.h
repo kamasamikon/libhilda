@@ -9,11 +9,11 @@ extern "C" {
 
 #include <hilda/sysdeps.h>
 
-char **build_argv_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v);
-char **build_argv(const char *input, int *arg_c, char ***arg_v);
-void free_argv(char **vector);
+char **karg_build_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v);
+char **karg_build(const char *input, int *arg_c, char ***arg_v);
+void karg_free(char **vector);
 
-int arg_find(int argc, char **argv, const char *opt, int fullmatch);
+int karg_find(int argc, char **argv, const char *opt, int fullmatch);
 
 #ifdef __cplusplus
 }

@@ -57,9 +57,9 @@ kinline void *kopt_get_new_ptr(void *oe);
 #define OS "s:"		/* str: */
 #define OP "p:"		/* ptr: */
 
-kinline void *wch_ua(void *ow);
-kinline void *wch_ub(void *ow);
-kinline void *wch_path(void *ow);
+kinline void *kopt_wch_ua(void *ow);
+kinline void *kopt_wch_ub(void *ow);
+kinline void *kopt_wch_path(void *ow);
 
 #define KOPT_CHK_TYPE(p) ((p) && \
 		((p)[1] == ':') && \

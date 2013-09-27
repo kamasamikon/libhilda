@@ -394,7 +394,7 @@ KXmlNode *xmldoc_add_node(KXmlDoc *doc, KXmlNode *node, KXmlNode *parent)
 	if (doc && node) {
 		if (!parent)
 			parent = doc->cur_node;
-		insert_dlist_tail_entry(&parent->subHdr, &node->entry);
+		kdlist_insert_tail_entry(&parent->subHdr, &node->entry);
 		node->parentNode = parent;
 	}
 	return node;
@@ -409,9 +409,9 @@ KXmlNode *xmlnode_new(KXmlNode *node, const kchar *name, const kchar *text)
 		node = (KXmlNode*)kmem_alloz(1, KXmlNode);
 
 	if (node) {
-		init_dlist_head(&node->entry);
-		init_dlist_head(&node->subHdr);
-		init_dlist_head(&node->attrHdr);
+		kdlist_init_head(&node->entry);
+		kdlist_init_head(&node->subHdr);
+		kdlist_init_head(&node->attrHdr);
 		node->parentNode = knil;
 		node->name = name ? kstr_dup(name) : knil;
 		node->text = text ? kstr_dup(text) : knil;
@@ -462,13 +462,13 @@ kint xmlnode_del(KXmlNode *node)
 		KXmlAttr *attr;
 		KXmlNode *snode;
 
-		while (!is_dlist_empty(&node->attrHdr)) {
-			entry = remove_dlist_tail_entry(&node->attrHdr);
+		while (!kdlist_is_empty(&node->attrHdr)) {
+			entry = kdlist_remove_tail_entry(&node->attrHdr);
 			attr = FIELD_TO_STRUCTURE(entry, KXmlAttr, entry);
 			xmlattr_del(attr);
 		}
-		while (!is_dlist_empty(&node->subHdr)) {
-			entry = remove_dlist_tail_entry(&node->subHdr);
+		while (!kdlist_is_empty(&node->subHdr)) {
+			entry = kdlist_remove_tail_entry(&node->subHdr);
 			snode = FIELD_TO_STRUCTURE(entry, KXmlNode, entry);
 			xmlnode_del(snode);
 		}
@@ -484,7 +484,7 @@ kint xmlnode_del(KXmlNode *node)
 
 kint xmlnode_detach(KXmlNode *node)
 {
-	remove_dlist_entry(&node->entry);
+	kdlist_remove_entry(&node->entry);
 	node->parentNode = knil;
 	return 0;
 }
@@ -549,7 +549,7 @@ KXmlNode *xmlnode_prev_same(KXmlNode *node)
 kint xmlnode_add_attr(KXmlNode *node, KXmlAttr *attr)
 {
 	if (node && attr) {
-		insert_dlist_tail_entry(&node->attrHdr, &attr->entry);
+		kdlist_insert_tail_entry(&node->attrHdr, &attr->entry);
 		attr->parentNode = node;
 		return 0;
 	}
@@ -579,7 +579,7 @@ KXmlAttr *xmlattr_new(KXmlAttr *attr, const kchar *name, const kchar *value)
 		attr = (KXmlAttr*)kmem_alloz(1, KXmlAttr);
 
 	if (attr) {
-		init_dlist_head(&attr->entry);
+		kdlist_init_head(&attr->entry);
 		attr->parentNode = knil;
 		setVal(attr->name, name);
 		setVal(attr->value, value);
@@ -600,7 +600,7 @@ kint xmlattr_del(KXmlAttr *attr)
 
 kint xmlattr_detach(KXmlAttr *attr)
 {
-	remove_dlist_entry(&attr->entry);
+	kdlist_remove_entry(&attr->entry);
 	attr->parentNode = knil;
 	return 0;
 }

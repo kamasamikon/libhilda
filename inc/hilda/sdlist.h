@@ -17,18 +17,18 @@ typedef struct _K_dlist_entry {
 #define FIELD_TO_STRUCTURE(address, type, field) \
 	((type *)((char *)(address) - (char *)(&((type *)0)->field)))
 
-kinline void init_dlist_head(K_dlist_entry *hdr);
-kinline int is_dlist_empty(K_dlist_entry *hdr);
+kinline void kdlist_init_head(K_dlist_entry *hdr);
+kinline int kdlist_is_empty(K_dlist_entry *hdr);
 
-kinline K_dlist_entry *remove_dlist_head_entry(K_dlist_entry *hdr);
-kinline K_dlist_entry *remove_dlist_tail_entry(K_dlist_entry *hdr);
+kinline K_dlist_entry *kdlist_remove_head_entry(K_dlist_entry *hdr);
+kinline K_dlist_entry *kdlist_remove_tail_entry(K_dlist_entry *hdr);
 
-kinline void remove_dlist_entry(K_dlist_entry *entry);
-kinline void insert_dlist_tail_entry(K_dlist_entry *hdr, K_dlist_entry *entry);
-kinline void insert_dlist_head_entry(K_dlist_entry *hdr, K_dlist_entry *entry);
-kinline int inquire_dlist_number(K_dlist_entry *hdr);
+kinline void kdlist_remove_entry(K_dlist_entry *entry);
+kinline void kdlist_insert_tail_entry(K_dlist_entry *hdr, K_dlist_entry *entry);
+kinline void kdlist_insert_head_entry(K_dlist_entry *hdr, K_dlist_entry *entry);
+kinline int kdlist_length(K_dlist_entry *hdr);
 
-kinline void incorporate_dlist(K_dlist_entry *obj_hdr, K_dlist_entry *old_hdr);
+kinline void kdlist_join(K_dlist_entry *obj_hdr, K_dlist_entry *old_hdr);
 
 #ifdef __cplusplus
 }
