@@ -109,7 +109,7 @@ int kmodu_init(const char *rootdir, const char *dllname,
 		return 0;
 	}
 	cc = __g_kmoducc = (kmoducc_t*)kmem_alloz(1, kmoducc_t);
-	init_dlist_head(&cc->modhdr);
+	kdlist_init_head(&cc->modhdr);
 
 	cc->path.root = kstr_dup(rootdir);
 	cc->path.dll = kstr_dup(dllname);
@@ -216,7 +216,7 @@ static int module_load(kmoducc_t *cc, const char *path)
 		return -1;
 	}
 
-	insert_dlist_tail_entry(&cc->modhdr, &mod->entry);
+	kdlist_insert_tail_entry(&cc->modhdr, &mod->entry);
 
 	sprintf(tmp, "%s%c%s", path, ps, cc->path.opt);
 	if (kvfs_exist(tmp))
@@ -268,7 +268,7 @@ static void module_unload()
 		mod = FIELD_TO_STRUCTURE(entry, kmodu_t, entry);
 		entry = entry->next;
 
-		remove_dlist_entry(&mod->entry);
+		kdlist_remove_entry(&mod->entry);
 		if (mod->bye())
 			kerror("bye: NG: %p:%s\n", mod->handle, mod->path);
 		lib_unload(mod);
@@ -374,7 +374,7 @@ static kmodu_t *lib_load(const char *path)
 	}
 
 	mod = (kmodu_t*)kmem_alloz(1, kmodu_t);
-	init_dlist_head(&mod->entry);
+	kdlist_init_head(&mod->entry);
 	strcpy(mod->path, path);
 	mod->handle = handle;
 	mod->hey = hey;

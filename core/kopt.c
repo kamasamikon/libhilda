@@ -396,17 +396,17 @@ kinline void *kopt_get_new_ptr(void *oe)
 	return ((kopt_entry_t*)(oe))->v.new.p.v;
 }
 
-kinline void *wch_path(void *ow)
+kinline void *kopt_wch_path(void *ow)
 {
 	return ((kopt_watch_t*)(ow))->path;
 }
 
-kinline void *wch_ua(void *ow)
+kinline void *kopt_wch_ua(void *ow)
 {
 	return ((kopt_watch_t*)(ow))->ua;
 }
 
-kinline void *wch_ub(void *ow)
+kinline void *kopt_wch_ub(void *ow)
 {
 	return ((kopt_watch_t*)(ow))->ub;
 }
@@ -828,8 +828,8 @@ static void sync_from_nylist(kopt_entry_t *oe)
 		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
 		entry = entry->next;
 		if (!strcmp(wch->path, path)) {
-			remove_dlist_entry(&wch->entry);
-			insert_dlist_tail_entry(&oe->awchhdr, &wch->entry);
+			kdlist_remove_entry(&wch->entry);
+			kdlist_insert_tail_entry(&oe->awchhdr, &wch->entry);
 			oe->awch_cnt++;
 		}
 	}
@@ -838,8 +838,8 @@ static void sync_from_nylist(kopt_entry_t *oe)
 		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
 		entry = entry->next;
 		if (!strcmp(wch->path, path)) {
-			remove_dlist_entry(&wch->entry);
-			insert_dlist_tail_entry(&oe->bwchhdr, &wch->entry);
+			kdlist_remove_entry(&wch->entry);
+			kdlist_insert_tail_entry(&oe->bwchhdr, &wch->entry);
 			oe->bwch_cnt++;
 		}
 	}
@@ -884,11 +884,11 @@ int kopt_new(const char *path, const char *desc, unsigned int attr,
 	oe->getter = getter;
 	oe->delter = delter;
 
-	init_dlist_head(&oe->entry);
-	insert_dlist_tail_entry(&__g_optcc->oehdr, &oe->entry);
+	kdlist_init_head(&oe->entry);
+	kdlist_insert_tail_entry(&__g_optcc->oehdr, &oe->entry);
 
-	init_dlist_head(&oe->awchhdr);
-	init_dlist_head(&oe->bwchhdr);
+	kdlist_init_head(&oe->awchhdr);
+	kdlist_init_head(&oe->bwchhdr);
 
 	/* process the NY watches */
 	sync_from_nylist(oe);
@@ -907,8 +907,8 @@ static void pushback_nylist(kopt_entry_t *oe)
 		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
 		entry = entry->next;
 
-		remove_dlist_entry(&wch->entry);
-		insert_dlist_tail_entry(&__g_optcc->nywch.ahdr, &wch->entry);
+		kdlist_remove_entry(&wch->entry);
+		kdlist_insert_tail_entry(&__g_optcc->nywch.ahdr, &wch->entry);
 	}
 
 	entry = oe->bwchhdr.next;
@@ -916,8 +916,8 @@ static void pushback_nylist(kopt_entry_t *oe)
 		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
 		entry = entry->next;
 
-		remove_dlist_entry(&wch->entry);
-		insert_dlist_tail_entry(&__g_optcc->nywch.bhdr, &wch->entry);
+		kdlist_remove_entry(&wch->entry);
+		kdlist_insert_tail_entry(&__g_optcc->nywch.bhdr, &wch->entry);
 	}
 }
 
@@ -952,7 +952,7 @@ static int entry_del(kopt_entry_t *oe)
 	pushback_nylist(oe);
 	if (oe->delter)
 		oe->delter(oe);
-	remove_dlist_entry(&oe->entry);
+	kdlist_remove_entry(&oe->entry);
 
 	kflg_clr(oe->attr, OA_IN_DEL);
 
@@ -1713,14 +1713,14 @@ static void queue_watch(kopt_entry_t *oe, kopt_watch_t *ow, int awch)
 		else
 			hdr = &oe->bwchhdr;
 
-		insert_dlist_tail_entry(hdr, &ow->entry);
+		kdlist_insert_tail_entry(hdr, &ow->entry);
 		oe->bwch_cnt++;
 	} else {
 		if (awch)
 			hdr = &__g_optcc->nywch.ahdr;
 		else
 			hdr = &__g_optcc->nywch.bhdr;
-		insert_dlist_tail_entry(hdr, &ow->entry);
+		kdlist_insert_tail_entry(hdr, &ow->entry);
 	}
 }
 
@@ -1767,7 +1767,7 @@ int kopt_wch_del(void *wch)
 	if (ow->delter)
 		ow->delter((void*)ow);
 
-	remove_dlist_entry(&ow->entry);
+	kdlist_remove_entry(&ow->entry);
 
 	/* spl_lck_rel(__g_optcc->lck); */
 
@@ -1910,9 +1910,9 @@ void *kopt_init(int argc, char *argv[])
 		return (void*)__g_optcc;
 
 	__g_optcc = (optcc_t*)kmem_alloz(1, optcc_t);
-	init_dlist_head(&__g_optcc->oehdr);
-	init_dlist_head(&__g_optcc->nywch.bhdr);
-	init_dlist_head(&__g_optcc->nywch.ahdr);
+	kdlist_init_head(&__g_optcc->oehdr);
+	kdlist_init_head(&__g_optcc->nywch.bhdr);
+	kdlist_init_head(&__g_optcc->nywch.ahdr);
 
 	__g_optcc->lck = spl_lck_new();
 
@@ -2042,19 +2042,5 @@ void kopt_session_set_err(void *opt, int error)
 		curerr |= error;
 		oe->ub = (void*)curerr;
 	}
-}
-
-/*
- * Only use for debugging
- */
-int os_opt_hook(int ses, void *opt, void *pa, void *pb)
-{
-	klog("ses:%d, path:%s\n", ses, kopt_path(opt));
-	return EC_DEFAULT;
-}
-int og_opt_hook(void *opt, void *pa, void *pb)
-{
-	klog("path:%s\n", kopt_path(opt));
-	return EC_DEFAULT;
 }
 

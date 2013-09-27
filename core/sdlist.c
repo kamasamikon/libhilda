@@ -2,37 +2,37 @@
 
 #include <hilda/sdlist.h>
 
-kinline void init_dlist_head(K_dlist_entry *hdr)
+kinline void kdlist_init_head(K_dlist_entry *hdr)
 {
 	hdr->next = hdr->prev = hdr;
 }
 
-kinline int is_dlist_empty(K_dlist_entry *hdr)
+kinline int kdlist_is_empty(K_dlist_entry *hdr)
 {
 	return (hdr->next == hdr);
 }
 
-kinline K_dlist_entry *remove_dlist_head_entry(K_dlist_entry *hdr)
+kinline K_dlist_entry *kdlist_remove_head_entry(K_dlist_entry *hdr)
 {
 	K_dlist_entry *entry;
 
 	entry = hdr->next;
-	remove_dlist_entry(hdr->next);
+	kdlist_remove_entry(hdr->next);
 
 	return entry;
 }
 
-kinline K_dlist_entry *remove_dlist_tail_entry(K_dlist_entry *hdr)
+kinline K_dlist_entry *kdlist_remove_tail_entry(K_dlist_entry *hdr)
 {
 	K_dlist_entry *entry;
 
 	entry = hdr->prev;
-	remove_dlist_entry(hdr->prev);
+	kdlist_remove_entry(hdr->prev);
 
 	return entry;
 }
 
-kinline void remove_dlist_entry(K_dlist_entry *entry)
+kinline void kdlist_remove_entry(K_dlist_entry *entry)
 {
 	K_dlist_entry *_ex_prev;
 	K_dlist_entry *_ex_next;
@@ -43,7 +43,7 @@ kinline void remove_dlist_entry(K_dlist_entry *entry)
 	_ex_next->prev = _ex_prev;
 }
 
-kinline void insert_dlist_tail_entry(K_dlist_entry *hdr,
+kinline void kdlist_insert_tail_entry(K_dlist_entry *hdr,
 		K_dlist_entry *entry)
 {
 	K_dlist_entry *_ex_prev;
@@ -57,7 +57,7 @@ kinline void insert_dlist_tail_entry(K_dlist_entry *hdr,
 	_ex_list_head->prev = entry;
 }
 
-kinline void insert_dlist_head_entry(K_dlist_entry *hdr,
+kinline void kdlist_insert_head_entry(K_dlist_entry *hdr,
 		K_dlist_entry *entry)
 {
 	K_dlist_entry *_ex_next;
@@ -71,7 +71,7 @@ kinline void insert_dlist_head_entry(K_dlist_entry *hdr,
 	_ex_list_head->next = entry;
 }
 
-kinline void incorporate_dlist(K_dlist_entry *obj_hdr,
+kinline void kdlist_join(K_dlist_entry *obj_hdr,
 		K_dlist_entry *old_hdr)
 {
 	K_dlist_entry *new_head;
@@ -93,7 +93,7 @@ kinline void incorporate_dlist(K_dlist_entry *obj_hdr,
 	new_tail->next = new_head;
 }
 
-kinline int inquire_dlist_number(K_dlist_entry *hdr)
+kinline int kdlist_length(K_dlist_entry *hdr)
 {
 	int number = 0;
 	K_dlist_entry *entry;

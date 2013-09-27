@@ -21,8 +21,8 @@ kmque_t *kmque_new()
 {
 	kmque_t *mque = (kmque_t*)kmem_alloz(1, kmque_t);
 
-	init_dlist_head(&mque->msg_qhdr);
-	init_dlist_head(&mque->dpc_qhdr);
+	kdlist_init_head(&mque->msg_qhdr);
+	kdlist_init_head(&mque->dpc_qhdr);
 	mque->qhdr_lck = spl_lck_new();
 
 	mque->msg_new_sem = spl_sema_new(0);
@@ -78,13 +78,13 @@ static mentry_t *get_ready_me(kmque_t *mque)
 	unsigned int now = spl_get_ticks();
 
 	spl_lck_get(mque->qhdr_lck);
-	if (!is_dlist_empty(&mque->msg_qhdr)) {
-		entry = remove_dlist_head_entry(&mque->msg_qhdr);
+	if (!kdlist_is_empty(&mque->msg_qhdr)) {
+		entry = kdlist_remove_head_entry(&mque->msg_qhdr);
 		me = FIELD_TO_STRUCTURE(entry, mentry_t, entry);
-	} else if (!is_dlist_empty(&mque->dpc_qhdr)) {
+	} else if (!kdlist_is_empty(&mque->dpc_qhdr)) {
 		me = FIELD_TO_STRUCTURE(mque->dpc_qhdr.next, mentry_t, entry);
 		if (me->dpc.due_time < now)
-			remove_dlist_head_entry(&mque->dpc_qhdr);
+			kdlist_remove_head_entry(&mque->dpc_qhdr);
 		else
 			me = NULL;
 	}
@@ -104,7 +104,7 @@ static int calc_wait_timeout(kmque_t *mque, int timeout)
 		new_timeout = timeout;
 
 	spl_lck_get(mque->qhdr_lck);
-	if (!is_dlist_empty(&mque->dpc_qhdr)) {
+	if (!kdlist_is_empty(&mque->dpc_qhdr)) {
 		me = FIELD_TO_STRUCTURE(mque->dpc_qhdr.next, mentry_t, entry);
 		if (me->dpc.due_time > now) {
 			first_timeout = me->dpc.due_time - now;
@@ -185,7 +185,7 @@ int mentry_send(kmque_t *mque, ME_WORKER worker, void *ua, void *ub)
 		me->mque = mque;
 
 		spl_lck_get(mque->qhdr_lck);
-		insert_dlist_tail_entry(&mque->msg_qhdr, &me->entry);
+		kdlist_insert_tail_entry(&mque->msg_qhdr, &me->entry);
 		spl_lck_rel(mque->qhdr_lck);
 
 		spl_sema_rel(mque->msg_new_sem);
@@ -215,7 +215,7 @@ int mentry_post(kmque_t *mque, ME_WORKER worker, ME_DESTORYER destoryer,
 	me->mque = mque;
 
 	spl_lck_get(mque->qhdr_lck);
-	insert_dlist_tail_entry(&mque->msg_qhdr, &me->entry);
+	kdlist_insert_tail_entry(&mque->msg_qhdr, &me->entry);
 	spl_lck_rel(mque->qhdr_lck);
 
 	spl_sema_rel(mque->msg_new_sem);
@@ -250,7 +250,7 @@ static int insert_dpc_entry(kmque_t *mque, mentry_t *me, unsigned int wait)
 	}
 
 	me->dpc.due_time = me_due_time;
-	insert_dlist_tail_entry(entry, &me->entry);
+	kdlist_insert_tail_entry(entry, &me->entry);
 
 	spl_lck_rel(mque->qhdr_lck);
 
@@ -299,7 +299,7 @@ int mentry_dpc_kill(kmque_t *mque, unsigned int dpcid)
 		if (me->dpc.id != dpcid)
 			continue;
 
-		remove_dlist_entry(&me->entry);
+		kdlist_remove_entry(&me->entry);
 		mentry_done(me);
 		break;
 	}
