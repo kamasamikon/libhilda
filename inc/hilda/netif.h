@@ -1,7 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-#ifndef __NET_IF_H__
-#define __NET_IF_H__
+#ifndef __K_NET_IF_H__
+#define __K_NET_IF_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,5 +22,5 @@ int netinf_islink(const char *dev);
 #ifdef __cplusplus
 }
 #endif
-#endif /* __NET_IF_H__ */
+#endif /* __K_NET_IF_H__ */
 

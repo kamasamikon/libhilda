@@ -1,7 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-#ifndef __HGET_H__
-#define __HGET_H__
+#ifndef __K_HGET_H__
+#define __K_HGET_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,4 +70,4 @@ kvoid hget_free_socket(SOCKET a_socket);
 #ifdef __cplusplus
 }
 #endif
-#endif /* __HGET_H__ */
+#endif /* __K_HGET_H__ */

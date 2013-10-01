@@ -1,5 +1,7 @@
-#ifndef __TRACE_H__
-#define __TRACE_H__
+/* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
+
+#ifndef __K_TRACE_H__
+#define __K_TRACE_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,5 +12,5 @@ void show_trace(void);
 #ifdef __cplusplus
 }
 #endif
-#endif /* __TRACE_H__ */
+#endif /* __K_TRACE_H__ */
 

@@ -1,8 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-
-#ifndef __SYS_PORT_LIB_H__
-#define __SYS_PORT_LIB_H__
+#ifndef __K_XTCOOL_H__
+#define __K_XTCOOL_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -196,5 +195,5 @@ int spl_sock_err();
 } /* extern "C" */
 #endif
 
-#endif /* __SYS_PORT_LIB_H__ */
+#endif /* __K_XTCOOL_H__ */
 

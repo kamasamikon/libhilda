@@ -1,7 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-#ifndef __HELPER_H__
-#define __HELPER_H__
+#ifndef __K_HELPER_H__
+#define __K_HELPER_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,5 +25,5 @@ extern "C" {
 }
 #endif
 
-#endif /* __HELPER_H__ */
+#endif /* __K_HELPER_H__ */
 

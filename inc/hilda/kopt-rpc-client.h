@@ -1,7 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-#ifndef __OPT_RPC_CLIENT_H__
-#define __OPT_RPC_CLIENT_H__
+#ifndef __K_OPT_RPC_CLIENT_H__
+#define __K_OPT_RPC_CLIENT_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,5 +35,5 @@ int kopt_rpc_disconnect(void *conn);
 }
 #endif
 
-#endif /* __OPT_RPC_CLIENT_H__ */
+#endif /* __K_OPT_RPC_CLIENT_H__ */
 

@@ -1,7 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-#ifndef __SDLIST_H__
-#define __SDLIST_H__
+#ifndef __K_SDLIST_H__
+#define __K_SDLIST_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,11 +28,11 @@ kinline void kdlist_insert_tail_entry(K_dlist_entry *hdr, K_dlist_entry *entry);
 kinline void kdlist_insert_head_entry(K_dlist_entry *hdr, K_dlist_entry *entry);
 kinline int kdlist_length(K_dlist_entry *hdr);
 
-kinline void kdlist_join(K_dlist_entry *obj_hdr, K_dlist_entry *old_hdr);
+kinline void kdlist_concat(K_dlist_entry *obj_hdr, K_dlist_entry *old_hdr);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __SDLIST_H__ */
+#endif /* __K_SDLIST_H__ */
 
