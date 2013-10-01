@@ -71,7 +71,7 @@ kinline void kdlist_insert_head_entry(K_dlist_entry *hdr,
 	_ex_list_head->next = entry;
 }
 
-kinline void kdlist_join(K_dlist_entry *obj_hdr,
+kinline void kdlist_concat(K_dlist_entry *obj_hdr,
 		K_dlist_entry *old_hdr)
 {
 	K_dlist_entry *new_head;

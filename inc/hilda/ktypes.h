@@ -19,8 +19,8 @@ sizeof(kchar) >= 1 byte
 
 ----------------------------------------------------------------------------*/
 
-#ifndef __IVTYPE_H__
-#define __IVTYPE_H__
+#ifndef __K_TYPE_H__
+#define __K_TYPE_H__
 
 typedef signed long long int kllint;
 typedef unsigned long long int kullint;
@@ -81,5 +81,5 @@ typedef void *kbean;
 
 #define EC_ERR(c)   ((c) & 0xffff0000)
 
-#endif /* __IVTYPE_H__ */
+#endif /* __K_TYPE_H__ */
 

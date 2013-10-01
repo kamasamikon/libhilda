@@ -1,5 +1,7 @@
-#ifndef STRBUF_H
-#define STRBUF_H
+/* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
+
+#ifndef __K_STRBUF_H__
+#define __K_STRBUF_H__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,4 +58,4 @@ extern void strbuf_vaddf(struct strbuf *sb, const char *fmt, va_list ap);
 
 extern size_t strbuf_fread(struct strbuf *, size_t, FILE *);
 
-#endif /* STRBUF_H */
+#endif /* __K_STRBUF_H__ */

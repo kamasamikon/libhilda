@@ -1,7 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-#ifndef __SYSDEPS_H__
-#define __SYSDEPS_H__
+#ifndef __K_SYSDEPS_H__
+#define __K_SYSDEPS_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,5 +25,5 @@ typedef long long int int64_t;
 }
 #endif
 
-#endif /* __SYSDEPS_H__ */
+#endif /* __K_SYSDEPS_H__ */
 

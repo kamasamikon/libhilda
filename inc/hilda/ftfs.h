@@ -6,8 +6,8 @@
  * such as FLASH, EEPROM etc.
  */
 
-#ifndef __FTFS_H__
-#define __FTFS_H__
+#ifndef __K_FTFS_H__
+#define __K_FTFS_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,5 +58,5 @@ int ftfs_header_length();
 #ifdef __cplusplus
 }
 #endif
-#endif /* __FTFS_H__ */
+#endif /* __K_FTFS_H__ */
 

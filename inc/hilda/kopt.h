@@ -1,7 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-#ifndef __OPT_H__
-#define __OPT_H__
+#ifndef __K_OPT_H__
+#define __K_OPT_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -195,5 +195,5 @@ void kopt_session_set_err(void *opt, int error);
 }
 #endif
 
-#endif /* __OPT_H__ */
+#endif /* __K_OPT_H__ */
 

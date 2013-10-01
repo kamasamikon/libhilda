@@ -1,7 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-#ifndef __PFLOCK_H__
-#define __PFLOCK_H__
+#ifndef __K_PFLOCK_H__
+#define __K_PFLOCK_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,5 +19,5 @@ int pflck_rel(int lck);
 #ifdef __cplusplus
 }
 #endif
-#endif /* __PFLOCK_H__ */
+#endif /* __K_PFLOCK_H__ */
 

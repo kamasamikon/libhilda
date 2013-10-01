@@ -1,7 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-#ifndef __XMLDOC_H__
-#define __XMLDOC_H__
+#ifndef __K_XMLDOC_H__
+#define __K_XMLDOC_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -100,4 +100,4 @@ kint xmlattr_set_value(KXmlAttr *attr, const kchar *value);
 #ifdef __cplusplus
 }
 #endif
-#endif /* __XMLDOC_H__ */
+#endif /* __K_XMLDOC_H__ */
