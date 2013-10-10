@@ -684,21 +684,29 @@ static unsigned int get_mask(char c)
 	} flagmap[] = {
 		{ '0', KLOG_FATAL },
 		{ 'f', KLOG_FATAL },
+
 		{ '1', KLOG_ALERT },
 		{ 'a', KLOG_ALERT },
+
 		{ '2', KLOG_CRIT },
 		{ 'c', KLOG_CRIT },
+
 		{ '3', KLOG_ERR },
 		{ 'e', KLOG_ERR },
+
 		{ '4', KLOG_WARNING },
 		{ 'w', KLOG_WARNING },
+
 		{ '5', KLOG_NOTICE },
 		{ 'n', KLOG_NOTICE },
+
 		{ '6', KLOG_INFO },
 		{ 'i', KLOG_INFO },
 		{ 'l', KLOG_INFO },
+
 		{ '7', KLOG_DEBUG },
 		{ 'd', KLOG_DEBUG },
+		{ 't', KLOG_DEBUG },
 
 		{ 's', KLOG_RTM },
 		{ 'S', KLOG_ATM },
