@@ -19,7 +19,7 @@ int url_getv(const char *str, const char *k, int klen, char v[], int len)
 	if (klen <= 0)
 		klen = strlen(k);
 
-	while (p = strstr(start, k)) {
+	while ((p = strstr(start, k))) {
 		p += klen;
 		if (p[0] != '=') {
 			start = p + 1;

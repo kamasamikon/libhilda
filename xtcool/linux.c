@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include <hilda/kmem.h>
+#include <hilda/kstr.h>
 #include <hilda/strbuf.h>
 
 #include <hilda/xtcool.h>
@@ -482,11 +483,11 @@ char *spl_get_cmdline(int *size)
 /**
  * \brief seperator for directory, in *nix is '/' in win32s, is '\\'
  */
-kchar kvfs_path_sep(kvoid)
+char kvfs_path_sep(kvoid)
 {
 	return '/';
 }
-kbool kvfs_exist(const kchar *a_path)
+kbool kvfs_exist(const char *a_path)
 {
 	if (-1 != access(a_path, 0))
 		return ktrue;
@@ -496,10 +497,8 @@ kbool kvfs_exist(const kchar *a_path)
 /* Only fill d_type and d_name */
 static int follow_link(const char *basedir, const char *name, struct dirent *ret_dirp)
 {
-	DIR *dir;
 	struct stat buf;
 	char fullpath[1024];
-	int ret = 0;
 
 	sprintf(fullpath, "%s/%s", basedir, name);
 	if (stat(fullpath, &buf))
@@ -553,7 +552,7 @@ static kuint get_file_attr(kuint d_type)
 	}
 }
 
-kbean kvfs_findfirst(const kchar *a_fspec, KVFS_FINDDATA *a_finfo)
+kbean kvfs_findfirst(const char *a_fspec, KVFS_FINDDATA *a_finfo)
 {
 	DIR *dir;
 	struct dirent *dirp, lnk_dirp;
@@ -593,7 +592,7 @@ kbean kvfs_findfirst(const kchar *a_fspec, KVFS_FINDDATA *a_finfo)
 	return (kbean)fb;
 }
 
-kint kvfs_findnext(kbean a_find, KVFS_FINDDATA *a_finfo)
+int kvfs_findnext(kbean a_find, KVFS_FINDDATA *a_finfo)
 {
 	findbean_t *fb = (findbean_t*)a_find;
 	DIR *dir;
@@ -622,7 +621,7 @@ kint kvfs_findnext(kbean a_find, KVFS_FINDDATA *a_finfo)
 	return 0;
 }
 
-kint kvfs_findclose(kbean a_find)
+int kvfs_findclose(kbean a_find)
 {
 	findbean_t *fb = (findbean_t*)a_find;
 	if (fb) {
@@ -634,14 +633,14 @@ kint kvfs_findclose(kbean a_find)
 	return -1;
 }
 
-kint kvfs_chdir(const kchar *dir)
+int kvfs_chdir(const char *dir)
 {
 	return chdir(dir);
 }
 
-kchar *kvfs_getcwd(kchar *buf, kint size)
+char *kvfs_getcwd(char *buf, int size)
 {
-	return (kchar*)getcwd(buf, size);
+	return (char*)getcwd(buf, size);
 }
 
 typedef struct _spl_timer_t spl_timer_t;
@@ -787,7 +786,7 @@ void *spl_lib_getsym(void *lib, const char *name)
 	return (void*)dlsym(lib, name);
 }
 
-void spl_exedir(char *argv[], kchar *exedir)
+void spl_exedir(char *argv[], char *exedir)
 {
 	char *p, buf[1024];
 	int ret;

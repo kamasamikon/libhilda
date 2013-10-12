@@ -504,7 +504,8 @@ void kopt_set_err(int no, const char *msg)
 			return;
 		}
 
-	i = cc->err.curpos = (++cc->err.curpos) % arrlen;
+	cc->err.curpos++;
+	i = cc->err.curpos = cc->err.curpos % arrlen;
 
 	cc->err.arr[i].task = curtsk;
 	cc->err.arr[i].no = no;

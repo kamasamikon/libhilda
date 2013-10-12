@@ -26,9 +26,9 @@ extern "C" {
 #define PROT_HTTPS  1
 
 #if (defined(__WIN32__) || defined(__WINCE__))
-#define SOCKET kint
+#define SOCKET int
 #else
-#define SOCKET kint
+#define SOCKET int
 #endif
 
 /**
@@ -47,20 +47,20 @@ extern "C" {
  *
  * @return 0 for success, -1 for error.
  */
-kint hget(const kchar *a_url, const kchar *a_proxy, kbool a_get,
-		const kchar *a_cmd, kchar **a_datbuf, kint *a_datlen,
-		kchar **a_hdrbuf, kint *a_hdrlen, SOCKET *a_socket);
+int hget(const char *a_url, const char *a_proxy, kbool a_get,
+		const char *a_cmd, char **a_datbuf, int *a_datlen,
+		char **a_hdrbuf, int *a_hdrlen, SOCKET *a_socket);
 
-kint hget_parseurl(const kchar *a_url, kuint *a_prot, kchar a_user[],
-		kchar a_pass[], kchar a_host[], kchar a_path[], kushort *a_port);
+int hget_parseurl(const char *a_url, kuint *a_prot, char a_user[],
+		char a_pass[], char a_host[], char a_path[], kushort *a_port);
 
-kint hget_connect(kint a_prot, const kchar *a_user,
-		const kchar *a_pass, const kchar *a_host,
-		const kchar *a_path, kushort a_port, SOCKET *a_socket);
+int hget_connect(int a_prot, const char *a_user,
+		const char *a_pass, const char *a_host,
+		const char *a_path, kushort a_port, SOCKET *a_socket);
 
-kint hget_recv(SOCKET a_socket, const kchar *a_host,
-		const kchar *a_path, const kchar *a_proxy, kbool a_get,
-		const kchar *a_cmd, kchar **a_datbuf, kint *a_datlen, kchar **a_hdrbuf, kint *a_hdrlen);
+int hget_recv(SOCKET a_socket, const char *a_host,
+		const char *a_path, const char *a_proxy, kbool a_get,
+		const char *a_cmd, char **a_datbuf, int *a_datlen, char **a_hdrbuf, int *a_hdrlen);
 
 /**
  * @brief close socket

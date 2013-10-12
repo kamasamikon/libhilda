@@ -11,6 +11,7 @@
 #include <hilda/helper.h>
 #include <hilda/kmem.h>
 #include <hilda/kflg.h>
+#include <hilda/kstr.h>
 #include <hilda/xtcool.h>
 #include <hilda/karg.h>
 #include <hilda/klog.h>
@@ -449,12 +450,12 @@ int klog_f(unsigned char type, unsigned int mask,
 
 char *klog_get_name_part(char *name)
 {
-	char *dup = strdup(name);
+	char *dup = kstr_dup(name);
 	char *bn = basename(dup);
 
-	bn = bn ? strdup(bn) : strdup("");
+	bn = bn ? kstr_dup(bn) : kstr_dup("");
 
-	free(dup);
+	kmem_free_s(dup);
 
 	return bn;
 }
@@ -498,7 +499,7 @@ static int strarr_add(strarr_t *sa, const char *str)
 	if (sa->cnt >= sa->size)
 		ARR_INC(10, sa->arr, sa->size, char*);
 
-	sa->arr[sa->cnt] = strdup(str);
+	sa->arr[sa->cnt] = kstr_dup(str);
 	sa->cnt++;
 
 	/* Return the position been inserted */
@@ -591,6 +592,9 @@ void klog_rule_add(const char *rule)
 
 	unsigned int set = 0, clr = 0;
 
+	if (!rule || rule[0] == '#')
+		return;
+
 	buf[0] = ',';
 	strncpy(buf + 1, rule, sizeof(buf) - 2);
 
@@ -649,7 +653,6 @@ void klog_rule_add(const char *rule)
 void klog_rule_del(int index)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
-	int i;
 
 	if (index < 0 || index >= cc->arr_rule.cnt)
 		return;

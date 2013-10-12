@@ -38,7 +38,7 @@ SUB_OBJS_hilda_all = \
 				 $(HI_PRJ_ROOT)/core/strbuf.o \
 				 $(HI_PRJ_ROOT)/xtcool/linux.o 
 
-SUB_OBJS_hilda = $(SUB_OBJS_hilda_all)
+SUB_OBJS_hilda = $(SUB_OBJS_hilda_core)
 
 ifdef NEVER
 SUB_OBJS_hilda += $(HI_PRJ_ROOT)/core/xmldoc.o

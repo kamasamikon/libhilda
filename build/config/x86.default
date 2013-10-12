@@ -11,9 +11,9 @@ INCDIR += -I /usr/include
 LIBS += -L /usr/lib -lpthread -lrt -ldl -lexpat 
  
 # DEFINES += -DAAA -DBBB
-DEFINES += -D_REENTRANT -D_LARGEFILE64_SOURCE
+DEFINES += -D_REENTRANT 
 
-CFLAGS += -fno-strict-aliasing 
+CFLAGS += -fno-strict-aliasing -Wall
 LDFLAGS +=
 
 CROSS_COMPILE := 
