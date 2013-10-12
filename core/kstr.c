@@ -9,7 +9,7 @@
 #include <hilda/kmem.h>
 #include <hilda/kstr.h>
 
-kint kstr_cmp(const kchar *a_str0, const kchar *a_str1, kint a_len)
+int kstr_cmp(const char *a_str0, const char *a_str1, int a_len)
 {
 	if (!a_str0 || !a_str1)
 		return 0;
@@ -20,7 +20,7 @@ kint kstr_cmp(const kchar *a_str0, const kchar *a_str1, kint a_len)
 		return strcmp(a_str0, a_str1);
 }
 
-kint kstr_icmp(const kchar *a_str0, const kchar *a_str1, kint a_len)
+int kstr_icmp(const char *a_str0, const char *a_str1, int a_len)
 {
 	if (!a_str0 || !a_str1)
 		return 0;
@@ -40,10 +40,10 @@ kint kstr_icmp(const kchar *a_str0, const kchar *a_str1, kint a_len)
 	return 0;
 }
 
-kchar *kstr_dup(const kchar *a_str)
+char *kstr_dup(const char *a_str)
 {
-	kint slen;
-	kchar *ret;
+	int slen;
+	char *ret;
 
 	if (a_str) {
 		slen = strlen(a_str);
@@ -54,9 +54,9 @@ kchar *kstr_dup(const kchar *a_str)
 	return knil;
 }
 
-kchar *kstr_subs(kchar *a_str, kchar a_from, kchar a_to)
+char *kstr_subs(char *a_str, char a_from, char a_to)
 {
-	kchar *p = a_str;
+	char *p = a_str;
 
 	while (*p) {
 		if (*p == a_from)
@@ -66,20 +66,20 @@ kchar *kstr_subs(kchar *a_str, kchar a_from, kchar a_to)
 	return a_str;
 }
 
-kint kstr_escxml(const kchar *a_is, kchar **a_os, kint *a_ol)
+int kstr_escxml(const char *a_is, char **a_os, int *a_ol)
 {
-	const kchar *s;
-	kchar *end;
-	kint buflen = *a_ol;
-	kint and_cnt = 0, lt_cnt = 0, gt_cnt = 0;
-	kint quot_cnt = 0, tab_cnt = 0, nl_cnt = 0;
+	const char *s;
+	char *end;
+	int buflen = *a_ol;
+	int and_cnt = 0, lt_cnt = 0, gt_cnt = 0;
+	int quot_cnt = 0, tab_cnt = 0, nl_cnt = 0;
 
 	if (!a_is)
 		return -1;
 
 	if (!*a_os) {
 		/* caller not provide buffer, allocate here */
-		kint ilen = strlen(a_is);
+		int ilen = strlen(a_is);
 		for (s = a_is; *s; s++) {
 			switch (*s) {
 			case '&':
@@ -108,7 +108,7 @@ kint kstr_escxml(const kchar *a_is, kchar **a_os, kint *a_ol)
 
 		*a_ol = ilen + (and_cnt * 4) + (lt_cnt * 3) + (gt_cnt * 3) +
 			(quot_cnt * 5) + (tab_cnt * 3) + (nl_cnt * 4) + 1;
-		*a_os = (kchar *) kmem_alloc(*a_ol, char);
+		*a_os = (char *) kmem_alloc(*a_ol, char);
 		if (!*a_os)
 			return -1;
 		buflen = *a_ol;
@@ -162,10 +162,10 @@ kint kstr_escxml(const kchar *a_is, kchar **a_os, kint *a_ol)
 	return 0;
 }
 
-kint kstr_toint(const kchar *s, kint *ret)
+int kstr_toint(const char *s, int *ret)
 {
-	kint val;
-	kint i, c, num_start = 0;
+	int val;
+	int i, c, num_start = 0;
 
 	if (s[0] == '+' || s[0] == '-')
 		num_start = 1;

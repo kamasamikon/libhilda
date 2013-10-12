@@ -126,8 +126,8 @@ unsigned long long int spl_time_get_usec(void);
 
 char *spl_get_cmdline(int *size);
 
-kchar kvfs_path_sep(kvoid);
-kbool kvfs_exist(const kchar *a_path);
+char kvfs_path_sep(kvoid);
+kbool kvfs_exist(const char *a_path);
 
 #define KVFS_A_REG      0x01        /**< regular file */
 #define KVFS_A_DEV      0x02        /**< device file */
@@ -139,18 +139,18 @@ kbool kvfs_exist(const kchar *a_path);
 
 typedef struct _KVFS_FINDDATA_ {
 	kuint attrib;               /**< OR-ed of KVFS_A_XXX */
-	kchar name[2048];           /**< Null-terminated name */
+	char name[2048];           /**< Null-terminated name */
 } KVFS_FINDDATA;
 
 /**
  * find directory with path == a_fspec not /xxx/ *.* and return each found files
  */
-kbean kvfs_findfirst(const kchar *a_fspec, KVFS_FINDDATA *a_finfo);
-kint kvfs_findnext(kbean a_find, KVFS_FINDDATA *a_finfo);
-kint kvfs_findclose(kbean a_find);
+kbean kvfs_findfirst(const char *a_fspec, KVFS_FINDDATA *a_finfo);
+int kvfs_findnext(kbean a_find, KVFS_FINDDATA *a_finfo);
+int kvfs_findclose(kbean a_find);
 
-kint kvfs_chdir(const kchar *dir);
-kchar *kvfs_getcwd(kchar *buf, kint size);
+int kvfs_chdir(const char *dir);
+char *kvfs_getcwd(char *buf, int size);
 
 /**
  * \brief timer with callback.
@@ -185,7 +185,7 @@ int wlog(const char *msg);
  * \brief Get full path of exe application.
  * This must be called before any chdir()
  */
-void spl_exedir(char *argv[], kchar *exedir);
+void spl_exedir(char *argv[], char *exedir);
 int spl_mkdir(const char *path, unsigned int mode);
 
 int spl_sock_close(void *s);

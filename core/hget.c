@@ -31,12 +31,12 @@
 #define CAN_CONTI() (EINTR == errno)
 #endif
 
-#define SOCKET kint
+#define SOCKET int
 
 #define PATH_LEN    1024
 #define DATA_LEN    2048	/**< XXX Large enough to hold on header */
 
-static kint socket_last_error()
+static int socket_last_error()
 {
 #if (defined(__WIN32__) || defined(__WINCE__))
 	return WSAGetLastError();
@@ -66,11 +66,11 @@ kvoid hget_free_socket(SOCKET a_socket)
  * @brief parse the url like,
  * https://auv:woshiauv@192.155.35.65:9088/index.php?l=en
  */
-kint hget_parseurl(const kchar *a_url, kuint *a_prot, kchar a_user[],
-		kchar a_pass[], kchar a_host[], kchar a_path[], kushort *a_port)
+int hget_parseurl(const char *a_url, kuint *a_prot, char a_user[],
+		char a_pass[], char a_host[], char a_path[], kushort *a_port)
 {
-	const kchar *url_cur = a_url;
-	kchar *tmp, *end;
+	const char *url_cur = a_url;
+	char *tmp, *end;
 
 	/* get a_prot */
 	*a_prot = PROT_HTTP;
@@ -84,7 +84,7 @@ kint hget_parseurl(const kchar *a_url, kuint *a_prot, kchar a_user[],
 
 	/* if not found ? assume ? in long long furtue */
 	if (!(end = strchr(url_cur, '?')))
-		end = (kchar*)url_cur + 80000;
+		end = (char*)url_cur + 80000;
 
 	/* get user and pass */
 	*a_user = '\0';
@@ -128,11 +128,11 @@ kint hget_parseurl(const kchar *a_url, kuint *a_prot, kchar a_user[],
 
 /* create socket and connect */
 /* a_socket for quick free while connecting */
-kint hget_connect(kint a_prot, const kchar *a_user, const kchar *a_pass,
-		const kchar *a_host, const kchar *a_path, kushort a_port,
+int hget_connect(int a_prot, const char *a_user, const char *a_pass,
+		const char *a_host, const char *a_path, kushort a_port,
 		SOCKET *a_socket)
 {
-	kint ret = -1;
+	int ret = -1;
 	SOCKET sockfd = -1;
 	struct sockaddr_in addr;
 	struct hostent *host_ent;
@@ -201,16 +201,16 @@ kint hget_connect(kint a_prot, const kchar *a_user, const kchar *a_pass,
 	return PGEC_SUCCESS;
 }
 
-kint hget_recv(SOCKET a_socket, const kchar *a_host, const kchar *a_path,
-		const kchar *a_proxy, kbool a_get, const kchar *a_cmd,
-		kchar **a_datbuf, kint *a_datlen,
-		kchar **a_hdrbuf, kint *a_hdrlen)
+int hget_recv(SOCKET a_socket, const char *a_host, const char *a_path,
+		const char *a_proxy, kbool a_get, const char *a_cmd,
+		char **a_datbuf, int *a_datlen,
+		char **a_hdrbuf, int *a_hdrlen)
 {
-	kchar *pTemp, *pNext;
-	kchar header[PATH_LEN] = "";
+	char *pTemp, *pNext;
+	char header[PATH_LEN] = "";
 
-	kchar data[DATA_LEN];
-	kint rc = PGEC_ERROR, ret = -1, resp_code, pkg_len = 0, dat_len = 0, hdr_len, cur_len = 0, lft_len;
+	char data[DATA_LEN];
+	int rc = PGEC_ERROR, ret = -1, resp_code, pkg_len = 0, dat_len = 0, hdr_len, cur_len = 0, lft_len;
 
 	/*
 	 * Fill the HTTP header information
@@ -287,9 +287,9 @@ kint hget_recv(SOCKET a_socket, const kchar *a_host, const kchar *a_path,
 			hdr_len = pTemp - data + 4;
 			if (!*a_hdrbuf) {
 				if (hdr_len > cur_len)
-					*a_hdrbuf = (kchar *)kmem_alloz(cur_len + 1, char);
+					*a_hdrbuf = (char *)kmem_alloz(cur_len + 1, char);
 				else
-					*a_hdrbuf = (kchar *)kmem_alloz(hdr_len + 1, char);
+					*a_hdrbuf = (char *)kmem_alloz(hdr_len + 1, char);
 			}
 			*a_hdrlen = 0;
 			if (*a_hdrbuf) {
@@ -339,10 +339,10 @@ kint hget_recv(SOCKET a_socket, const kchar *a_host, const kchar *a_path,
 		cur_len = *a_datlen;
 		if (!*a_datbuf) {
 			if (dat_len > cur_len) {
-				*a_datbuf = (kchar *) kmem_alloz(cur_len + 1, char);
+				*a_datbuf = (char *) kmem_alloz(cur_len + 1, char);
 				dat_len = cur_len;
 			} else {
-				*a_datbuf = (kchar *) kmem_alloz(dat_len + 1, char);
+				*a_datbuf = (char *) kmem_alloz(dat_len + 1, char);
 				dat_len = dat_len;
 			}
 		}
@@ -428,14 +428,14 @@ done:
 	return rc;
 }
 
-kint hget(const kchar *a_url, const kchar *a_proxy, kbool a_get,
-		const kchar *a_cmd, kchar **a_datbuf, kint *a_datlen,
-		kchar **a_hdrbuf, kint *a_hdrlen, kint *a_socket)
+int hget(const char *a_url, const char *a_proxy, kbool a_get,
+		const char *a_cmd, char **a_datbuf, int *a_datlen,
+		char **a_hdrbuf, int *a_hdrlen, int *a_socket)
 {
-	kchar user[32] = { 0 }, pass[32] = { 0 }, host[1024] = { 0 }, path[1024] = { 0 };
+	char user[32] = { 0 }, pass[32] = { 0 }, host[1024] = { 0 }, path[1024] = { 0 };
 	kuint prot;
 	kushort port;
-	kint ret = PGEC_ERROR;
+	int ret = PGEC_ERROR;
 	SOCKET ls, *s = a_socket ? a_socket : &ls;
 
 	hget_parseurl(a_url, &prot, user, pass, host, path, &port);

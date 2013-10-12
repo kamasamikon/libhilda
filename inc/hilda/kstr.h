@@ -11,12 +11,12 @@ extern "C" {
 
 #include <hilda/ktypes.h>
 
-kint kstr_cmp(const kchar *a_str0, const kchar *a_str1, kint a_len);
-kint kstr_icmp(const kchar *a_str0, const kchar *a_str1, kint a_len);
-kchar *kstr_dup(const kchar *a_str);
-kchar *kstr_subs(kchar *a_str, kchar a_from, kchar a_to);
-kint kstr_escxml(const kchar *a_is, kchar **a_os, kint *a_ol);
-kint kstr_toint(const kchar *s, kint *ret);
+int kstr_cmp(const char *a_str0, const char *a_str1, int a_len);
+int kstr_icmp(const char *a_str0, const char *a_str1, int a_len);
+char *kstr_dup(const char *a_str);
+char *kstr_subs(char *a_str, char a_from, char a_to);
+int kstr_escxml(const char *a_is, char **a_os, int *a_ol);
+int kstr_toint(const char *s, int *ret);
 
 char *kstr_trim_left(char *str);
 char *kstr_trim_right(char *str);

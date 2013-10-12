@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <time.h>
 
 #include <hilda/ktypes.h>
 

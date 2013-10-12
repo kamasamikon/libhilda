@@ -241,7 +241,6 @@ static void rpc_watch(int ses, void *opt, void *wch)
 	void *ua = kopt_wch_ua(wch);
 	char *ini;
 	struct strbuf sb;
-	int bytes;
 	char *path = kopt_path(opt);
 
 	klog("path:%s\n", path);
