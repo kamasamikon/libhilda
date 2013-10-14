@@ -12,9 +12,9 @@ INCDIR += -I $(OTVPRJ_ROOT)/toolchains/stbgcc-4.5.3-2.4/mipsel-linux-uclibc/incl
 
 LIBS += -lpthread -lrt -ldl
  
-DEFINES += -D_REENTRANT -D_LARGEFILE64_SOURCE
+DEFINES += -D_REENTRANT 
 
-CFLAGS += -fno-strict-aliasing 
+CFLAGS += -fno-strict-aliasing -Wall
 LDFLAGS +=
 
 CROSS_COMPILE := mipsel-linux-uclibc-
