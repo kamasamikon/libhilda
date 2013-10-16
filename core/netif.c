@@ -192,7 +192,6 @@ int netinf_get_gw(const char *dev, char gw[])
 {
 	FILE *fp;
 	char buf[256];
-	int ret;
 
 	if (!dev)
 		return -1;
@@ -203,7 +202,7 @@ int netinf_get_gw(const char *dev, char gw[])
 		return -1;
 
 	memset(buf, 0, sizeof(buf));
-	ret = fread(buf, sizeof(char), sizeof(buf), fp);
+	(void)fread(buf, sizeof(char), sizeof(buf), fp);
 	pclose(fp);
 
 	/* strlen("0.0.0.0") == 7 */
@@ -268,7 +267,7 @@ static int netinf_chk_ipaddr(const char *ipaddr)
 static int netinf_chk_netmask(const char *netmask)
 {
 	in_addr_t addr;
-	int i, zeropos;
+	int i;
 
 	if (dot_count(netmask) != 3)
 		return -1;
@@ -281,8 +280,6 @@ static int netinf_chk_netmask(const char *netmask)
 	for (i = 31; i; i--)
 		if (!(addr & (1 << i)))
 			break;
-	zeropos = i;
-
 	/* No 1 after zero found */
 	for (; i; i--)
 		if (addr & (1 << i))
