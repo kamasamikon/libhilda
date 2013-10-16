@@ -33,7 +33,7 @@ void md5_calculate(char rethash[32], const char *dat, int len)
 	MD5Update(&context, (kuchar *) dat, (kuint) len);
 	MD5Final(rawhash, &context);
 
-	sprintf((kchar *)strhash, FMT,
+	sprintf((char *)strhash, FMT,
 			rawhash[0], rawhash[1], rawhash[2], rawhash[3],
 			rawhash[4], rawhash[5], rawhash[6], rawhash[7],
 			rawhash[8], rawhash[9], rawhash[10], rawhash[11],
@@ -46,7 +46,7 @@ void md5_calculate(char rethash[32], const char *dat, int len)
 kint main(kvoid)
 {
 	char sum[33];
-	kchar *string = "awertuqpoeriyhoasdghes";
+	char *string = "awertuqpoeriyhoasdghes";
 
 	calculate(sum, (kuchar *) string, strlen(string));
 	sum[32] = '\0';
