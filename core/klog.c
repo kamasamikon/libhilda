@@ -497,7 +497,7 @@ static int strarr_add(strarr_t *sa, const char *str)
 		return pos;
 
 	if (sa->cnt >= sa->size)
-		ARR_INC(10, sa->arr, sa->size, char*);
+		ARR_INC(256, sa->arr, sa->size, char*);
 
 	sa->arr[sa->cnt] = kstr_dup(str);
 	sa->cnt++;
@@ -558,7 +558,7 @@ static int rulearr_add(rulearr_t *ra, int prog, int modu,
 		unsigned int fset, unsigned int fclr)
 {
 	if (ra->cnt >= ra->size)
-		ARR_INC(1, ra->arr, ra->size, rule_t);
+		ARR_INC(16, ra->arr, ra->size, rule_t);
 
 	rule_t *rule = &ra->arr[ra->cnt];
 
