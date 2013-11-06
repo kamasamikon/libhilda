@@ -169,16 +169,14 @@ void *klog_attach(void *logcc)
 	return (void*)__g_klogcc;
 }
 
-kinline void *klog_cc(void)
+static void klog_init_default()
 {
 	int argc, cl_size = 0;
 	char **argv, *cl_buf;
-	void *cc;
 
 	if (__g_klogcc)
-		return (void*)__g_klogcc;
+		return;
 
-	/* klog_init not called, load args by myself */
 	argc = 0;
 	argv = NULL;
 
@@ -186,10 +184,16 @@ kinline void *klog_cc(void)
 	karg_build_nul(cl_buf, cl_size, &argc, &argv);
 	kmem_free(cl_buf);
 
-	cc = klog_init(KLOG_DFT, argc, argv);
+	klog_init(KLOG_DFT, argc, argv);
 	karg_free(argv);
+}
 
-	return cc;
+kinline void *klog_cc(void)
+{
+	if (!__g_klogcc)
+		klog_init_default();
+
+	return (void*)__g_klogcc;
 }
 
 kinline void klog_touch(void)
@@ -329,6 +333,9 @@ int klog_vf(unsigned char type, unsigned int mask,
 		if (cc->rloggers[i])
 			cc->rloggers[i](type, mask, prog, modu, file, func, ln, fmt, ap);
 
+	if (!cc->nlogger_cnt)
+		return 0;
+
 	if (mask & (KLOG_RTM | KLOG_ATM))
 		tick = spl_get_ticks();
 
@@ -429,7 +436,6 @@ int klog_vf(unsigned char type, unsigned int mask,
 	if (bufptr != buffer)
 		kmem_free(bufptr);
 	return ret;
-
 }
 
 int klog_f(unsigned char type, unsigned int mask,
@@ -499,7 +505,7 @@ static int strarr_add(strarr_t *sa, const char *str)
 	if (sa->cnt >= sa->size)
 		ARR_INC(256, sa->arr, sa->size, char*);
 
-	sa->arr[sa->cnt] = kstr_dup(str);
+	sa->arr[sa->cnt] = str;
 	sa->cnt++;
 
 	/* Return the position been inserted */
@@ -667,14 +673,6 @@ void klog_rule_clr()
 
 	cc->arr_rule.cnt = 0;
 	klog_touch();
-}
-
-char *klog_rule_all()
-{
-	klogcc_t *cc = (klogcc_t*)klog_cc();
-
-	/* TODO: return all the rule */
-	return NULL;
 }
 
 static unsigned int get_mask(char c)
