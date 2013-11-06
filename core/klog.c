@@ -25,7 +25,7 @@ typedef struct _strarr_t strarr_t;
 struct _strarr_t {
 	int size;
 	int cnt;
-	char **arr;
+	const char **arr;
 };
 
 typedef struct _rule_t rule_t;
@@ -327,7 +327,7 @@ int klog_vf(unsigned char type, unsigned int mask,
 	time_t t;
 	struct tm *tmp;
 
-	unsigned long tick;
+	unsigned long tick = 0;
 
 	for (i = 0; i < cc->rlogger_cnt; i++)
 		if (cc->rloggers[i])
@@ -503,7 +503,7 @@ static int strarr_add(strarr_t *sa, const char *str)
 		return pos;
 
 	if (sa->cnt >= sa->size)
-		ARR_INC(256, sa->arr, sa->size, char*);
+		ARR_INC(256, sa->arr, sa->size, const char*);
 
 	sa->arr[sa->cnt] = str;
 	sa->cnt++;
