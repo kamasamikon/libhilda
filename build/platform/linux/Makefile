@@ -53,6 +53,8 @@ LOCAL_OUT_OBJS = $(SUB_OBJS_hilda)
 LOCAL_OUT_LIB = libhilda.a
 LOCAL_SHARE_LIB = libhilda.so
 
+LDFLAGS += -Wl,-Map,hilda.map
+
 .PHONY: all clean
 
 all: BUILD_SUB_DIRS $(LOCAL_OUT_LIB) $(LOCAL_SHARE_LIB)
