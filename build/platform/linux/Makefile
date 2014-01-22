@@ -40,12 +40,9 @@ SUB_OBJS_hilda_all = \
 
 ifeq ($(HILDA_PLATFORM),x86)
 SUB_OBJS_hilda = $(SUB_OBJS_hilda_all)
+SUB_OBJS_hilda += $(HI_PRJ_ROOT)/core/xmldoc.o
 else
 SUB_OBJS_hilda = $(SUB_OBJS_hilda_core)
-endif
-
-ifdef NEVER
-SUB_OBJS_hilda += $(HI_PRJ_ROOT)/core/xmldoc.o
 endif
 
 LOCAL_INCDIRS = -I $(HI_PRJ_ROOT)/inc
