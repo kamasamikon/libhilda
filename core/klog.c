@@ -524,7 +524,7 @@ int klog_file_name_add(const char *name)
 	int pos;
 
 	spl_mutex_lock(cc->mutex);
-	pos = strarr_add(&cc->arr_file_name, name ? name : "unknown") + 1;
+	pos = strarr_add(&cc->arr_file_name, name ? name : "unknown");
 	spl_mutex_unlock(cc->mutex);
 	return pos;
 }
@@ -534,7 +534,7 @@ int klog_modu_name_add(const char *name)
 	int pos;
 
 	spl_mutex_lock(cc->mutex);
-	pos = strarr_add(&cc->arr_modu_name, name ? name : "unknown") + 1;
+	pos = strarr_add(&cc->arr_modu_name, name ? name : "unknown");
 	spl_mutex_unlock(cc->mutex);
 	return pos;
 }
@@ -544,7 +544,7 @@ int klog_prog_name_add(const char *name)
 	int pos;
 
 	spl_mutex_lock(cc->mutex);
-	pos = strarr_add(&cc->arr_prog_name, name ? name : "unknown") + 1;
+	pos = strarr_add(&cc->arr_prog_name, name ? name : "unknown");
 	spl_mutex_unlock(cc->mutex);
 	return pos;
 }
@@ -554,7 +554,7 @@ int klog_func_name_add(const char *name)
 	int pos;
 
 	spl_mutex_lock(cc->mutex);
-	pos = strarr_add(&cc->arr_func_name, name ? name : "unknown") + 1;
+	pos = strarr_add(&cc->arr_func_name, name ? name : "unknown");
 	spl_mutex_unlock(cc->mutex);
 	return pos;
 }
@@ -622,27 +622,27 @@ void klog_rule_add(const char *rule)
 			buf[i] = '\0';
 
 	if (!s_prog || !s_prog[6])
-		i_prog = 0;
+		i_prog = -1;
 	else
-		i_prog = klog_prog_name_add(s_prog + 6);
+		i_prog = klog_prog_name_add(strdup(s_prog + 6));
 	if (!s_modu || !s_modu[6])
-		i_modu = 0;
+		i_modu = -1;
 	else
-		i_modu = klog_modu_name_add(s_modu + 6);
+		i_modu = klog_modu_name_add(strdup(s_modu + 6));
 	if (!s_file || !s_file[6])
-		i_file = 0;
+		i_file = -1;
 	else
-		i_file = klog_file_name_add(s_file + 6);
+		i_file = klog_file_name_add(strdup(s_file + 6));
 	if (!s_func || !s_func[6])
-		i_func = 0;
+		i_func = -1;
 	else
-		i_func = klog_func_name_add(s_func + 6);
+		i_func = klog_func_name_add(strdup(s_func + 6));
 	if (!s_line || !s_line[6])
-		i_line = 0;
+		i_line = -1;
 	else
 		i_line = atoi(s_line + 6);
 	if (!s_pid || !s_pid[5])
-		i_pid = 0;
+		i_pid = -1;
 	else
 		i_pid = atoi(s_pid + 6);
 
@@ -754,17 +754,17 @@ unsigned int klog_calc_mask(int prog, int modu, int file, int func, int line, in
 	for (i = 0; i < cc->arr_rule.cnt; i++) {
 		rule_t *rule = &cc->arr_rule.arr[i];
 
-		if (rule->prog && rule->prog != prog)
+		if (rule->prog != -1 && rule->prog != prog)
 			continue;
-		if (rule->modu && rule->modu != modu)
+		if (rule->modu != -1 && rule->modu != modu)
 			continue;
-		if (rule->file && rule->file != file)
+		if (rule->file != -1 && rule->file != file)
 			continue;
-		if (rule->func && rule->func != func)
+		if (rule->func != -1 && rule->func != func)
 			continue;
-		if (rule->line && rule->line != line)
+		if (rule->line != -1 && rule->line != line)
 			continue;
-		if (rule->pid && rule->pid != pid)
+		if (rule->pid != -1 && rule->pid != pid)
 			continue;
 
 		kflg_clr(all, rule->clr);
