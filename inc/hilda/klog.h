@@ -70,7 +70,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 #define KLOG_LINE       0x00100000 /* N: Line Number */
 
 #define KLOG_ALL        0xffffffff
-#define KLOG_DFT        (KLOG_TYPE_ALL | KLOG_RTM | KLOG_FILE | KLOG_LINE)
+#define KLOG_DFT        (KLOG_FATAL | KLOG_ALERT | KLOG_CRIT | KLOG_ERR | KLOG_WARNING | KLOG_NOTICE | KLOG_PROG | KLOG_MODU | KLOG_FILE | KLOG_LINE)
 
 
 /*-----------------------------------------------------------------------
@@ -136,7 +136,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 			KLOG_SETUP_NAME_AND_ID(); \
 		} \
 		klog_f('!', KLOG_ALL, __kl_prog_name_, KMODU_NAME, __kl_file_name_, __FUNCTION__, __LINE__, \
-				"\n\t ASSERT NG: \"%s\"\n\n", #_x_); \
+				"\n\tASSERT NG: \"%s\"\n\n", #_x_); \
 	} \
 } while (0)
 
@@ -148,7 +148,7 @@ void *klog_init(unsigned int deflev, int argc, char **argv);
 kinline void *klog_cc(void) VAR_UNUSED;
 void *klog_attach(void *logcc);
 
-kinline void klog_touch(void) VAR_UNUSED;
+void klog_touch(void) VAR_UNUSED;
 kinline int klog_touches(void) VAR_UNUSED;
 
 char *klog_get_name_part(char *name);

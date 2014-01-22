@@ -196,7 +196,7 @@ kinline void *klog_cc(void)
 	return (void*)__g_klogcc;
 }
 
-kinline void klog_touch(void)
+void klog_touch(void)
 {
 	klogcc_t *cc = (klogcc_t*)klog_cc();
 
