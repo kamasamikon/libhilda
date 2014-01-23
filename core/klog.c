@@ -505,7 +505,7 @@ static int strarr_add(strarr_t *sa, const char *str)
 	if (sa->cnt >= sa->size)
 		ARR_INC(256, sa->arr, sa->size, const char*);
 
-	sa->arr[sa->cnt] = str;
+	sa->arr[sa->cnt] = strdup(str);
 	sa->cnt++;
 
 	/* Return the position been inserted */
@@ -524,7 +524,7 @@ int klog_file_name_add(const char *name)
 	int pos;
 
 	spl_mutex_lock(cc->mutex);
-	pos = strarr_add(&cc->arr_file_name, name ? name : "unknown");
+	pos = strarr_add(&cc->arr_file_name, name);
 	spl_mutex_unlock(cc->mutex);
 	return pos;
 }
@@ -534,7 +534,7 @@ int klog_modu_name_add(const char *name)
 	int pos;
 
 	spl_mutex_lock(cc->mutex);
-	pos = strarr_add(&cc->arr_modu_name, name ? name : "unknown");
+	pos = strarr_add(&cc->arr_modu_name, name);
 	spl_mutex_unlock(cc->mutex);
 	return pos;
 }
@@ -544,7 +544,7 @@ int klog_prog_name_add(const char *name)
 	int pos;
 
 	spl_mutex_lock(cc->mutex);
-	pos = strarr_add(&cc->arr_prog_name, name ? name : "unknown");
+	pos = strarr_add(&cc->arr_prog_name, name);
 	spl_mutex_unlock(cc->mutex);
 	return pos;
 }
@@ -554,7 +554,7 @@ int klog_func_name_add(const char *name)
 	int pos;
 
 	spl_mutex_lock(cc->mutex);
-	pos = strarr_add(&cc->arr_func_name, name ? name : "unknown");
+	pos = strarr_add(&cc->arr_func_name, name);
 	spl_mutex_unlock(cc->mutex);
 	return pos;
 }
