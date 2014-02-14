@@ -7,6 +7,7 @@
 #include <libgen.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/inotify.h>
 
 #include <hilda/helper.h>
 #include <hilda/kmem.h>
@@ -152,7 +153,6 @@ int klog_del_rlogger(KRLOGGER logger)
 	return -1;
 }
 
-
 /*-----------------------------------------------------------------------
  * implementation
  */
@@ -224,20 +224,94 @@ static void load_cfg_file(const char *path)
 	fclose(fp);
 }
 
-static void load_cfg(int argc, char *argv[])
+static void apply_rtcfg(const char *path)
 {
-	char *cfgpath;
+	static int line_applied = 0;
+	int line = 0;
+	char buf[8092];
+	FILE *fp;
+
+	fp = fopen(path, "rt");
+	if (!fp)
+		return;
+
+	while (fgets(buf, sizeof(buf), fp)) {
+		if (line++ < line_applied)
+			continue;
+		klog_rule_add(buf);
+		line_applied++;
+	}
+
+	fclose(fp);
+}
+
+static void* thread_monitor_cfgfile(void *user_data)
+{
+	const char *path = (const char*)user_data;
+	int fd, wd, len, tmp_len;
+	char buffer[2048], *offset = NULL;
+	struct inotify_event *event;
+
+	fd = inotify_init();
+	if (fd < 0)
+		goto quit;
+
+	wd = inotify_add_watch(fd, path, IN_MODIFY);
+	if (wd < 0)
+		goto quit;
+
+	while ((len = read(fd, buffer, sizeof(buffer)))) {
+		offset = buffer;
+		event = (struct inotify_event*)buffer;
+
+		while (((char*)event - buffer) < len) {
+			if (event->wd == wd) {
+				if (IN_MODIFY & event->mask)
+					apply_rtcfg(path);
+				break;
+			}
+
+			tmp_len = sizeof(struct inotify_event) + event->len;
+			event = (struct inotify_event*)(offset + tmp_len);
+			offset += tmp_len;
+		}
+	}
+
+quit:
+	free((void*)path);
+	return NULL;
+}
+
+static void process_cfg(int argc, char *argv[])
+{
+	char *cfg;
 	int i;
 
+	/*
+	 * 1. Default configure file
+	 */
 	/* Load configure from env, DeFault ConFiGure */
-	cfgpath = getenv("KLOG_DFCFG");
-	if (cfgpath)
-		load_cfg_file(cfgpath);
+	cfg = getenv("KLOG_DFCFG");
+	if (cfg)
+		load_cfg_file(cfg);
 
 	/* Load configure from command line */
-	i = karg_find(argc, argv, "--klog-cfgfile", 1);
-	if (i > 1)
+	i = karg_find(argc, argv, "--klog-dfcfg", 1);
+	if (i > 0)
 		load_cfg_file(argv[i + 1]);
+
+	/*
+	 * 2. Runtime configure file
+	 */
+	cfg = NULL;
+	i = karg_find(argc, argv, "--klog-rtcfg", 1);
+	if (i > 0)
+		cfg = argv[i + 1];
+
+	if (!cfg)
+		cfg = getenv("KLOG_RTCFG");
+	if (cfg)
+		spl_thread_create(thread_monitor_cfgfile, strdup(cfg), 0);
 }
 
 static void rule_add_from_mask(unsigned int mask)
@@ -306,7 +380,7 @@ void *klog_init(unsigned int mask, int argc, char **argv)
 	if (mask)
 		rule_add_from_mask(mask);
 
-	load_cfg(argc, argv);
+	process_cfg(argc, argv);
 
 	klog_touch();
 
