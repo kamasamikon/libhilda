@@ -110,6 +110,19 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 		klog_f((indi), __kl_mask, __kl_prog_name_, modu, __kl_file_name_, func, line, fmt, ##__VA_ARGS__); \
 } while (0)
 
+#define KLOG_CHK_AND_CALL_AP(mask, indi, modu, file, func, line, fmt, ap) do { \
+	KLOG_INNER_VAR_DEF(); \
+	if (__kl_ver_get > __kl_ver_sav) { \
+		__kl_ver_sav = __kl_ver_get; \
+		KLOG_SETUP_NAME_AND_ID(modu, file, func); \
+		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id_, __kl_file_name_id_, __kl_func_name_id, line, (int)spl_process_current()); \
+		if (!(__kl_mask & (mask))) \
+			__kl_mask = 0; \
+	} \
+	if (__kl_mask) \
+		klog_vf((indi), __kl_mask, __kl_prog_name_, modu, __kl_file_name_, func, line, fmt, ap); \
+} while (0)
+
 /*-----------------------------------------------------------------------
  * klog, kerror, kfatal etc
  */
