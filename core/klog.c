@@ -224,7 +224,7 @@ static void load_cfg_file(const char *path)
 	fclose(fp);
 }
 
-static void apply_rtcfg(const char *path)
+static void apply_rtcfg(const char *path, int dryrun)
 {
 	static int line_applied = 0;
 	int line = 0;
@@ -238,7 +238,8 @@ static void apply_rtcfg(const char *path)
 	while (fgets(buf, sizeof(buf), fp)) {
 		if (line++ < line_applied)
 			continue;
-		klog_rule_add(buf);
+		if (!dryrun)
+			klog_rule_add(buf);
 		line_applied++;
 	}
 
@@ -260,6 +261,7 @@ static void* thread_monitor_cfgfile(void *user_data)
 	if (wd < 0)
 		goto quit;
 
+	apply_rtcfg(path, 1);
 	while ((len = read(fd, buffer, sizeof(buffer)))) {
 		offset = buffer;
 		event = (struct inotify_event*)buffer;
@@ -267,7 +269,7 @@ static void* thread_monitor_cfgfile(void *user_data)
 		while (((char*)event - buffer) < len) {
 			if (event->wd == wd) {
 				if (IN_MODIFY & event->mask)
-					apply_rtcfg(path);
+					apply_rtcfg(path, 0);
 				break;
 			}
 
