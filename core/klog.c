@@ -190,7 +190,7 @@ static void klog_init_default()
 
 kinline void *klog_cc(void)
 {
-	if (!__g_klogcc)
+	if (unlikely(!__g_klogcc))
 		klog_init_default();
 
 	return (void*)__g_klogcc;
@@ -224,7 +224,7 @@ static void load_cfg_file(const char *path)
 	fclose(fp);
 }
 
-static void apply_rtcfg(const char *path, int dryrun)
+static void apply_rtcfg(const char *path)
 {
 	static int line_applied = 0;
 	int line = 0;
@@ -238,8 +238,7 @@ static void apply_rtcfg(const char *path, int dryrun)
 	while (fgets(buf, sizeof(buf), fp)) {
 		if (line++ < line_applied)
 			continue;
-		if (!dryrun)
-			klog_rule_add(buf);
+		klog_rule_add(buf);
 		line_applied++;
 	}
 
@@ -261,7 +260,6 @@ static void* thread_monitor_cfgfile(void *user_data)
 	if (wd < 0)
 		goto quit;
 
-	apply_rtcfg(path, 1);
 	while ((len = read(fd, buffer, sizeof(buffer)))) {
 		offset = buffer;
 		event = (struct inotify_event*)buffer;
@@ -269,7 +267,7 @@ static void* thread_monitor_cfgfile(void *user_data)
 		while (((char*)event - buffer) < len) {
 			if (event->wd == wd) {
 				if (IN_MODIFY & event->mask)
-					apply_rtcfg(path, 0);
+					apply_rtcfg(path);
 				break;
 			}
 
@@ -409,7 +407,7 @@ int klog_vf(unsigned char type, unsigned int mask,
 		if (cc->rloggers[i])
 			cc->rloggers[i](type, mask, prog, modu, file, func, ln, fmt, ap);
 
-	if (!cc->nlogger_cnt)
+	if (unlikely(!cc->nlogger_cnt))
 		return 0;
 
 	if (mask & (KLOG_RTM | KLOG_ATM))
@@ -418,7 +416,7 @@ int klog_vf(unsigned char type, unsigned int mask,
 	ofs = 0;
 
 	/* Type */
-	if (type)
+	if (likely(type))
 		ofs += sprintf(bufptr, "|%c|", type);
 
 	/* Time */
@@ -453,7 +451,7 @@ int klog_vf(unsigned char type, unsigned int mask,
 	if (mask & KLOG_LINE)
 		ofs += sprintf(bufptr + ofs, "L:%d|", ln);
 
-	if (ofs)
+	if (likely(ofs))
 		ofs += sprintf(bufptr + ofs, " ");
 
 	ret = vsnprintf(bufptr + ofs, bufsize - ofs, fmt, ap);
@@ -562,7 +560,7 @@ static int strarr_find(strarr_t *sa, const char *str)
 {
 	int i;
 
-	if (!str)
+	if (unlikely(!str))
 		return -1;
 
 	for (i = 0; i < sa->cnt; i++)
@@ -639,7 +637,7 @@ static int rulearr_add(rulearr_t *ra, int prog, int modu,
 		int file, int func, int line, int pid,
 		unsigned int fset, unsigned int fclr)
 {
-	if (ra->cnt >= ra->size)
+	if (unlikely(ra->cnt >= ra->size))
 		ARR_INC(16, ra->arr, ra->size, rule_t);
 
 	rule_t *rule = &ra->arr[ra->cnt];

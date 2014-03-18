@@ -7,13 +7,20 @@
 extern "C" {
 #endif
 
+#ifndef likely
+#define likely(x)      __builtin_expect(!!(x), 1)
+#endif
+#ifndef unlikely
+#define unlikely(x)    __builtin_expect(!!(x), 0)
+#endif
+
 #define ARR_INC(STEP, ARR, LEN, TYPE) \
 	do { \
 		void *arr; \
 		(LEN) += (STEP); \
 		\
 		arr = kmem_get((LEN) * sizeof(TYPE)); \
-		if (ARR) { \
+		if (likely(ARR)) { \
 			memcpy(arr, (ARR), ((LEN) - (STEP)) * sizeof(TYPE)); \
 			kmem_rel((void*)ARR); \
 			memset(((char*)arr) + (((LEN) - (STEP)) * sizeof(TYPE)), 0, (STEP) * sizeof(TYPE)); \
