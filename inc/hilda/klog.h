@@ -22,8 +22,6 @@ static char VAR_UNUSED *__kl_file_name_ = NULL;
 static int VAR_UNUSED __kl_prog_name_id_ = -1;
 static char VAR_UNUSED *__kl_prog_name_ = NULL;
 
-static int VAR_UNUSED __kl_modu_name_id_ = -1;
-
 
 /*-----------------------------------------------------------------------
  * Normal and Raw Logger
@@ -78,9 +76,10 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
  */
 #define KLOG_INNER_VAR_DEF() \
 	static int VAR_UNUSED __kl_ver_sav = -1; \
+	static int VAR_UNUSED __kl_modu_name_id = -1; \
 	static int VAR_UNUSED __kl_func_name_id = -1; \
 	static int VAR_UNUSED __kl_mask = 0; \
-	int VAR_UNUSED __kl_ver_get = klog_touches();
+	int VAR_UNUSED __kl_ver_get = klog_touches()
 
 #define KLOG_SETUP_NAME_AND_ID(modu, file, func) do { \
 	if (__kl_file_name_id_ == -1) { \
@@ -91,8 +90,8 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 		__kl_prog_name_ = klog_get_prog_name(); \
 		__kl_prog_name_id_ = klog_prog_name_add(__kl_prog_name_); \
 	} \
-	if (__kl_modu_name_id_ == -1) \
-		__kl_modu_name_id_ = klog_modu_name_add(modu); \
+	if (__kl_modu_name_id == -1) \
+		__kl_modu_name_id = klog_modu_name_add(modu); \
 	if (__kl_func_name_id == -1) \
 		__kl_func_name_id = klog_func_name_add(func); \
 } while (0)
@@ -102,7 +101,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 	if (__kl_ver_get > __kl_ver_sav) { \
 		__kl_ver_sav = __kl_ver_get; \
 		KLOG_SETUP_NAME_AND_ID(modu, file, func); \
-		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id_, __kl_file_name_id_, __kl_func_name_id, line, (int)spl_process_current()); \
+		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id, __kl_file_name_id_, __kl_func_name_id, line, (int)spl_process_current()); \
 		if (!(__kl_mask & (mask))) \
 			__kl_mask = 0; \
 	} \
@@ -115,7 +114,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, const char *prog
 	if (__kl_ver_get > __kl_ver_sav) { \
 		__kl_ver_sav = __kl_ver_get; \
 		KLOG_SETUP_NAME_AND_ID(modu, file, func); \
-		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id_, __kl_file_name_id_, __kl_func_name_id, line, (int)spl_process_current()); \
+		__kl_mask = klog_calc_mask(__kl_prog_name_id_, __kl_modu_name_id, __kl_file_name_id_, __kl_func_name_id, line, (int)spl_process_current()); \
 		if (!(__kl_mask & (mask))) \
 			__kl_mask = 0; \
 	} \
