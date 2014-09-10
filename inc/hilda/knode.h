@@ -21,15 +21,15 @@ struct _dstr_node_t {
 	void *link_dat;
 };
 
-typedef int (*knode_FOREACH)(knode_t *node, void *ua, void *ub);
+typedef int (*KNODE_FOREACH)(knode_t *node, void *ua, void *ub);
 
-/* Core Node FLags */
-#define CNFL_STOP       0x00000001
-#define CNFL_PAUSE      0x00000002
+/* K Node FLags */
+#define KNFL_STOP       0x00000001
+#define KNFL_PAUSE      0x00000002
 
-/* Core Node ATtribute */
-#define CNAT_INPUT      0x00000001
-#define CNAT_OUTPUT     0x00000002
+/* K Node ATtribute */
+#define KNAT_INPUT      0x00000001
+#define KNAT_OUTPUT     0x00000002
 
 struct _knode_t {
 	char *name;
@@ -62,7 +62,7 @@ struct _knode_t {
 	 *
 	 * \param usnode Upstream node.
 	 * \param self This node
-	 * \param link_dat Parameter will be used for \c write().
+	 * \param link_dat Parameter will be used for \c push().
 	 *
 	 * \warning \c usnode can be NULL.
 	 * \retval 0 the Downstream node agree to chain.
@@ -74,8 +74,8 @@ struct _knode_t {
 	int (*setting_query)(knode_t *self, int setting, void**ret);
 
 	/* upper layer call this when data is ready, for chained down stream node */
-	/* XXX Only write, read is not needed */
-	int (*write)(knode_t *self, knode_t *usnode, void *dat, int len, void *link_dat);
+	/* XXX Only push, read is not needed */
+	int (*push)(knode_t *self, knode_t *usnode, void *dat, int len, void *link_dat);
 
 	/** Downstream node */
 	struct {
@@ -84,7 +84,7 @@ struct _knode_t {
 	} dstr;
 };
 
-void knode_data_ready(knode_t *node, void *dat, int len);
+void knode_push(knode_t *node, void *dat, int len);
 
 int knode_link_add(knode_t *unode, knode_t *dnode, void *link_dat);
 int knode_link_del(knode_t *unode, knode_t *dnode);
@@ -106,6 +106,8 @@ int knode_call_start(knode_t *node);
 int knode_call_stop(knode_t *node);
 int knode_call_pause(knode_t *node);
 int knode_call_resume(knode_t *node);
+
+int knode_foreach(KNODE_FOREACH foreach, void *ua, void *ub);
 
 int knode_foreach_start();
 int knode_foreach_stop();
