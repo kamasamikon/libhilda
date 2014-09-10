@@ -43,6 +43,8 @@ int kmque_del(kmque_t *mque)
 
 void kmque_set_quit(kmque_t *mque)
 {
+	kmque_cleanup(mque);
+
 	mque->quit = 1;
 	spl_sema_rel(mque->msg_new_sem);
 	/* FIXME: What if when a send waiting? rel(msg_snt_sem)? */

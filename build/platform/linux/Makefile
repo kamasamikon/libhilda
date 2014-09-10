@@ -12,6 +12,7 @@ SUB_OBJS_hilda_core = \
 				 $(HI_PRJ_ROOT)/core/sdlist.o \
 				 $(HI_PRJ_ROOT)/core/kmisc.o \
 				 $(HI_PRJ_ROOT)/core/strbuf.o \
+				 $(HI_PRJ_ROOT)/core/kmque.o \
 				 $(HI_PRJ_ROOT)/xtcool/linux.o 
 
 SUB_OBJS_hilda_all = \

@@ -26,7 +26,7 @@ struct _knodecc_t {
 static knodecc_t *__g_knodecc = NULL;
 
 /* foreach of down stream nodes */
-void knode_data_ready(knode_t *node, void *dat, int len)
+void knode_push(knode_t *node, void *dat, int len)
 {
 	int i;
 	dstr_node_t *tmp;
@@ -36,13 +36,13 @@ void knode_data_ready(knode_t *node, void *dat, int len)
 		tmp = &node->dstr.arr[i];
 		tnode = tmp->node;
 
-		if (!tnode || !tnode->write)
+		if (!tnode || !tnode->push)
 			continue;
 
-		if (kflg_chk_any(tnode->flg, CNFL_PAUSE | CNFL_STOP))
+		if (kflg_chk_any(tnode->flg, KNFL_PAUSE | KNFL_STOP))
 			continue;
 
-		tnode->write(tnode, node, dat, len, tmp->link_dat);
+		tnode->push(tnode, node, dat, len, tmp->link_dat);
 	}
 }
 
@@ -120,7 +120,7 @@ int knode_reg(knode_t *node)
 
 	node->dstr.arr = 0;
 	node->dstr.cnt = 0;
-	node->flg = CNFL_STOP;
+	node->flg = KNFL_STOP;
 	node->attr &= 0xffff;
 
 	for (i = 0; i < cc->cnt; i++) {
@@ -161,7 +161,56 @@ int knode_unreg(knode_t *node)
 	return -1;
 }
 
-int knode_link(knode_t *node)
+static int sort_node(knode_t **arr, int cnt)
+{
+	int i, j, k, swaps = 0;
+	knode_t *tmp_i, *tmp_j;
+	knode_t **bak = kmem_alloc(cnt, knode_t*);
+
+	int my_pos, ds_pos;
+
+	memcpy(bak, arr, sizeof(knode_t*) * cnt);
+
+	for (i = 0; i < cnt; i++) {
+		tmp_i = bak[i];
+
+		ds_pos = 7777777;
+
+		/* 1. Search the left-most dstr node pos */
+		for (j = 0; j < cnt; j++) {
+			tmp_j = arr[j];
+
+			if (tmp_i == tmp_j) {
+				my_pos = j;
+				continue;
+			}
+
+			for (k = 0; k < tmp_i->dstr.cnt; k++)
+				if (tmp_i->dstr.arr[k].node == tmp_j)
+					if (ds_pos > j)
+						ds_pos = j;
+		}
+
+		/* 2. Put me before all the DS */
+		if (ds_pos != 7777777 && ds_pos < my_pos) {
+			swaps = 1;
+
+			tmp_j = arr[my_pos];
+			memmove(&arr[ds_pos + 1], &arr[ds_pos],
+					sizeof(knode_t*) * (my_pos - ds_pos));
+			arr[ds_pos] = tmp_j;
+		}
+	}
+
+	kmem_free(bak);
+
+	if (swaps)
+		return sort_node(arr, cnt);
+
+	return 0;
+}
+
+static int knode_link_internal(knode_t *node)
 {
 	int i;
 	knode_t *dstr;
@@ -172,13 +221,24 @@ int knode_link(knode_t *node)
 	for (i = 0; i < cc->cnt; i++) {
 		dstr = cc->arr[i];
 		if (dstr && node && (dstr != node) && dstr->link_query)
-			if (kflg_chk_bit(dstr->attr, CNAT_INPUT))
+			if (kflg_chk_bit(dstr->attr, KNAT_INPUT))
 				if (!dstr->link_query(node, dstr, &link_dat))
 					knode_link_add(node, dstr, link_dat);
 
 		if (!node)
-			knode_link(dstr);
+			knode_link_internal(dstr);
 	}
+
+	return 0;
+}
+
+
+int knode_link(knode_t *node)
+{
+	knodecc_t *cc = __g_knodecc;
+
+	knode_link_internal(node);
+	sort_node(cc->arr, cc->cnt);
 
 	return 0;
 }
@@ -210,7 +270,7 @@ knode_t *knode_find(const char *name)
 	return NULL;
 }
 
-static int knode_foreach(knode_FOREACH foreach, void *ua, void *ub)
+int knode_foreach(KNODE_FOREACH foreach, void *ua, void *ub)
 {
 	int i;
 	knode_t *tmp;
@@ -350,22 +410,29 @@ int knode_call_start(knode_t *node)
 {
 	int ret = 0;
 
+	if (!kflg_chk_any(node->flg, KNFL_STOP | KNFL_PAUSE))
+		return 0;
+
 	if (node->start)
 		ret = node->start(node);
 
-	if (!ret) {
-		kflg_clr(node->flg, CNFL_STOP);
-		kflg_clr(node->flg, CNFL_PAUSE);
-	}
+	if (!ret)
+		kflg_clr(node->flg, KNFL_STOP | KNFL_PAUSE);
+
 	return ret;
-}
-static int do_start(knode_t *node, void *ua, void *ub)
-{
-	return knode_call_start(node);
 }
 int knode_foreach_start()
 {
-	knode_foreach(do_start, NULL, NULL);
+	int i;
+	knode_t *tmp;
+	knodecc_t *cc = __g_knodecc;
+
+	for (i = cc->cnt; i >= 0; i--) {
+		tmp = cc->arr[i];
+		if (tmp)
+			knode_call_start(tmp);
+	}
+
 	return 0;
 }
 
@@ -373,22 +440,29 @@ int knode_call_stop(knode_t *node)
 {
 	int ret = 0;
 
+	if (kflg_chk_any(node->flg, KNFL_STOP))
+		return 0;
+
 	if (node->stop)
 		ret = node->stop(node);
 
-	if (!ret) {
-		kflg_set(node->flg, CNFL_STOP);
-		kflg_clr(node->flg, CNFL_PAUSE);
-	}
+	if (!ret)
+		kflg_set(node->flg, KNFL_STOP);
+
 	return ret;
-}
-static int do_stop(knode_t *node, void *ua, void *ub)
-{
-	return knode_call_stop(node);
 }
 int knode_foreach_stop()
 {
-	knode_foreach(do_stop, NULL, NULL);
+	int i;
+	knode_t *tmp;
+	knodecc_t *cc = __g_knodecc;
+
+	for (i = 0; i < cc->cnt; i++) {
+		tmp = cc->arr[i];
+		if (tmp)
+			knode_call_stop(tmp);
+	}
+
 	return 0;
 }
 
@@ -396,22 +470,29 @@ int knode_call_pause(knode_t *node)
 {
 	int ret = 0;
 
+	if (kflg_chk_any(node->flg, KNFL_STOP | KNFL_PAUSE))
+		return 0;
+
 	if (node->pause)
 		ret = node->pause(node);
 
-	if (!ret) {
-		kflg_clr(node->flg, CNFL_STOP);
-		kflg_set(node->flg, CNFL_PAUSE);
-	}
+	if (!ret)
+		kflg_set(node->flg, KNFL_PAUSE);
+
 	return ret;
-}
-static int do_pause(knode_t *node, void *ua, void *ub)
-{
-	return knode_call_pause(node);
 }
 int knode_foreach_pause()
 {
-	knode_foreach(do_pause, NULL, NULL);
+	int i;
+	knode_t *tmp;
+	knodecc_t *cc = __g_knodecc;
+
+	for (i = 0; i < cc->cnt; i++) {
+		tmp = cc->arr[i];
+		if (tmp)
+			knode_call_pause(tmp);
+	}
+
 	return 0;
 }
 
@@ -419,22 +500,32 @@ int knode_call_resume(knode_t *node)
 {
 	int ret = 0;
 
+	if (kflg_chk_any(node->flg, KNFL_STOP))
+		return 0;
+	if (!kflg_chk_any(node->flg, KNFL_PAUSE))
+		return 0;
+
 	if (node->resume)
 		ret = node->resume(node);
 
-	if (!ret) {
-		kflg_clr(node->flg, CNFL_STOP);
-		kflg_clr(node->flg, CNFL_PAUSE);
-	}
+	if (!ret)
+		kflg_clr(node->flg, KNFL_PAUSE);
+
 	return ret;
 }
-static int do_resume(knode_t *node, void *ua, void *ub)
-{
-	return knode_call_resume(node);
-}
+
 int knode_foreach_resume()
 {
-	knode_foreach(do_resume, NULL, NULL);
+	int i;
+	knode_t *tmp;
+	knodecc_t *cc = __g_knodecc;
+
+	for (i = cc->cnt; i >= 0; i--) {
+		tmp = cc->arr[i];
+		if (tmp)
+			knode_call_resume(tmp);
+	}
+
 	return 0;
 }
 
