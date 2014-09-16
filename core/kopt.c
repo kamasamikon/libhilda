@@ -738,9 +738,9 @@ static char *dat_to_str(char *dat, int len)
 int kopt_getini_by_opt(void *opt, char **ret)
 {
 	kopt_entry_t *oe = (kopt_entry_t*)opt;
-	int err = EC_NG, ival, dlen;
-	char *sval, *dval;
-	void *pval;
+	int err = EC_NG, v_int, dlen;
+	char *v_str, *v_dat;
+	void *v_ptr;
 
 	switch (KOPT_TYPE(oe)) {
 	case 'a':
@@ -748,34 +748,34 @@ int kopt_getini_by_opt(void *opt, char **ret)
 		break;
 	case 'i':
 	case 'b':
-		err = getint(oe, NULL, NULL, &ival);
+		err = getint(oe, NULL, NULL, &v_int);
 		if (err != EC_OK)
 			break;
 		*ret = (char*)kmem_alloz(20, char);
-		sprintf(*ret, "%d", ival);
+		sprintf(*ret, "%d", v_int);
 		break;
 	case 'd':
 		/* TODO */
-		err = getdat(oe, NULL, NULL, &dval, &dlen);
+		err = getdat(oe, NULL, NULL, &v_dat, &dlen);
 		if (err != EC_OK)
 			break;
-		*ret = dat_to_str(dval, dlen);
+		*ret = dat_to_str(v_dat, dlen);
 		break;
 	case 'e':
 		/* XXX, can not get a event */
 		return EC_FORBIDEN;
 	case 's':
-		err = getstr(oe, NULL, NULL, &sval);
+		err = getstr(oe, NULL, NULL, &v_str);
 		if (err != EC_OK)
 			break;
-		*ret = kstr_dup(sval);
+		*ret = kstr_dup(v_str);
 		break;
 	case 'p':
-		err = getptr(oe, NULL, NULL, &pval);
+		err = getptr(oe, NULL, NULL, &v_ptr);
 		if (err != EC_OK)
 			break;
 		*ret = (char*)kmem_alloz(10, char);
-		sprintf(*ret, "%p", pval);
+		sprintf(*ret, "%p", v_ptr);
 		break;
 	default:
 		kassert(!"should not be here");
