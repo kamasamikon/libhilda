@@ -285,18 +285,18 @@ static optcc_t *__g_optcc = NULL;
 static int entry_del(kopt_entry_t *oe);
 static kinline kopt_entry_t *entry_find(const char *path);
 
-static int setint(int ses, kopt_entry_t *oe, void *pa, void *pb, int val);
-static int setptr(int ses, kopt_entry_t *oe, void *pa, void *pb, void *val);
-static int setstr(int ses, kopt_entry_t *oe, void *pa, void *pb, char *val);
+static int setint(int ses, kopt_entry_t *oe, void *pa, void *pb, int v_int);
+static int setptr(int ses, kopt_entry_t *oe, void *pa, void *pb, void *v_ptr);
+static int setstr(int ses, kopt_entry_t *oe, void *pa, void *pb, char *v_str);
 static int setdat(int ses, kopt_entry_t *oe, void *pa, void *pb,
-		const char *val, int len);
+		const char *v_dat, int len);
 static int setarr(int ses, kopt_entry_t *oe, void *pa, void *pb,
-		const char **val, int len);
+		const char **v_arr, int len);
 
-static int getint(kopt_entry_t *oe, void *pa, void *pb, int *val);
-static int getstr(kopt_entry_t *oe, void *pa, void *pb, char **val);
-static int getptr(kopt_entry_t *oe, void *pa, void *pb, void **val);
-static int getdat(kopt_entry_t *oe, void *pa, void *pb, char **val, int *len);
+static int getint(kopt_entry_t *oe, void *pa, void *pb, int *v_int);
+static int getstr(kopt_entry_t *oe, void *pa, void *pb, char **v_str);
+static int getptr(kopt_entry_t *oe, void *pa, void *pb, void **v_ptr);
+static int getdat(kopt_entry_t *oe, void *pa, void *pb, char **v_dat, int *len);
 
 /*-----------------------------------------------------------------------
  * kinline functions
@@ -411,7 +411,7 @@ kinline void *kopt_wch_ub(void *ow)
 	return ((kopt_watch_t*)(ow))->ub;
 }
 
-kinline int kopt_set_cur_arr(void *oe, char **val, int len)
+kinline int kopt_set_cur_arr(void *oe, char **v_arr, int len)
 {
 	kopt_entry_t *e = (kopt_entry_t*)oe;
 
@@ -422,7 +422,7 @@ kinline int kopt_set_cur_arr(void *oe, char **val, int len)
 		if (len > 0) {
 			kmem_free_sz(e->v.cur.a.v);
 			e->v.cur.a.v = (char**)kmem_alloz(len, char*);
-			memcpy(e->v.cur.a.v, val, len * sizeof(char*));
+			memcpy(e->v.cur.a.v, v_arr, len * sizeof(char*));
 		}
 		e->v.cur.a.l = len;
 		return EC_OK;
@@ -430,7 +430,7 @@ kinline int kopt_set_cur_arr(void *oe, char **val, int len)
 	return EC_FORBIDEN;
 }
 
-kinline int kopt_set_cur_dat(void *oe, char *val, int len)
+kinline int kopt_set_cur_dat(void *oe, char *v_dat, int len)
 {
 	kopt_entry_t *e = (kopt_entry_t*)oe;
 
@@ -441,7 +441,7 @@ kinline int kopt_set_cur_dat(void *oe, char *val, int len)
 		if (len > 0) {
 			kmem_free_sz(e->v.cur.d.v);
 			e->v.cur.d.v = (char*)kmem_alloz(len, char);
-			memcpy(e->v.cur.d.v, val, len * sizeof(char));
+			memcpy(e->v.cur.d.v, v_dat, len * sizeof(char));
 		}
 		e->v.cur.d.l = len;
 		return EC_OK;
@@ -449,35 +449,35 @@ kinline int kopt_set_cur_dat(void *oe, char *val, int len)
 	return EC_FORBIDEN;
 }
 
-kinline int kopt_set_cur_int(void *oe, int val)
+kinline int kopt_set_cur_int(void *oe, int v_int)
 {
 	kopt_entry_t *e = (kopt_entry_t*)oe;
 
 	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
-		e->v.cur.i.v = val;
+		e->v.cur.i.v = v_int;
 		return EC_OK;
 	}
 	return EC_FORBIDEN;
 }
 
-kinline int kopt_set_cur_str(void *oe, char *val)
+kinline int kopt_set_cur_str(void *oe, char *v_str)
 {
 	kopt_entry_t *e = (kopt_entry_t*)oe;
 
 	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
 		kmem_free_sz(e->v.cur.s.v);
-		e->v.cur.s.v = kstr_dup(val);
+		e->v.cur.s.v = kstr_dup(v_str);
 		return EC_OK;
 	}
 	return EC_FORBIDEN;
 }
 
-kinline int kopt_set_cur_ptr(void *oe, void *val)
+kinline int kopt_set_cur_ptr(void *oe, void *v_ptr)
 {
 	kopt_entry_t *e = (kopt_entry_t*)oe;
 
 	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
-		e->v.cur.p.v = val;
+		e->v.cur.p.v = v_ptr;
 		return EC_OK;
 	}
 	return EC_FORBIDEN;
@@ -1184,7 +1184,7 @@ int kopt_setkv(int ses, const char *k, const char *v)
  * \retval -2 not allowed
  * \retval -.
  */
-static int setint(int ses, kopt_entry_t *oe, void *pa, void *pb, int val)
+static int setint(int ses, kopt_entry_t *oe, void *pa, void *pb, int v_int)
 {
 	int ret = 0;
 
@@ -1193,7 +1193,7 @@ static int setint(int ses, kopt_entry_t *oe, void *pa, void *pb, int val)
 	RET_IF_FORBIDEN();
 
 	kflg_set(oe->attr, OA_IN_SET);
-	oe->v.new.i.v = val;
+	oe->v.new.i.v = v_int;
 	SET_SET_PARA();
 	CALL_BWCH();
 
@@ -1204,17 +1204,17 @@ static int setint(int ses, kopt_entry_t *oe, void *pa, void *pb, int val)
 			ret = oe->setter(ses, oe, oe->set_pa, oe->set_pb);
 			if (EC_DEFAULT == ret) {
 				ret = 0;
-				oe->v.cur.i.v = val;
+				oe->v.cur.i.v = v_int;
 			} else if (ret == EC_SKIP) {
 				kflg_clr(oe->attr, OA_IN_SET);
 				return ret;
 			} else if (ret != EC_OK)
-				kerror("set fail: %s, val:%d\n", oe->path, val);
+				kerror("set fail: %s, v_int:%d\n", oe->path, v_int);
 		} else
-			oe->v.cur.i.v = val;
+			oe->v.cur.i.v = v_int;
 
 		if ('b' == KOPT_TYPE(oe))
-			oe->v.cur.i.v = val;
+			oe->v.cur.i.v = v_int;
 	}
 
 	CALL_AWCH();
@@ -1222,7 +1222,7 @@ static int setint(int ses, kopt_entry_t *oe, void *pa, void *pb, int val)
 	return ret;
 }
 
-int kopt_setint_sp(int ses, const char *path, void *pa, void *pb, int val)
+int kopt_setint_sp(int ses, const char *path, void *pa, void *pb, int v_int)
 {
 	int ret = -1;
 	kopt_entry_t *oe;
@@ -1231,7 +1231,7 @@ int kopt_setint_sp(int ses, const char *path, void *pa, void *pb, int val)
 
 	oe = entry_find(path);
 	if (oe)
-		ret = setint(ses, oe, pa, pb, val);
+		ret = setint(ses, oe, pa, pb, v_int);
 	else {
 		kerror("Opt not found: <%s>\n", path);
 		kopt_set_err(EC_NG, "Opt not found");
@@ -1241,7 +1241,7 @@ int kopt_setint_sp(int ses, const char *path, void *pa, void *pb, int val)
 	return ret;
 }
 
-static int getint(kopt_entry_t *oe, void *pa, void *pb, int *val)
+static int getint(kopt_entry_t *oe, void *pa, void *pb, int *v_int)
 {
 	int ret = 0;
 
@@ -1261,14 +1261,14 @@ static int getint(kopt_entry_t *oe, void *pa, void *pb, int *val)
 		if (EC_DEFAULT == ret)
 			ret = 0;
 	}
-	*val = oe->v.cur.i.v;
+	*v_int = oe->v.cur.i.v;
 
 	kflg_clr(oe->attr, OA_IN_GET);
 
 	return ret;
 }
 
-int kopt_getint_p(const char *path, void *pa, void *pb, int *val)
+int kopt_getint_p(const char *path, void *pa, void *pb, int *v_int)
 {
 	int ret = -1;
 	kopt_entry_t *oe;
@@ -1277,7 +1277,7 @@ int kopt_getint_p(const char *path, void *pa, void *pb, int *val)
 
 	oe = entry_find(path);
 	if (oe)
-		ret = getint(oe, pa, pb, val);
+		ret = getint(oe, pa, pb, v_int);
 	else {
 		kerror("Opt not found: <%s>\n", path);
 		kopt_set_err(EC_NG, "Opt not found");
@@ -1297,7 +1297,7 @@ int kopt_getint_p(const char *path, void *pa, void *pb, int *val)
  * \retval -2 not allowed
  * \retval -.
  */
-static int setptr(int ses, kopt_entry_t *oe, void *pa, void *pb, void *val)
+static int setptr(int ses, kopt_entry_t *oe, void *pa, void *pb, void *v_ptr)
 {
 	int ret = 0;
 
@@ -1306,7 +1306,7 @@ static int setptr(int ses, kopt_entry_t *oe, void *pa, void *pb, void *val)
 	RET_IF_FORBIDEN();
 
 	kflg_set(oe->attr, OA_IN_SET);
-	oe->v.new.p.v = val;
+	oe->v.new.p.v = v_ptr;
 	SET_SET_PARA();
 	CALL_BWCH();
 
@@ -1314,21 +1314,21 @@ static int setptr(int ses, kopt_entry_t *oe, void *pa, void *pb, void *val)
 		ret = oe->setter(ses, oe, oe->set_pa, oe->set_pb);
 		if (EC_DEFAULT == ret) {
 			ret = 0;
-			oe->v.cur.p.v = val;
+			oe->v.cur.p.v = v_ptr;
 		} else if (ret == EC_SKIP) {
 			kflg_clr(oe->attr, OA_IN_SET);
 			return ret;
 		} else if (ret != EC_OK)
-			kerror("set fail: %s, val:%p\n", oe->path, val);
+			kerror("set fail: %s, v_ptr:%p\n", oe->path, v_ptr);
 	} else
-		oe->v.cur.p.v = val;
+		oe->v.cur.p.v = v_ptr;
 
 	CALL_AWCH();
 	kflg_clr(oe->attr, OA_IN_SET);
 	return ret;
 }
 
-int kopt_setptr_sp(int ses, const char *path, void *pa, void *pb, void *val)
+int kopt_setptr_sp(int ses, const char *path, void *pa, void *pb, void *v_ptr)
 {
 	int ret = -1;
 	kopt_entry_t *oe;
@@ -1337,7 +1337,7 @@ int kopt_setptr_sp(int ses, const char *path, void *pa, void *pb, void *val)
 
 	oe = entry_find(path);
 	if (oe)
-		ret = setptr(ses, oe, pa, pb, val);
+		ret = setptr(ses, oe, pa, pb, v_ptr);
 	else {
 		kerror("Opt not found: <%s>\n", path);
 		kopt_set_err(EC_NG, "Opt not found");
@@ -1347,7 +1347,7 @@ int kopt_setptr_sp(int ses, const char *path, void *pa, void *pb, void *val)
 	return ret;
 }
 
-static int getptr(kopt_entry_t *oe, void *pa, void *pb, void **val)
+static int getptr(kopt_entry_t *oe, void *pa, void *pb, void **v_ptr)
 {
 	int ret = 0;
 
@@ -1367,14 +1367,14 @@ static int getptr(kopt_entry_t *oe, void *pa, void *pb, void **val)
 		if (EC_DEFAULT == ret)
 			ret = 0;
 	}
-	*val = oe->v.cur.p.v;
+	*v_ptr = oe->v.cur.p.v;
 
 	kflg_clr(oe->attr, OA_IN_GET);
 
 	return ret;
 }
 
-int kopt_getptr_p(const char *path, void *pa, void *pb, void **val)
+int kopt_getptr_p(const char *path, void *pa, void *pb, void **v_ptr)
 {
 	int ret = -1;
 	kopt_entry_t *oe;
@@ -1383,7 +1383,7 @@ int kopt_getptr_p(const char *path, void *pa, void *pb, void **val)
 
 	oe = entry_find(path);
 	if (oe)
-		ret = getptr(oe, pa, pb, val);
+		ret = getptr(oe, pa, pb, v_ptr);
 	else {
 		kerror("Opt not found: <%s>\n", path);
 		kopt_set_err(EC_NG, "Opt not found");
@@ -1403,7 +1403,7 @@ int kopt_getptr_p(const char *path, void *pa, void *pb, void **val)
  * \retval -2 not allowed
  * \retval -.
  */
-static int setstr(int ses, kopt_entry_t *oe, void *pa, void *pb, char *val)
+static int setstr(int ses, kopt_entry_t *oe, void *pa, void *pb, char *v_str)
 {
 	int ret = 0;
 
@@ -1412,7 +1412,7 @@ static int setstr(int ses, kopt_entry_t *oe, void *pa, void *pb, char *val)
 	RET_IF_FORBIDEN();
 
 	kflg_set(oe->attr, OA_IN_SET);
-	oe->v.new.s.v = val;
+	oe->v.new.s.v = v_str;
 	SET_SET_PARA();
 	CALL_BWCH();
 
@@ -1421,15 +1421,15 @@ static int setstr(int ses, kopt_entry_t *oe, void *pa, void *pb, char *val)
 		if (EC_DEFAULT == ret) {
 			ret = 0;
 			kmem_free_sz(oe->v.cur.s.v);
-			oe->v.cur.s.v = kstr_dup(val);
+			oe->v.cur.s.v = kstr_dup(v_str);
 		} else if (ret == EC_SKIP) {
 			kflg_clr(oe->attr, OA_IN_SET);
 			return ret;
 		} else if (ret != EC_OK)
-			kerror("set fail: %s, val:%s\n", oe->path, val);
+			kerror("set fail: %s, v_str:%s\n", oe->path, v_str);
 	} else {
 		kmem_free_sz(oe->v.cur.s.v);
-		oe->v.cur.s.v = kstr_dup(val);
+		oe->v.cur.s.v = kstr_dup(v_str);
 	}
 
 	CALL_AWCH();
@@ -1441,7 +1441,7 @@ static int setstr(int ses, kopt_entry_t *oe, void *pa, void *pb, char *val)
 	return ret;
 }
 
-int kopt_setstr_sp(int ses, const char *path, void *pa, void *pb, char *val)
+int kopt_setstr_sp(int ses, const char *path, void *pa, void *pb, char *v_str)
 {
 	int ret = -1;
 	kopt_entry_t *oe;
@@ -1450,7 +1450,7 @@ int kopt_setstr_sp(int ses, const char *path, void *pa, void *pb, char *val)
 
 	oe = entry_find(path);
 	if (oe)
-		ret = setstr(ses, oe, pa, pb, val);
+		ret = setstr(ses, oe, pa, pb, v_str);
 	else {
 		kerror("Opt not found: <%s>\n", path);
 		kopt_set_err(EC_NG, "Opt not found");
@@ -1460,7 +1460,7 @@ int kopt_setstr_sp(int ses, const char *path, void *pa, void *pb, char *val)
 	return ret;
 }
 
-static int getstr(kopt_entry_t *oe, void *pa, void *pb, char **val)
+static int getstr(kopt_entry_t *oe, void *pa, void *pb, char **v_str)
 {
 	int ret = 0;
 
@@ -1480,14 +1480,14 @@ static int getstr(kopt_entry_t *oe, void *pa, void *pb, char **val)
 		if (EC_DEFAULT == ret)
 			ret = 0;
 	}
-	*val = oe->v.cur.s.v;
+	*v_str = oe->v.cur.s.v;
 
 	kflg_clr(oe->attr, OA_IN_GET);
 
 	return ret;
 }
 
-int kopt_getstr_p(const char *path, void *pa, void *pb, char **val)
+int kopt_getstr_p(const char *path, void *pa, void *pb, char **v_str)
 {
 	int ret = -1;
 	kopt_entry_t *oe;
@@ -1496,7 +1496,7 @@ int kopt_getstr_p(const char *path, void *pa, void *pb, char **val)
 
 	oe = entry_find(path);
 	if (oe)
-		ret = getstr(oe, pa, pb, val);
+		ret = getstr(oe, pa, pb, v_str);
 	else {
 		kerror("Opt not found: <%s>\n", path);
 		kopt_set_err(EC_NG, "Opt not found");
@@ -1507,7 +1507,7 @@ int kopt_getstr_p(const char *path, void *pa, void *pb, char **val)
 }
 
 static int setarr(int ses, kopt_entry_t *oe,
-		void *pa, void *pb, const char **val, int len)
+		void *pa, void *pb, const char **v_arr, int len)
 {
 	int ret = 0;
 
@@ -1516,7 +1516,7 @@ static int setarr(int ses, kopt_entry_t *oe,
 	RET_IF_FORBIDEN();
 
 	kflg_set(oe->attr, OA_IN_SET);
-	oe->v.new.a.v = (char**)val;
+	oe->v.new.a.v = (char**)v_arr;
 	oe->v.new.a.l = len;
 	SET_SET_PARA();
 	CALL_BWCH();
@@ -1527,7 +1527,7 @@ static int setarr(int ses, kopt_entry_t *oe,
 			ret = 0;
 			kmem_free_sz(oe->v.cur.a.v);
 			oe->v.cur.a.v = (char**)kmem_alloz(len, char);
-			memcpy(oe->v.cur.a.v, val, len);
+			memcpy(oe->v.cur.a.v, v_arr, len);
 			oe->v.cur.a.l = len;
 		} else if (ret == EC_SKIP) {
 			kflg_clr(oe->attr, OA_IN_SET);
@@ -1537,7 +1537,7 @@ static int setarr(int ses, kopt_entry_t *oe,
 	} else {
 		kmem_free_sz(oe->v.cur.a.v);
 		oe->v.cur.a.v = (char**)kmem_alloz(len, char);
-		memcpy(oe->v.cur.a.v, val, len);
+		memcpy(oe->v.cur.a.v, v_arr, len);
 		oe->v.cur.a.l = len;
 	}
 
@@ -1547,7 +1547,7 @@ static int setarr(int ses, kopt_entry_t *oe,
 }
 
 int kopt_setarr_sp(int ses, const char *path,
-		void *pa, void *pb, const char **val, int len)
+		void *pa, void *pb, const char **v_arr, int len)
 {
 	int ret = -1;
 	kopt_entry_t *oe;
@@ -1556,7 +1556,7 @@ int kopt_setarr_sp(int ses, const char *path,
 
 	oe = entry_find(path);
 	if (oe)
-		ret = setarr(ses, oe, pa, pb, val, len);
+		ret = setarr(ses, oe, pa, pb, v_arr, len);
 	else {
 		kerror("Opt not found: <%s>\n", path);
 		kopt_set_err(EC_NG, "Opt not found");
@@ -1572,7 +1572,7 @@ int kopt_getarr_p(const char *path, void *pa, void *pb, void **arr, int *len)
 }
 
 static int setdat(int ses, kopt_entry_t *oe,
-		void *pa, void *pb, const char *val, int len)
+		void *pa, void *pb, const char *v_dat, int len)
 {
 	int ret = 0;
 
@@ -1581,7 +1581,7 @@ static int setdat(int ses, kopt_entry_t *oe,
 	RET_IF_FORBIDEN();
 
 	kflg_set(oe->attr, OA_IN_SET);
-	oe->v.new.d.v = (void*)val;
+	oe->v.new.d.v = (void*)v_dat;
 	oe->v.new.d.l = len;
 	SET_SET_PARA();
 	CALL_BWCH();
@@ -1592,7 +1592,7 @@ static int setdat(int ses, kopt_entry_t *oe,
 			ret = 0;
 			kmem_free_sz(oe->v.cur.d.v);
 			oe->v.cur.d.v = (char**)kmem_alloz(len, char);
-			memcpy(oe->v.cur.d.v, val, len);
+			memcpy(oe->v.cur.d.v, v_dat, len);
 			oe->v.cur.d.l = len;
 		} else if (ret == EC_SKIP) {
 			kflg_clr(oe->attr, OA_IN_SET);
@@ -1602,7 +1602,7 @@ static int setdat(int ses, kopt_entry_t *oe,
 	} else {
 		kmem_free_sz(oe->v.cur.d.v);
 		oe->v.cur.d.v = (char*)kmem_alloc(len, char);
-		memcpy(oe->v.cur.d.v, val, len);
+		memcpy(oe->v.cur.d.v, v_dat, len);
 		oe->v.cur.d.l = len;
 	}
 
@@ -1617,7 +1617,7 @@ static int setdat(int ses, kopt_entry_t *oe,
 }
 
 int kopt_setdat_sp(int ses, const char *path,
-		void *pa, void *pb, const char *val, int len)
+		void *pa, void *pb, const char *v_dat, int len)
 {
 	int ret = -1;
 	kopt_entry_t *oe;
@@ -1626,7 +1626,7 @@ int kopt_setdat_sp(int ses, const char *path,
 
 	oe = entry_find(path);
 	if (oe)
-		ret = setdat(ses, oe, pa, pb, val, len);
+		ret = setdat(ses, oe, pa, pb, v_dat, len);
 	else {
 		kerror("Opt not found: <%s>\n", path);
 		kopt_set_err(EC_NG, "Opt not found");
@@ -1636,7 +1636,7 @@ int kopt_setdat_sp(int ses, const char *path,
 	return ret;
 }
 
-static int getdat(kopt_entry_t *oe, void *pa, void *pb, char **val, int *len)
+static int getdat(kopt_entry_t *oe, void *pa, void *pb, char **v_dat, int *len)
 {
 	int ret = 0;
 
@@ -1656,7 +1656,7 @@ static int getdat(kopt_entry_t *oe, void *pa, void *pb, char **val, int *len)
 		if (EC_DEFAULT == ret)
 			ret = 0;
 	}
-	*val = oe->v.cur.d.v;
+	*v_dat = oe->v.cur.d.v;
 	*len = oe->v.cur.d.l;
 
 	kflg_clr(oe->attr, OA_IN_GET);
@@ -1664,7 +1664,7 @@ static int getdat(kopt_entry_t *oe, void *pa, void *pb, char **val, int *len)
 	return ret;
 }
 
-int kopt_getdat_p(const char *path, void *pa, void *pb, char **val, int *len)
+int kopt_getdat_p(const char *path, void *pa, void *pb, char **v_dat, int *len)
 {
 	int ret = -1;
 	kopt_entry_t *oe;
@@ -1673,7 +1673,7 @@ int kopt_getdat_p(const char *path, void *pa, void *pb, char **val, int *len)
 
 	oe = entry_find(path);
 	if (oe)
-		ret = getdat(oe, pa, pb, val, len);
+		ret = getdat(oe, pa, pb, v_dat, len);
 	else {
 		kerror("Opt not found: <%s>\n", path);
 		kopt_set_err(EC_NG, "Opt not found");

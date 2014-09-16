@@ -26,11 +26,11 @@ kinline int kopt_get_cur_int(void *oe);
 kinline char *kopt_get_cur_str(void *oe);
 kinline void *kopt_get_cur_ptr(void *oe);
 
-kinline int kopt_set_cur_arr(void *oe, char **val, int len);
-kinline int kopt_set_cur_dat(void *oe, char *val, int len);
-kinline int kopt_set_cur_int(void *oe, int val);
-kinline int kopt_set_cur_str(void *oe, char *val);
-kinline int kopt_set_cur_ptr(void *oe, void *val);
+kinline int kopt_set_cur_arr(void *oe, char **v_arr, int len);
+kinline int kopt_set_cur_dat(void *oe, char *v_dat, int len);
+kinline int kopt_set_cur_int(void *oe, int v_int);
+kinline int kopt_set_cur_str(void *oe, char *v_str);
+kinline int kopt_set_cur_ptr(void *oe, void *v_ptr);
 
 kinline char **kopt_get_new_arr(void *oe);
 kinline int kopt_get_new_arr_len(void *oe);
@@ -139,35 +139,35 @@ int kopt_getini(const char *path, char **ret);
 #define kopt_setint(p, v) kopt_setint_sp(0, (p), NULL, NULL, (v))
 #define kopt_setint_s(s, p, v) kopt_setint_sp((s), (p), NULL, NULL, (v))
 #define kopt_setint_p(p, pa, pb, v) kopt_setint_sp(0, (p), (void*)(pa), (void*)(pb), (v))
-int kopt_setint_sp(int ses, const char *path, void *pa, void *pb, int val);
+int kopt_setint_sp(int ses, const char *path, void *pa, void *pb, int v_int);
 #define kopt_getint(p, v) kopt_getint_p((p), NULL, NULL, (v))
-int kopt_getint_p(const char *path, void *pa, void *pb, int *val);
+int kopt_getint_p(const char *path, void *pa, void *pb, int *v_int);
 
 #define kopt_setptr(p, v) kopt_setptr_sp(0, (p), NULL, NULL, (v))
 #define kopt_setptr_s(s, p, v) kopt_setptr_sp((s), (p), NULL, NULL, (v))
 #define kopt_setptr_p(p, pa, pb, v) kopt_setptr_sp(0, (p), (void*)(pa), (void*)(pb), (v))
-int kopt_setptr_sp(int ses, const char *path, void *pa, void *pb, void *val);
+int kopt_setptr_sp(int ses, const char *path, void *pa, void *pb, void *v_ptr);
 #define kopt_getptr(p, v) kopt_getptr_p((p), NULL, NULL, (v))
-int kopt_getptr_p(const char *path, void *pa, void *pb, void **val);
+int kopt_getptr_p(const char *path, void *pa, void *pb, void **v_ptr);
 
 #define kopt_setstr(p, v) kopt_setstr_sp(0, (p), NULL, NULL, (v))
 #define kopt_setstr_s(s, p, v) kopt_setstr_sp((s), (p), NULL, NULL, (v))
 #define kopt_setstr_p(p, pa, pb, v) kopt_setstr_sp(0, (p), (void*)(pa), (void*)(pb), (v))
-int kopt_setstr_sp(int ses, const char *path, void *pa, void *pb, char *val);
+int kopt_setstr_sp(int ses, const char *path, void *pa, void *pb, char *v_str);
 #define kopt_getstr(p, v) kopt_getstr_p((p), NULL, NULL, (v))
-int kopt_getstr_p(const char *path, void *pa, void *pb, char **val);
+int kopt_getstr_p(const char *path, void *pa, void *pb, char **v_str);
 
 #define kopt_setarr(p, v, l) kopt_setarr_sp(0, (p), NULL, NULL, (v), (l))
 #define kopt_setarr_s(s, p, v, l) kopt_setarr_sp((s), (p), NULL, NULL, (v), (l))
 #define kopt_setarr_p(p, pa, pb, v, l) kopt_setarr_sp(0, (p), (void*)(pa), (void*)(pb), (v), (l))
-int kopt_setarr_sp(int ses, const char *path, void *pa, void *pb, const char **val, int len);
+int kopt_setarr_sp(int ses, const char *path, void *pa, void *pb, const char **v_arr, int len);
 #define kopt_getarr(p, v, l) kopt_getarr_p((p), (pa), NULL, NULL, (v))
 int kopt_getarr_p(const char *path, void *pa, void *pb, void **arr, int *len);
 
 #define kopt_setdat(p, v, l) kopt_setdat_sp(0, (p), NULL, NULL, (v), (l))
 #define kopt_setdat_s(s, p, v, l) kopt_setdat_sp((s), (p), NULL, NULL, (v), (l))
 #define kopt_setdat_p(p, pa, pb, v, l) kopt_setdat_sp(0, (p), (void*)(pa), (void*)(pb), (v), (l))
-int kopt_setdat_sp(int ses, const char *path, void *pa, void *pb, const char *val, int len);
+int kopt_setdat_sp(int ses, const char *path, void *pa, void *pb, const char *v_dat, int len);
 #define kopt_getdat(p, v, l) kopt_getdat_p((p), NULL, NULL, (v), (l))
 int kopt_getdat_p(const char *path, void *pa, void *pb, char **arr, int *len);
 
