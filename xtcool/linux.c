@@ -18,8 +18,8 @@
 
 #include <hilda/xtcool.h>
 
-typedef struct _spl_event_t spl_event_t;
-struct _spl_event_t {
+typedef struct _spl_event_s spl_event_s;
+struct _spl_event_s {
 	SPL_HANDLE sem;
 	SPL_HANDLE lock;
 };
@@ -33,7 +33,7 @@ struct _spl_event_t {
  */
 SPL_HANDLE spl_event_create(int signaled)
 {
-	spl_event_t *ev = (spl_event_t*)kmem_alloz(1, spl_event_t);
+	spl_event_s *ev = (spl_event_s*)kmem_alloz(1, spl_event_s);
 	ev->sem = spl_sema_new(signaled ? 1 : 0);
 	ev->lock = spl_mutex_create();
 	return (SPL_HANDLE)ev;
@@ -49,7 +49,7 @@ SPL_HANDLE spl_event_create(int signaled)
  */
 int spl_event_set(SPL_HANDLE h)
 {
-	spl_event_t *ev = (spl_event_t*)h;
+	spl_event_s *ev = (spl_event_s*)h;
 	spl_mutex_lock(ev->lock);
 	spl_sema_rel(ev->sem);
 	spl_mutex_unlock(ev->lock);
@@ -64,7 +64,7 @@ int spl_event_set(SPL_HANDLE h)
  */
 int spl_event_clear(SPL_HANDLE h)
 {
-	spl_event_t *ev = (spl_event_t*)h;
+	spl_event_s *ev = (spl_event_s*)h;
 	int val;
 	spl_mutex_lock(ev->lock);
 	for (;;) {
@@ -79,12 +79,12 @@ int spl_event_clear(SPL_HANDLE h)
 }
 int spl_event_wait(SPL_HANDLE h, unsigned int ms)
 {
-	spl_event_t *ev = (spl_event_t*)h;
+	spl_event_s *ev = (spl_event_s*)h;
 	return spl_sema_get(ev->sem, ms);
 }
 int spl_event_destroy(SPL_HANDLE h)
 {
-	spl_event_t *ev = (spl_event_t*)h;
+	spl_event_s *ev = (spl_event_s*)h;
 	spl_sema_del(ev->sem);
 	spl_mutex_destroy(ev->lock);
 	kmem_free(ev);
@@ -248,8 +248,8 @@ int spl_sema_rel(SPL_HANDLE h)
 	return SPL_EC_OK;
 }
 
-typedef struct _spl_thread_t spl_thread_t;
-struct _spl_thread_t {
+typedef struct _spl_thread_s spl_thread_s;
+struct _spl_thread_s {
 	pthread_t id;
 	pthread_t self;
 
@@ -320,7 +320,7 @@ void spl_thread_exit(void)
 int spl_thread_kill(SPL_HANDLE h, int signo)
 {
 	int err;
-	spl_thread_t *t = (spl_thread_t*)h;
+	spl_thread_s *t = (spl_thread_s*)h;
 
 	err = pthread_kill((pthread_t)h, signo) ? SPL_EC_NG : SPL_EC_OK;
 	return err;
@@ -331,7 +331,7 @@ int spl_thread_kill(SPL_HANDLE h, int signo)
 int spl_thread_destroy(SPL_HANDLE h)
 {
 	int err;
-	spl_thread_t *t = (spl_thread_t*)h;
+	spl_thread_s *t = (spl_thread_s*)h;
 
 	err = pthread_cancel((pthread_t)h) ? SPL_EC_NG : SPL_EC_OK;
 	return err;
@@ -523,8 +523,8 @@ static int follow_link(const char *basedir, const char *name, struct dirent *ret
 	return 0;
 }
 
-typedef struct _findbean_t findbean_t;
-struct _findbean_t {
+typedef struct _findbean_s findbean_s;
+struct _findbean_s {
 	char basedir[1024];
 	DIR *dir;
 };
@@ -556,7 +556,7 @@ kbean kvfs_findfirst(const char *a_fspec, KVFS_FINDDATA *a_finfo)
 {
 	DIR *dir;
 	struct dirent *dirp, lnk_dirp;
-	findbean_t *fb;
+	findbean_s *fb;
 
 	dir = opendir(a_fspec);
 	if (!dir)
@@ -580,7 +580,7 @@ kbean kvfs_findfirst(const char *a_fspec, KVFS_FINDDATA *a_finfo)
 	strncpy(a_finfo->name, dirp->d_name, sizeof(a_finfo->name) - 1);
 	a_finfo->name[sizeof(a_finfo->name) - 1] = '\0';
 
-	fb = (findbean_t*)kmem_alloc(1, findbean_t);
+	fb = (findbean_s*)kmem_alloc(1, findbean_s);
 	if (!fb) {
 		closedir(dir);
 		return knil;
@@ -594,7 +594,7 @@ kbean kvfs_findfirst(const char *a_fspec, KVFS_FINDDATA *a_finfo)
 
 int kvfs_findnext(kbean a_find, KVFS_FINDDATA *a_finfo)
 {
-	findbean_t *fb = (findbean_t*)a_find;
+	findbean_s *fb = (findbean_s*)a_find;
 	DIR *dir;
 	struct dirent *dirp, lnk_dirp;
 
@@ -623,7 +623,7 @@ int kvfs_findnext(kbean a_find, KVFS_FINDDATA *a_finfo)
 
 int kvfs_findclose(kbean a_find)
 {
-	findbean_t *fb = (findbean_t*)a_find;
+	findbean_s *fb = (findbean_s*)a_find;
 	if (fb) {
 		if (fb->dir)
 			closedir(fb->dir);
@@ -643,8 +643,8 @@ char *kvfs_getcwd(char *buf, int size)
 	return (char*)getcwd(buf, size);
 }
 
-typedef struct _spl_timer_t spl_timer_t;
-struct _spl_timer_t {
+typedef struct _spl_timer_s spl_timer_s;
+struct _spl_timer_s {
 	timer_t tid;
 
 	char in_callback;
@@ -657,7 +657,7 @@ struct _spl_timer_t {
 static void sig_handle(sigval_t v)
 {
 	int conti = 0;
-	spl_timer_t *t = (spl_timer_t*)v.sival_ptr;
+	spl_timer_s *t = (spl_timer_s*)v.sival_ptr;
 	if (t) {
 		t->in_callback = 1;
 		conti = t->callback((void*)t, t->userdata);
@@ -689,12 +689,12 @@ int spl_timer_add(void **retid, int interval, TIMER_CBK callback, void *userdata
 	struct sigevent se;
 	struct itimerspec ts, ots;
 	struct timespec tts;
-	spl_timer_t *t = NULL;
+	spl_timer_s *t = NULL;
 
 	if (!callback)
 		return -1;
 
-	t = (spl_timer_t*)kmem_alloz(1, spl_timer_t);
+	t = (spl_timer_s*)kmem_alloz(1, spl_timer_s);
 
 	t->callback = callback;
 	t->userdata = userdata;
@@ -735,7 +735,7 @@ success:
 
 int spl_timer_del(void *id)
 {
-	spl_timer_t *t = (spl_timer_t*)id;
+	spl_timer_s *t = (spl_timer_s*)id;
 	if (t) {
 		if (t->in_callback)
 			t->killed = 1;

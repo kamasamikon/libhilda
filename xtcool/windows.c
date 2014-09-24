@@ -11,8 +11,8 @@
 
 #include <hilda/xtcool.h>
 
-typedef struct _spl_event_t spl_event_t;
-struct _spl_event_t {
+typedef struct _spl_event_s spl_event_s;
+struct _spl_event_s {
 	SPL_HANDLE sem;
 	SPL_HANDLE lock;
 };

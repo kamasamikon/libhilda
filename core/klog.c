@@ -22,15 +22,15 @@
  */
 
 /* STRing ARRay to save programe name, module name, file name etc */
-typedef struct _strarr_t strarr_t;
-struct _strarr_t {
+typedef struct _strarr_s strarr_s;
+struct _strarr_s {
 	int size;
 	int cnt;
 	const char **arr;
 };
 
-typedef struct _rule_t rule_t;
-struct _rule_t {
+typedef struct _rule_s rule_s;
+struct _rule_s {
 	/* XXX: Don't filter ThreadID, it need the getflg called every log */
 
 	/* 0 is know care */
@@ -49,11 +49,11 @@ struct _rule_t {
 	unsigned int set, clr;
 };
 
-typedef struct _rulearr_t rulearr_t;
-struct _rulearr_t {
+typedef struct _rulearr_s rulearr_s;
+struct _rulearr_s {
 	int size;
 	int cnt;
-	rule_t *arr;
+	rule_s *arr;
 };
 
 /* How many logger slot */
@@ -61,33 +61,33 @@ struct _rulearr_t {
 #define MAX_RLOGGER 8
 
 /* Control Center for klog */
-typedef struct _klogcc_t klogcc_t;
-struct _klogcc_t {
+typedef struct _klogcc_s klogcc_s;
+struct _klogcc_s {
 	/** version is a ref count user change klog arg */
 	int touches;
 
 	SPL_HANDLE mutex;
 
-	strarr_t arr_file_name;
-	strarr_t arr_modu_name;
-	strarr_t arr_prog_name;
-	strarr_t arr_func_name;
+	strarr_s arr_file_name;
+	strarr_s arr_modu_name;
+	strarr_s arr_prog_name;
+	strarr_s arr_func_name;
 
-	rulearr_t arr_rule;
+	rulearr_s arr_rule;
 
 	unsigned char nlogger_cnt, rlogger_cnt;
 	KNLOGGER nloggers[MAX_NLOGGER];
 	KRLOGGER rloggers[MAX_RLOGGER];
 };
 
-static klogcc_t *__g_klogcc = NULL;
+static klogcc_s *__g_klogcc = NULL;
 
 /*-----------------------------------------------------------------------
  * klog-logger
  */
 int klog_add_logger(KNLOGGER logger)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 	int i;
 
 	for (i = 0; i < MAX_NLOGGER; i++)
@@ -105,7 +105,7 @@ int klog_add_logger(KNLOGGER logger)
 
 int klog_del_logger(KNLOGGER logger)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 	int i;
 
 	for (i = 0; i < cc->nlogger_cnt; i++)
@@ -121,7 +121,7 @@ int klog_del_logger(KNLOGGER logger)
 
 int klog_add_rlogger(KRLOGGER logger)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 	int i;
 
 	for (i = 0; i < MAX_RLOGGER; i++)
@@ -139,7 +139,7 @@ int klog_add_rlogger(KRLOGGER logger)
 
 int klog_del_rlogger(KRLOGGER logger)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 	int i;
 
 	for (i = 0; i < cc->rlogger_cnt; i++)
@@ -165,7 +165,7 @@ static void klog_parse_mask(const char *mask, unsigned int *set, unsigned int *c
  */
 void *klog_attach(void *logcc)
 {
-	__g_klogcc = (klogcc_t*)logcc;
+	__g_klogcc = (klogcc_s*)logcc;
 	return (void*)__g_klogcc;
 }
 
@@ -198,13 +198,13 @@ kinline void *klog_cc(void)
 
 void klog_touch(void)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 
 	cc->touches++;
 }
 kinline int klog_touches(void)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 
 	return cc->touches;
 }
@@ -366,12 +366,12 @@ static void rule_add_from_mask(unsigned int mask)
 
 void *klog_init(unsigned int mask, int argc, char **argv)
 {
-	klogcc_t *cc;
+	klogcc_s *cc;
 
 	if (__g_klogcc)
 		return (void*)__g_klogcc;
 
-	cc = (klogcc_t*)kmem_alloz(1, klogcc_t);
+	cc = (klogcc_s*)kmem_alloz(1, klogcc_s);
 	__g_klogcc = cc;
 
 	cc->mutex = spl_mutex_create();
@@ -392,7 +392,7 @@ int klog_vf(unsigned char type, unsigned int mask,
 		const char *file, const char *func, int ln,
 		const char *fmt, va_list ap)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 
 	char buffer[2048], *bufptr = buffer;
 	int i, ret, ofs, bufsize = sizeof(buffer);
@@ -556,7 +556,7 @@ char *klog_get_prog_name()
 	return pname;
 }
 
-static int strarr_find(strarr_t *sa, const char *str)
+static int strarr_find(strarr_s *sa, const char *str)
 {
 	int i;
 
@@ -569,7 +569,7 @@ static int strarr_find(strarr_t *sa, const char *str)
 	return -1;
 }
 
-static int strarr_add(strarr_t *sa, const char *str)
+static int strarr_add(strarr_s *sa, const char *str)
 {
 	int pos = strarr_find(sa, str);
 
@@ -594,7 +594,7 @@ static int strarr_add(strarr_t *sa, const char *str)
  */
 int klog_file_name_add(const char *name)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 	int pos;
 
 	spl_mutex_lock(cc->mutex);
@@ -604,7 +604,7 @@ int klog_file_name_add(const char *name)
 }
 int klog_modu_name_add(const char *name)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 	int pos;
 
 	spl_mutex_lock(cc->mutex);
@@ -614,7 +614,7 @@ int klog_modu_name_add(const char *name)
 }
 int klog_prog_name_add(const char *name)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 	int pos;
 
 	spl_mutex_lock(cc->mutex);
@@ -624,7 +624,7 @@ int klog_prog_name_add(const char *name)
 }
 int klog_func_name_add(const char *name)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 	int pos;
 
 	spl_mutex_lock(cc->mutex);
@@ -633,14 +633,14 @@ int klog_func_name_add(const char *name)
 	return pos;
 }
 
-static int rulearr_add(rulearr_t *ra, int prog, int modu,
+static int rulearr_add(rulearr_s *ra, int prog, int modu,
 		int file, int func, int line, int pid,
 		unsigned int fset, unsigned int fclr)
 {
 	if (unlikely(ra->cnt >= ra->size))
-		ARR_INC(16, ra->arr, ra->size, rule_t);
+		ARR_INC(16, ra->arr, ra->size, rule_s);
 
-	rule_t *rule = &ra->arr[ra->cnt];
+	rule_s *rule = &ra->arr[ra->cnt];
 
 	rule->prog = prog;
 	rule->modu = modu;
@@ -664,7 +664,7 @@ static int rulearr_add(rulearr_t *ra, int prog, int modu,
  */
 void klog_rule_add(const char *rule)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 	int i_prog, i_modu, i_file, i_func, i_line, i_pid;
 	char *s_prog, *s_modu, *s_file, *s_func, *s_line, *s_pid, *s_mask;
 	char buf[1024];
@@ -732,18 +732,18 @@ void klog_rule_add(const char *rule)
 }
 void klog_rule_del(int index)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 
 	if (index < 0 || index >= cc->arr_rule.cnt)
 		return;
 
 	memcpy(&cc->arr_rule.arr[index], &cc->arr_rule.arr[index + 1],
-			(cc->arr_rule.cnt - index - 1) * sizeof(rule_t));
+			(cc->arr_rule.cnt - index - 1) * sizeof(rule_s));
 	klog_touch();
 }
 void klog_rule_clr()
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 
 	cc->arr_rule.cnt = 0;
 	klog_touch();
@@ -822,11 +822,11 @@ static void klog_parse_mask(const char *mask, unsigned int *set, unsigned int *c
 
 unsigned int klog_calc_mask(int prog, int modu, int file, int func, int line, int pid)
 {
-	klogcc_t *cc = (klogcc_t*)klog_cc();
+	klogcc_s *cc = (klogcc_s*)klog_cc();
 	unsigned int i, all = 0;
 
 	for (i = 0; i < cc->arr_rule.cnt; i++) {
-		rule_t *rule = &cc->arr_rule.arr[i];
+		rule_s *rule = &cc->arr_rule.arr[i];
 
 		if (rule->prog != -1 && rule->prog != prog)
 			continue;

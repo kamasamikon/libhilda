@@ -17,8 +17,8 @@
 #include <hilda/kmque.h>
 #include <hilda/kcfg.h>
 
-static kcfg_t *__g_cfg = NULL;
-static kmque_t *__g_mque_main = NULL;
+static kcfg_s *__g_cfg = NULL;
+static kmque_s *__g_mque_main = NULL;
 static void *__g_tm_cfg_save = NULL;
 static int __g_cfg_loaded = 0;
 
@@ -27,7 +27,7 @@ static char *__g_skips[20];
 
 static kinline int target_find(const char *name);
 static void cfg_save_dpc(void *ua, void *ub);
-static int target_opt_add(kcfg_target_t *ct, const char *opt);
+static int target_opt_add(kcfg_target_s *ct, const char *opt);
 
 static int is_skipped_target(const char *name);
 
@@ -81,11 +81,11 @@ static void free_skipped_target()
 		kmem_free_s(__g_skips[i]);
 }
 
-static void queue_target(kcfg_target_t *ct)
+static void queue_target(kcfg_target_s *ct)
 {
 	int i;
-	kcfg_target_t *tct;
-	kcfg_t *c = __g_cfg;
+	kcfg_target_s *tct;
+	kcfg_s *c = __g_cfg;
 
 	for (i = 0; i < c->target.cnt; i++) {
 		tct = c->target.arr[i];
@@ -95,17 +95,17 @@ static void queue_target(kcfg_target_t *ct)
 		}
 	}
 
-	ARR_INC(1, c->target.arr, c->target.cnt, kcfg_target_t*);
+	ARR_INC(1, c->target.arr, c->target.cnt, kcfg_target_s*);
 	c->target.arr[i] = ct;
 }
 
 
-kcfg_target_t *kcfg_target_add(const char *name, KCFG_SAVE dosave,
+kcfg_target_s *kcfg_target_add(const char *name, KCFG_SAVE dosave,
 		KCFG_LOAD doload, KCFG_DELETE dodelete, void *ua, void *ub)
 {
 	int i;
-	kcfg_target_t *tct, *nct;
-	kcfg_t *c = __g_cfg;
+	kcfg_target_s *tct, *nct;
+	kcfg_s *c = __g_cfg;
 
 	if (is_skipped_target(name))
 		return NULL;
@@ -122,7 +122,7 @@ kcfg_target_t *kcfg_target_add(const char *name, KCFG_SAVE dosave,
 		return NULL;
 	}
 
-	nct = (kcfg_target_t*)kmem_alloz(1, kcfg_target_t);
+	nct = (kcfg_target_s*)kmem_alloz(1, kcfg_target_s);
 	nct->name = kstr_dup(name);
 	nct->save = dosave;
 	nct->load = doload;
@@ -137,8 +137,8 @@ kcfg_target_t *kcfg_target_add(const char *name, KCFG_SAVE dosave,
 static kinline int target_find(const char *name)
 {
 	int i;
-	kcfg_target_t *ct;
-	kcfg_t *c = __g_cfg;
+	kcfg_target_s *ct;
+	kcfg_s *c = __g_cfg;
 
 	if (!name)
 		return -1;
@@ -154,8 +154,8 @@ static kinline int target_find(const char *name)
 int kcfg_target_del(const char *name)
 {
 	int i;
-	kcfg_target_t *ct;
-	kcfg_t *c = __g_cfg;
+	kcfg_target_s *ct;
+	kcfg_s *c = __g_cfg;
 
 	i = target_find(name);
 	if (-1 != i) {
@@ -171,7 +171,7 @@ int kcfg_target_del(const char *name)
 	return -1;
 }
 
-static kinline int target_opt_find(kcfg_target_t *ct, const char *opt)
+static kinline int target_opt_find(kcfg_target_s *ct, const char *opt)
 {
 	int i;
 	const char *path;
@@ -190,7 +190,7 @@ static kinline int target_opt_find(kcfg_target_t *ct, const char *opt)
 	return -1;
 }
 
-static int target_opt_add(kcfg_target_t *ct, const char *opt)
+static int target_opt_add(kcfg_target_s *ct, const char *opt)
 {
 	int i;
 	const char *path;
@@ -217,7 +217,7 @@ static int target_opt_add(kcfg_target_t *ct, const char *opt)
 	return 0;
 }
 
-static void target_opt_clr(kcfg_target_t *ct)
+static void target_opt_clr(kcfg_target_s *ct)
 {
 	int i;
 	for (i = 0; i < ct->opts.cnt; i++)
@@ -244,7 +244,7 @@ int kcfg_target_opt_add(const char *name, const char *opt)
 int kcfg_target_opt_del(const char *name, const char *opt)
 {
 	int i, j;
-	kcfg_t *c = __g_cfg;
+	kcfg_s *c = __g_cfg;
 
 	i = target_find(name);
 	if (-1 != i) {
@@ -257,7 +257,7 @@ int kcfg_target_opt_del(const char *name, const char *opt)
 	return -1;
 }
 
-static void make_save_buffer(kcfg_target_t *ct, char **dat, int *len)
+static void make_save_buffer(kcfg_target_s *ct, char **dat, int *len)
 {
 	int i, klen, vlen, dlen = 0;
 	char *buf = 0, *v, *opt;
@@ -304,8 +304,8 @@ static void make_save_buffer(kcfg_target_t *ct, char **dat, int *len)
 static int og_targets(void *opt, void *pa, void *pb)
 {
 	int i;
-	kcfg_t *c = __g_cfg;
-	kcfg_target_t *ct;
+	kcfg_s *c = __g_cfg;
+	kcfg_target_s *ct;
 	char *targets = (char*)kmem_alloc(1024, char);
 
 	targets[0] = '\0';
@@ -332,7 +332,7 @@ static int og_targets(void *opt, void *pa, void *pb)
 static int og_target(void *opt, void *pa, void *pb)
 {
 	int i, len = 0;
-	kcfg_target_t *ct;
+	kcfg_target_s *ct;
 	char *dat = NULL;
 
 	if (!pa)
@@ -394,7 +394,7 @@ int kcfg_init()
 
 	setup_skipped_target();
 
-	__g_cfg = (kcfg_t*)kmem_alloz(1, kcfg_t);
+	__g_cfg = (kcfg_s*)kmem_alloz(1, kcfg_s);
 
 	kopt_getptr("p:/env/mque", (void**)&__g_mque_main);
 
@@ -405,7 +405,7 @@ int kcfg_init()
 	return 0;
 }
 
-int kcfg_final(kcfg_t *cfg)
+int kcfg_final(kcfg_s *cfg)
 {
 	if (!__g_cfg)
 		return 0;
@@ -426,8 +426,8 @@ static void cfg_save_dpc(void *ua, void *ub)
 {
 	int i, len;
 	char *dat, hash[32];
-	kcfg_t *c = __g_cfg;
-	kcfg_target_t *ct;
+	kcfg_s *c = __g_cfg;
+	kcfg_target_s *ct;
 
 	for (i = 0; i < c->target.cnt; i++) {
 		ct = c->target.arr[i];
@@ -477,7 +477,7 @@ int kcfg_save()
 	return 0;
 }
 
-static kinline int del_bad_opt(kcfg_target_t *ct, char **kvarrarr, int pos)
+static kinline int del_bad_opt(kcfg_target_s *ct, char **kvarrarr, int pos)
 {
 	char *k = kvarrarr[(pos * 2) + 0];
 
@@ -524,8 +524,8 @@ static int load_targets()
 {
 	int i, j, len, *kvcntarr, kvcnt = 0;
 	char ***kvarrarr, *dat;
-	kcfg_t *c = __g_cfg;
-	kcfg_target_t *ct;
+	kcfg_s *c = __g_cfg;
+	kcfg_target_s *ct;
 
 	kvarrarr = kmem_alloz(c->target.cnt, char**);
 	kvcntarr = kmem_alloz(c->target.cnt, int);
@@ -594,7 +594,7 @@ int kcfg_load()
  *
  * OPT from command line
  */
-static int argv_load(kcfg_target_t *ct, char **dat,
+static int argv_load(kcfg_target_s *ct, char **dat,
 		int *len, void *ua, void *ub)
 {
 	char *path = &ct->name[5], buf[64 * 1024];
@@ -618,7 +618,7 @@ static int target_argv()
 {
 	int i, argc;
 	char **argv, name[1024], *path;
-	kcfg_target_t *ct;
+	kcfg_target_s *ct;
 
 	kopt_getint("i:/prog/argc", &argc);
 	kopt_getptr("p:/prog/argv", (void**)&argv);
@@ -649,7 +649,7 @@ static int target_argv()
  *
  * OPT register by other module
  */
-static int file_load(kcfg_target_t *ct, char **dat,
+static int file_load(kcfg_target_s *ct, char **dat,
 		int *len, void *ua, void *ub)
 {
 	char *path = &ct->name[5], buf[64 * 1024];
@@ -673,7 +673,7 @@ static int os_cfg_target_file_add(int ses, void *opt, void *pa, void *pb)
 {
 	char *file = kopt_get_new_str(opt);
 	char name[1024];
-	kcfg_target_t *ct;
+	kcfg_target_s *ct;
 
 	sprintf(name, "file:%s", file);
 	ct = kcfg_target_add(name, NULL, file_load, NULL, NULL, NULL);

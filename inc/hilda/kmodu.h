@@ -25,8 +25,8 @@ typedef int (*KMODU_HEY)(void*);
 typedef int (*KMODU_BYE)(void);
 typedef int (*KMODU_CFG)(const char *kv, ...);
 
-typedef struct _kmodu_t kmodu_t;
-struct _kmodu_t {
+typedef struct _kmodu_s kmodu_s;
+struct _kmodu_s {
 	K_dlist_entry entry;
 
 	char path[1024];

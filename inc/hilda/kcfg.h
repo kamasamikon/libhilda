@@ -7,14 +7,14 @@
 extern "C" {
 #endif
 
-typedef struct _kcfg_target_t kcfg_target_t;
-typedef struct _kcfg_t kcfg_t;
+typedef struct _kcfg_target_s kcfg_target_s;
+typedef struct _kcfg_s kcfg_s;
 
-typedef int (*KCFG_SAVE)(kcfg_target_t *ct, char *dat, int len, void *ua, void *ub);
-typedef int (*KCFG_LOAD)(kcfg_target_t *ct, char **dat, int *len, void *ua, void *ub);
-typedef int (*KCFG_DELETE)(kcfg_target_t *ct, void *ua, void *ub);
+typedef int (*KCFG_SAVE)(kcfg_target_s *ct, char *dat, int len, void *ua, void *ub);
+typedef int (*KCFG_LOAD)(kcfg_target_s *ct, char **dat, int *len, void *ua, void *ub);
+typedef int (*KCFG_DELETE)(kcfg_target_s *ct, void *ua, void *ub);
 
-struct _kcfg_target_t {
+struct _kcfg_target_s {
 	char *name;
 
 	struct {
@@ -34,9 +34,9 @@ struct _kcfg_target_t {
 	char data_hash[32];
 };
 
-struct _kcfg_t {
+struct _kcfg_s {
 	struct {
-		kcfg_target_t **arr;
+		kcfg_target_s **arr;
 		int cnt;
 	} target;
 };
@@ -44,7 +44,7 @@ struct _kcfg_t {
 int kcfg_init();
 int kcfg_final();
 
-kcfg_target_t *kcfg_target_add(const char *name, KCFG_SAVE dosave, KCFG_LOAD doload, KCFG_DELETE dodelete, void *ua, void *ub);
+kcfg_target_s *kcfg_target_add(const char *name, KCFG_SAVE dosave, KCFG_LOAD doload, KCFG_DELETE dodelete, void *ua, void *ub);
 int kcfg_target_del(const char *name);
 
 int kcfg_target_opt_add(const char *name, const char *opt);

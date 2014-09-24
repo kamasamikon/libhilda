@@ -12,16 +12,16 @@ extern "C" {
 #include <hilda/sdlist.h>
 #include <hilda/xtcool.h>
 
-typedef struct _mentry_t mentry_t;
-typedef struct _kmque_t kmque_t;
+typedef struct _mentry_s mentry_s;
+typedef struct _kmque_s kmque_s;
 
 typedef void (*ME_WORKER)(void *ua, void *ub);
 typedef void (*ME_DESTORYER)(void *ua, void *ub);
 
 
-struct _mentry_t {
+struct _mentry_s {
 	/*
-	 * Queue to kmque_t::msg_qhdr or kmque_t::dpc_qhdr for
+	 * Queue to kmque_s::msg_qhdr or kmque_s::dpc_qhdr for
 	 * mentry_delay().
 	 */
 	K_dlist_entry entry;
@@ -41,11 +41,11 @@ struct _mentry_t {
 	/* emit by mentry_send */
 	kbool is_send;
 
-	/* pointer back to kmque_t */
-	kmque_t *mque;
+	/* pointer back to kmque_s */
+	kmque_s *mque;
 };
 
-struct _kmque_t {
+struct _kmque_s {
 	/* Queue HeaDeR for queue message */
 	K_dlist_entry msg_qhdr;
 
@@ -67,22 +67,22 @@ struct _kmque_t {
 	unsigned int dpc_ref;
 };
 
-kmque_t *kmque_new();
-int kmque_del(kmque_t *mque);
+kmque_s *kmque_new();
+int kmque_del(kmque_s *mque);
 
-void kmque_set_quit(kmque_t *mque);
+void kmque_set_quit(kmque_s *mque);
 
-int kmque_peek(kmque_t *mque, mentry_t **retme, int timeout);
-int mentry_send(kmque_t *mque, ME_WORKER worker, void *ua, void *ub);
-int mentry_post(kmque_t *mque, ME_WORKER worker, ME_DESTORYER destoryer,
+int kmque_peek(kmque_s *mque, mentry_s **retme, int timeout);
+int mentry_send(kmque_s *mque, ME_WORKER worker, void *ua, void *ub);
+int mentry_post(kmque_s *mque, ME_WORKER worker, ME_DESTORYER destoryer,
 		void *ua, void *ub);
 
-int mentry_dpc_add(kmque_t *mque, void (*worker)(void *ua, void *ub),
+int mentry_dpc_add(kmque_s *mque, void (*worker)(void *ua, void *ub),
 		void (*destoryer)(void *ua, void *ub), void *ua, void *ub,
 		unsigned int wait);
-int mentry_dpc_kill(kmque_t *mque, unsigned int dpcid);
+int mentry_dpc_kill(kmque_s *mque, unsigned int dpcid);
 
-int kmque_run(kmque_t *mque);
+int kmque_run(kmque_s *mque);
 
 #ifdef __cplusplus
 }

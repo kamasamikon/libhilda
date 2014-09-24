@@ -18,8 +18,8 @@
 #include <hilda/kmodu.h>
 
 /* Control Center of K MODUles */
-typedef struct _kmoducc_t kmoducc_t;
-struct _kmoducc_t {
+typedef struct _kmoducc_s kmoducc_s;
+struct _kmoducc_s {
 	K_dlist_entry modhdr;
 
 	struct {
@@ -32,20 +32,20 @@ struct _kmoducc_t {
 	int ref;
 };
 
-static kmoducc_t *__g_kmoducc;
+static kmoducc_s *__g_kmoducc;
 
-static void setup_opt(kmoducc_t *cc);
-static void add_config_file(kmoducc_t *cc);
-static int module_load(kmoducc_t *cc, const char *path);
+static void setup_opt(kmoducc_s *cc);
+static void add_config_file(kmoducc_s *cc);
+static int module_load(kmoducc_s *cc, const char *path);
 static void module_unload();
-static kmodu_t *lib_load(const char *path);
-static int lib_unload(kmodu_t *mod);
+static kmodu_s *lib_load(const char *path);
+static int lib_unload(kmodu_s *mod);
 static int manual_layout();
 
 static int og_kmodu_diag_dump(void *opt, void *pa, void *pb)
 {
-	kmoducc_t *cc = (kmoducc_t*)kopt_ua(opt);
-	kmodu_t *mod;
+	kmoducc_s *cc = (kmoducc_s*)kopt_ua(opt);
+	kmodu_s *mod;
 	K_dlist_entry *entry;
 	struct strbuf sb;
 
@@ -53,7 +53,7 @@ static int og_kmodu_diag_dump(void *opt, void *pa, void *pb)
 
 	entry = cc->modhdr.next;
 	while (entry != &cc->modhdr) {
-		mod = FIELD_TO_STRUCTURE(entry, kmodu_t, entry);
+		mod = FIELD_TO_STRUCTURE(entry, kmodu_s, entry);
 		entry = entry->next;
 
 		strbuf_addf(&sb, "\r\n---->\r\n  path:%s\r\n  name:%s\r\n  "
@@ -68,7 +68,7 @@ static int og_kmodu_diag_dump(void *opt, void *pa, void *pb)
 	return EC_OK;
 }
 
-static void setup_opt(kmoducc_t *cc)
+static void setup_opt(kmoducc_s *cc)
 {
 	kopt_add("s:/k/modu/diag/dump", NULL, OA_GET, NULL,
 			og_kmodu_diag_dump, NULL, (void*)cc, NULL);
@@ -88,7 +88,7 @@ static void setup_opt(kmoducc_t *cc)
 	kopt_add_s("e:/k/modu/load/mod/done", OA_DFT, NULL, NULL);
 }
 
-static void add_config_file(kmoducc_t *cc)
+static void add_config_file(kmoducc_s *cc)
 {
 	char path[1024];
 
@@ -102,13 +102,13 @@ static void add_config_file(kmoducc_t *cc)
 int kmodu_init(const char *rootdir, const char *dllname,
 		const char *manifestname, const char *optname)
 {
-	kmoducc_t *cc;
+	kmoducc_s *cc;
 
 	if (__g_kmoducc) {
 		__g_kmoducc->ref++;
 		return 0;
 	}
-	cc = __g_kmoducc = (kmoducc_t*)kmem_alloz(1, kmoducc_t);
+	cc = __g_kmoducc = (kmoducc_s*)kmem_alloz(1, kmoducc_s);
 	kdlist_init_head(&cc->modhdr);
 
 	cc->path.root = kstr_dup(rootdir);
@@ -123,7 +123,7 @@ int kmodu_init(const char *rootdir, const char *dllname,
 
 int kmodu_final()
 {
-	kmoducc_t *cc = __g_kmoducc;
+	kmoducc_s *cc = __g_kmoducc;
 
 	kassert(cc);
 
@@ -174,9 +174,9 @@ static int read_manifest(FILE *fp, char name[],
 	return -1;
 }
 
-static int module_load(kmoducc_t *cc, const char *path)
+static int module_load(kmoducc_s *cc, const char *path)
 {
-	kmodu_t *mod = NULL;
+	kmodu_s *mod = NULL;
 	FILE *fp;
 	char tmp[1024], cwd[1024], name[256], ps = kvfs_path_sep();
 	unsigned int enable, version;
@@ -227,7 +227,7 @@ static int module_load(kmoducc_t *cc, const char *path)
 
 int kmodu_load()
 {
-	kmoducc_t *cc = __g_kmoducc;
+	kmoducc_s *cc = __g_kmoducc;
 	kbean fd;
 	char path[1024], ps = kvfs_path_sep();
 	KVFS_FINDDATA fdat;
@@ -259,13 +259,13 @@ int kmodu_load()
 
 static void module_unload()
 {
-	kmoducc_t *cc = __g_kmoducc;
-	kmodu_t *mod;
+	kmoducc_s *cc = __g_kmoducc;
+	kmodu_s *mod;
 	K_dlist_entry *entry;
 
 	entry = cc->modhdr.next;
 	while (entry != &cc->modhdr) {
-		mod = FIELD_TO_STRUCTURE(entry, kmodu_t, entry);
+		mod = FIELD_TO_STRUCTURE(entry, kmodu_s, entry);
 		entry = entry->next;
 
 		kdlist_remove_entry(&mod->entry);
@@ -291,7 +291,7 @@ static int manual_layout()
 {
 	FILE *fp;
 	char *sv = NULL, buf[8192], *uname, *arrow, *dname;
-	knode_t *unode, *dnode;
+	knode_s *unode, *dnode;
 	void *link_dat;
 
 	kopt_getstr("s:/k/modu/layout/path", &sv);
@@ -348,12 +348,12 @@ int kmodu_layout()
 	return ret;
 }
 
-static kmodu_t *lib_load(const char *path)
+static kmodu_s *lib_load(const char *path)
 {
 	void *handle;
 	KMODU_HEY hey;
 	KMODU_BYE bye;
-	kmodu_t *mod;
+	kmodu_s *mod;
 
 	handle = spl_lib_load(path, 0);
 	if (!handle) {
@@ -373,7 +373,7 @@ static kmodu_t *lib_load(const char *path)
 		goto error;
 	}
 
-	mod = (kmodu_t*)kmem_alloz(1, kmodu_t);
+	mod = (kmodu_s*)kmem_alloz(1, kmodu_s);
 	kdlist_init_head(&mod->entry);
 	strcpy(mod->path, path);
 	mod->handle = handle;
@@ -388,7 +388,7 @@ error:
 	return NULL;
 }
 
-static int lib_unload(kmodu_t *mod)
+static int lib_unload(kmodu_s *mod)
 {
 	int ret;
 
