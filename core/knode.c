@@ -17,20 +17,20 @@
 #include <hilda/helper.h>
 
 /* Control Center for knode */
-typedef struct _knodecc_t knodecc_t;
-struct _knodecc_t {
-	knode_t **arr;
+typedef struct _knodecc_s knodecc_s;
+struct _knodecc_s {
+	knode_s **arr;
 	int cnt;
 };
 
-static knodecc_t *__g_knodecc = NULL;
+static knodecc_s *__g_knodecc = NULL;
 
 /* foreach of down stream nodes */
-void knode_push(knode_t *node, void *dat, int len)
+void knode_push(knode_s *node, void *dat, int len)
 {
 	int i;
-	dstr_node_t *tmp;
-	knode_t *tnode;
+	dstr_node_s *tmp;
+	knode_s *tnode;
 
 	for (i = 0; i < node->dstr.cnt; i++) {
 		tmp = &node->dstr.arr[i];
@@ -47,10 +47,10 @@ void knode_push(knode_t *node, void *dat, int len)
 }
 
 /* caller can be NULL or a dummy root for head of chain */
-int knode_link_add(knode_t *unode, knode_t *dnode, void *link_dat)
+int knode_link_add(knode_s *unode, knode_s *dnode, void *link_dat)
 {
 	int i;
-	dstr_node_t *tmp;
+	dstr_node_s *tmp;
 
 	if (!unode || !dnode)
 		return -1;
@@ -70,17 +70,17 @@ int knode_link_add(knode_t *unode, knode_t *dnode, void *link_dat)
 			return 0;
 		}
 
-	ARR_INC(1, unode->dstr.arr, unode->dstr.cnt, dstr_node_t);
+	ARR_INC(1, unode->dstr.arr, unode->dstr.cnt, dstr_node_s);
 	unode->dstr.arr[i].node = dnode;
 	unode->dstr.arr[i].link_dat = link_dat;
 
 	return 0;
 }
 
-int knode_link_del(knode_t *unode, knode_t *dnode)
+int knode_link_del(knode_s *unode, knode_s *dnode)
 {
 	int i;
-	dstr_node_t *tmp;
+	dstr_node_s *tmp;
 
 	if (!unode || !dnode)
 		return -1;
@@ -97,7 +97,7 @@ int knode_link_del(knode_t *unode, knode_t *dnode)
 	return -1;
 }
 
-int knode_link_clr(knode_t *node)
+int knode_link_clr(knode_s *node)
 {
 	int i;
 
@@ -112,11 +112,11 @@ int knode_link_clr(knode_t *node)
 	return 0;
 }
 
-int knode_reg(knode_t *node)
+int knode_reg(knode_s *node)
 {
 	int i;
-	knode_t *tmp;
-	knodecc_t *cc = __g_knodecc;
+	knode_s *tmp;
+	knodecc_s *cc = __g_knodecc;
 
 	node->dstr.arr = 0;
 	node->dstr.cnt = 0;
@@ -137,17 +137,17 @@ int knode_reg(knode_t *node)
 			return 0;
 		}
 
-	ARR_INC(1, cc->arr, cc->cnt, knode_t*);
+	ARR_INC(1, cc->arr, cc->cnt, knode_s*);
 	cc->arr[i] = node;
 	klog("%s success.\n", node->name);
 	return 0;
 }
 
-int knode_unreg(knode_t *node)
+int knode_unreg(knode_s *node)
 {
 	int i;
-	knode_t *tmp;
-	knodecc_t *cc = __g_knodecc;
+	knode_s *tmp;
+	knodecc_s *cc = __g_knodecc;
 
 	for (i = 0; i < cc->cnt; i++) {
 		tmp = cc->arr[i];
@@ -161,15 +161,15 @@ int knode_unreg(knode_t *node)
 	return -1;
 }
 
-static int sort_node(knode_t **arr, int cnt)
+static int sort_node(knode_s **arr, int cnt)
 {
 	int i, j, k, swaps = 0;
-	knode_t *tmp_i, *tmp_j;
-	knode_t **bak = kmem_alloc(cnt, knode_t*);
+	knode_s *tmp_i, *tmp_j;
+	knode_s **bak = kmem_alloc(cnt, knode_s*);
 
 	int my_pos, ds_pos;
 
-	memcpy(bak, arr, sizeof(knode_t*) * cnt);
+	memcpy(bak, arr, sizeof(knode_s*) * cnt);
 
 	for (i = 0; i < cnt; i++) {
 		tmp_i = bak[i];
@@ -197,7 +197,7 @@ static int sort_node(knode_t **arr, int cnt)
 
 			tmp_j = arr[my_pos];
 			memmove(&arr[ds_pos + 1], &arr[ds_pos],
-					sizeof(knode_t*) * (my_pos - ds_pos));
+					sizeof(knode_s*) * (my_pos - ds_pos));
 			arr[ds_pos] = tmp_j;
 		}
 	}
@@ -210,11 +210,11 @@ static int sort_node(knode_t **arr, int cnt)
 	return 0;
 }
 
-static int knode_link_internal(knode_t *node)
+static int knode_link_internal(knode_s *node)
 {
 	int i;
-	knode_t *dstr;
-	knodecc_t *cc = __g_knodecc;
+	knode_s *dstr;
+	knodecc_s *cc = __g_knodecc;
 	void *link_dat;
 
 	/* setup the chain */
@@ -233,9 +233,9 @@ static int knode_link_internal(knode_t *node)
 }
 
 
-int knode_link(knode_t *node)
+int knode_link(knode_s *node)
 {
-	knodecc_t *cc = __g_knodecc;
+	knodecc_s *cc = __g_knodecc;
 
 	knode_link_internal(node);
 	sort_node(cc->arr, cc->cnt);
@@ -248,11 +248,11 @@ int knode_link(knode_t *node)
  * Name can be reguler name for index name #ddd,
  * e.g #1 or #-2 etc.
  */
-knode_t *knode_find(const char *name)
+knode_s *knode_find(const char *name)
 {
 	int i, index;
-	knode_t *tmp;
-	knodecc_t *cc = __g_knodecc;
+	knode_s *tmp;
+	knodecc_s *cc = __g_knodecc;
 
 	if (!name || !cc->cnt)
 		return NULL;
@@ -273,8 +273,8 @@ knode_t *knode_find(const char *name)
 int knode_foreach(KNODE_FOREACH foreach, void *ua, void *ub)
 {
 	int i;
-	knode_t *tmp;
-	knodecc_t *cc = __g_knodecc;
+	knode_s *tmp;
+	knodecc_s *cc = __g_knodecc;
 
 	for (i = 0; i < cc->cnt; i++) {
 		tmp = cc->arr[i];
@@ -285,7 +285,7 @@ int knode_foreach(KNODE_FOREACH foreach, void *ua, void *ub)
 	return 0;
 }
 
-static int do_dump(knode_t *node, void *ua, void *ub)
+static int do_dump(knode_s *node, void *ua, void *ub)
 {
 	int i;
 	struct strbuf *sb = (struct strbuf*)ua;
@@ -317,7 +317,7 @@ static int os_knode_cmd(int ses, void *opt, void *pa, void *pb)
 {
 	char *name = kopt_get_new_str(opt);
 	char type = (char)(int)kopt_ua(opt);
-	knode_t *node;
+	knode_s *node;
 	int ret;
 
 	if (name && !strcmp(name, "*")) {
@@ -360,7 +360,7 @@ static int os_knode_cmd(int ses, void *opt, void *pa, void *pb)
 
 void *knode_attach(void *knodecc)
 {
-	__g_knodecc = (knodecc_t*)knodecc;
+	__g_knodecc = (knodecc_s*)knodecc;
 
 	return (void*)__g_knodecc;
 }
@@ -392,7 +392,7 @@ void *knode_init(int argc, char *argv[])
 	if (__g_knodecc)
 		return (void*)__g_knodecc;
 
-	__g_knodecc = (knodecc_t*)kmem_alloz(1, knodecc_t);
+	__g_knodecc = (knodecc_s*)kmem_alloz(1, knodecc_s);
 	setup_opt();
 	return (void*)__g_knodecc;
 }
@@ -406,7 +406,7 @@ int knode_final()
 	return 0;
 }
 
-int knode_call_start(knode_t *node)
+int knode_call_start(knode_s *node)
 {
 	int ret = 0;
 
@@ -424,8 +424,8 @@ int knode_call_start(knode_t *node)
 int knode_foreach_start()
 {
 	int i;
-	knode_t *tmp;
-	knodecc_t *cc = __g_knodecc;
+	knode_s *tmp;
+	knodecc_s *cc = __g_knodecc;
 
 	for (i = cc->cnt; i >= 0; i--) {
 		tmp = cc->arr[i];
@@ -436,7 +436,7 @@ int knode_foreach_start()
 	return 0;
 }
 
-int knode_call_stop(knode_t *node)
+int knode_call_stop(knode_s *node)
 {
 	int ret = 0;
 
@@ -454,8 +454,8 @@ int knode_call_stop(knode_t *node)
 int knode_foreach_stop()
 {
 	int i;
-	knode_t *tmp;
-	knodecc_t *cc = __g_knodecc;
+	knode_s *tmp;
+	knodecc_s *cc = __g_knodecc;
 
 	for (i = 0; i < cc->cnt; i++) {
 		tmp = cc->arr[i];
@@ -466,7 +466,7 @@ int knode_foreach_stop()
 	return 0;
 }
 
-int knode_call_pause(knode_t *node)
+int knode_call_pause(knode_s *node)
 {
 	int ret = 0;
 
@@ -484,8 +484,8 @@ int knode_call_pause(knode_t *node)
 int knode_foreach_pause()
 {
 	int i;
-	knode_t *tmp;
-	knodecc_t *cc = __g_knodecc;
+	knode_s *tmp;
+	knodecc_s *cc = __g_knodecc;
 
 	for (i = 0; i < cc->cnt; i++) {
 		tmp = cc->arr[i];
@@ -496,7 +496,7 @@ int knode_foreach_pause()
 	return 0;
 }
 
-int knode_call_resume(knode_t *node)
+int knode_call_resume(knode_s *node)
 {
 	int ret = 0;
 
@@ -517,8 +517,8 @@ int knode_call_resume(knode_t *node)
 int knode_foreach_resume()
 {
 	int i;
-	knode_t *tmp;
-	knodecc_t *cc = __g_knodecc;
+	knode_s *tmp;
+	knodecc_s *cc = __g_knodecc;
 
 	for (i = cc->cnt; i >= 0; i--) {
 		tmp = cc->arr[i];

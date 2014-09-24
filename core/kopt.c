@@ -73,11 +73,11 @@
 /* XXX */
 /* / : = */
 /* - */
-typedef struct _optcc_t optcc_t;
-typedef struct _opt_watch_t kopt_watch_t;
-typedef struct _opt_entry_t kopt_entry_t;
+typedef struct _optcc_s optcc_s;
+typedef struct _opt_watch_s kopt_watch_s;
+typedef struct _opt_entry_s kopt_entry_s;
 
-struct _opt_watch_t {
+struct _opt_watch_s {
 	/** queue to bwchhdr/awchhdr */
 	K_dlist_entry entry;
 
@@ -95,8 +95,8 @@ struct _opt_watch_t {
 	unsigned int wch_cnt;
 };
 
-struct _opt_entry_t {
-	/** _optcc_t::oehdr */
+struct _opt_entry_s {
+	/** _optcc_s::oehdr */
 	K_dlist_entry entry;
 
 	char *path;
@@ -122,7 +122,7 @@ struct _opt_entry_t {
 		/* cur is copy */
 		union {
 			struct {
-				/* maintain other _opt_entry_t */
+				/* maintain other _opt_entry_s */
 				/* kvfmt: [path1,path2,path3] */
 				char **v;
 				int l;
@@ -149,7 +149,7 @@ struct _opt_entry_t {
 		/* new is ref */
 		union {
 			struct {
-				/* maintain other _opt_entry_t */
+				/* maintain other _opt_entry_s */
 				/* kvfmt: [path1,path2,path3] */
 				char **v;
 				int l;
@@ -184,7 +184,7 @@ struct _opt_entry_t {
 };
 
 /* Control Center for OPT */
-struct _optcc_t {
+struct _optcc_s {
 	/** Opt Entry Header */
 	K_dlist_entry oehdr;
 
@@ -210,7 +210,7 @@ struct _optcc_t {
 	} err;
 };
 
-#define KOPT_TYPE(oe) ((kopt_entry_t*)(oe))->type
+#define KOPT_TYPE(oe) ((kopt_entry_s*)(oe))->type
 
 #define RET_IF_NOT_INT() do { \
 	if ('i' != oe->type && 'b' != oe->type && 'e' != oe->type) { \
@@ -280,23 +280,23 @@ struct _optcc_t {
 } while (0)
 
 
-static optcc_t *__g_optcc = NULL;
+static optcc_s *__g_optcc = NULL;
 
-static int entry_del(kopt_entry_t *oe);
-static kinline kopt_entry_t *entry_find(const char *path);
+static int entry_del(kopt_entry_s *oe);
+static kinline kopt_entry_s *entry_find(const char *path);
 
-static int setint(int ses, kopt_entry_t *oe, void *pa, void *pb, int v_int);
-static int setptr(int ses, kopt_entry_t *oe, void *pa, void *pb, void *v_ptr);
-static int setstr(int ses, kopt_entry_t *oe, void *pa, void *pb, char *v_str);
-static int setdat(int ses, kopt_entry_t *oe, void *pa, void *pb,
+static int setint(int ses, kopt_entry_s *oe, void *pa, void *pb, int v_int);
+static int setptr(int ses, kopt_entry_s *oe, void *pa, void *pb, void *v_ptr);
+static int setstr(int ses, kopt_entry_s *oe, void *pa, void *pb, char *v_str);
+static int setdat(int ses, kopt_entry_s *oe, void *pa, void *pb,
 		const char *v_dat, int len);
-static int setarr(int ses, kopt_entry_t *oe, void *pa, void *pb,
+static int setarr(int ses, kopt_entry_s *oe, void *pa, void *pb,
 		const char **v_arr, int len);
 
-static int getint(kopt_entry_t *oe, void *pa, void *pb, int *v_int);
-static int getstr(kopt_entry_t *oe, void *pa, void *pb, char **v_str);
-static int getptr(kopt_entry_t *oe, void *pa, void *pb, void **v_ptr);
-static int getdat(kopt_entry_t *oe, void *pa, void *pb, char **v_dat, int *len);
+static int getint(kopt_entry_s *oe, void *pa, void *pb, int *v_int);
+static int getstr(kopt_entry_s *oe, void *pa, void *pb, char **v_str);
+static int getptr(kopt_entry_s *oe, void *pa, void *pb, void **v_ptr);
+static int getdat(kopt_entry_s *oe, void *pa, void *pb, char **v_dat, int *len);
 
 /*-----------------------------------------------------------------------
  * kinline functions
@@ -305,34 +305,34 @@ static int getdat(kopt_entry_t *oe, void *pa, void *pb, char **v_dat, int *len);
 /* normal access */
 kinline char *kopt_path(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->path;
+	return ((kopt_entry_s*)(oe))->path;
 }
 kinline char *kopt_desc(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->desc;
+	return ((kopt_entry_s*)(oe))->desc;
 }
 
 kinline void *kopt_ua(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->ua;
+	return ((kopt_entry_s*)(oe))->ua;
 }
 kinline void *kopt_ub(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->ub;
+	return ((kopt_entry_s*)(oe))->ub;
 }
 
 kinline int kopt_get_setpa(void *oe, void **pa)
 {
-	if (kflg_chk_any(((kopt_entry_t*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH | OA_IN_SET)) {
-		*pa = ((kopt_entry_t*)oe)->set_pa;
+	if (kflg_chk_any(((kopt_entry_s*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH | OA_IN_SET)) {
+		*pa = ((kopt_entry_s*)oe)->set_pa;
 		return 0;
 	}
 	return -1;
 }
 kinline int kopt_get_setpb(void *oe, void **pb)
 {
-	if (kflg_chk_any(((kopt_entry_t*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH | OA_IN_SET)) {
-		*pb = ((kopt_entry_t*)oe)->set_pb;
+	if (kflg_chk_any(((kopt_entry_s*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH | OA_IN_SET)) {
+		*pb = ((kopt_entry_s*)oe)->set_pb;
 		return 0;
 	}
 	return -1;
@@ -340,80 +340,80 @@ kinline int kopt_get_setpb(void *oe, void **pb)
 
 kinline char **kopt_get_cur_arr(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.cur.a.v;
+	return ((kopt_entry_s*)(oe))->v.cur.a.v;
 }
 kinline int kopt_get_cur_arr_len(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.cur.a.l;
+	return ((kopt_entry_s*)(oe))->v.cur.a.l;
 }
 kinline void *kopt_get_cur_dat(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.cur.d.v;
+	return ((kopt_entry_s*)(oe))->v.cur.d.v;
 }
 kinline int kopt_get_cur_dat_len(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.cur.d.l;
+	return ((kopt_entry_s*)(oe))->v.cur.d.l;
 }
 kinline int kopt_get_cur_int(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.cur.i.v;
+	return ((kopt_entry_s*)(oe))->v.cur.i.v;
 }
 kinline char *kopt_get_cur_str(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.cur.s.v;
+	return ((kopt_entry_s*)(oe))->v.cur.s.v;
 }
 kinline void *kopt_get_cur_ptr(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.cur.p.v;
+	return ((kopt_entry_s*)(oe))->v.cur.p.v;
 }
 
 kinline char **kopt_get_new_arr(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.new.a.v;
+	return ((kopt_entry_s*)(oe))->v.new.a.v;
 }
 kinline int kopt_get_new_arr_len(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.new.a.l;
+	return ((kopt_entry_s*)(oe))->v.new.a.l;
 }
 kinline void *kopt_get_new_dat(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.new.d.v;
+	return ((kopt_entry_s*)(oe))->v.new.d.v;
 }
 kinline int kopt_get_new_dat_len(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.new.d.l;
+	return ((kopt_entry_s*)(oe))->v.new.d.l;
 }
 kinline int kopt_get_new_int(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.new.i.v;
+	return ((kopt_entry_s*)(oe))->v.new.i.v;
 }
 kinline char *kopt_get_new_str(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.new.s.v;
+	return ((kopt_entry_s*)(oe))->v.new.s.v;
 }
 kinline void *kopt_get_new_ptr(void *oe)
 {
-	return ((kopt_entry_t*)(oe))->v.new.p.v;
+	return ((kopt_entry_s*)(oe))->v.new.p.v;
 }
 
 kinline void *kopt_wch_path(void *ow)
 {
-	return ((kopt_watch_t*)(ow))->path;
+	return ((kopt_watch_s*)(ow))->path;
 }
 
 kinline void *kopt_wch_ua(void *ow)
 {
-	return ((kopt_watch_t*)(ow))->ua;
+	return ((kopt_watch_s*)(ow))->ua;
 }
 
 kinline void *kopt_wch_ub(void *ow)
 {
-	return ((kopt_watch_t*)(ow))->ub;
+	return ((kopt_watch_s*)(ow))->ub;
 }
 
 kinline int kopt_set_cur_arr(void *oe, char **v_arr, int len)
 {
-	kopt_entry_t *e = (kopt_entry_t*)oe;
+	kopt_entry_s *e = (kopt_entry_s*)oe;
 
 	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
 		kmem_free_sz(e->v.cur.a.v);
@@ -432,7 +432,7 @@ kinline int kopt_set_cur_arr(void *oe, char **v_arr, int len)
 
 kinline int kopt_set_cur_dat(void *oe, char *v_dat, int len)
 {
-	kopt_entry_t *e = (kopt_entry_t*)oe;
+	kopt_entry_s *e = (kopt_entry_s*)oe;
 
 	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
 		kmem_free_sz(e->v.cur.d.v);
@@ -451,7 +451,7 @@ kinline int kopt_set_cur_dat(void *oe, char *v_dat, int len)
 
 kinline int kopt_set_cur_int(void *oe, int v_int)
 {
-	kopt_entry_t *e = (kopt_entry_t*)oe;
+	kopt_entry_s *e = (kopt_entry_s*)oe;
 
 	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
 		e->v.cur.i.v = v_int;
@@ -462,7 +462,7 @@ kinline int kopt_set_cur_int(void *oe, int v_int)
 
 kinline int kopt_set_cur_str(void *oe, char *v_str)
 {
-	kopt_entry_t *e = (kopt_entry_t*)oe;
+	kopt_entry_s *e = (kopt_entry_s*)oe;
 
 	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
 		kmem_free_sz(e->v.cur.s.v);
@@ -474,7 +474,7 @@ kinline int kopt_set_cur_str(void *oe, char *v_str)
 
 kinline int kopt_set_cur_ptr(void *oe, void *v_ptr)
 {
-	kopt_entry_t *e = (kopt_entry_t*)oe;
+	kopt_entry_s *e = (kopt_entry_s*)oe;
 
 	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
 		e->v.cur.p.v = v_ptr;
@@ -485,7 +485,7 @@ kinline int kopt_set_cur_ptr(void *oe, void *v_ptr)
 
 void kopt_set_err(int no, const char *msg)
 {
-	optcc_t *cc = __g_optcc;
+	optcc_s *cc = __g_optcc;
 	SPL_HANDLE curtsk = spl_thread_current();
 	int i, arrlen = sizeof(cc->err.arr) / sizeof(cc->err.arr[0]);
 
@@ -516,7 +516,7 @@ void kopt_set_err(int no, const char *msg)
 
 int kopt_get_err(int *no, char **msg)
 {
-	optcc_t *cc = __g_optcc;
+	optcc_s *cc = __g_optcc;
 	SPL_HANDLE curtsk = spl_thread_current();
 	int i, arrlen = sizeof(cc->err.arr) / sizeof(cc->err.arr[0]);
 
@@ -645,17 +645,17 @@ char *kopt_pack_kv(const char **k, const char **v)
 
 /* user data for setxx */
 
-static kinline kopt_entry_t *entry_find(const char *path)
+static kinline kopt_entry_s *entry_find(const char *path)
 {
 	K_dlist_entry *entry;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	if (!path || !__g_optcc)
 		return NULL;
 
 	entry = __g_optcc->oehdr.next;
 	while (entry != &__g_optcc->oehdr) {
-		oe = FIELD_TO_STRUCTURE(entry, kopt_entry_t, entry);
+		oe = FIELD_TO_STRUCTURE(entry, kopt_entry_s, entry);
 		entry = entry->next;
 
 		if (0 == strcmp(path, oe->path))
@@ -737,7 +737,7 @@ static char *dat_to_str(char *dat, int len)
 
 int kopt_getini_by_opt(void *opt, char **ret)
 {
-	kopt_entry_t *oe = (kopt_entry_t*)opt;
+	kopt_entry_s *oe = (kopt_entry_s*)opt;
 	int err = EC_NG, v_int, dlen;
 	char *v_str, *v_dat;
 	void *v_ptr;
@@ -795,7 +795,7 @@ int kopt_getini_by_opt(void *opt, char **ret)
  */
 int kopt_getini(const char *path, char **ret)
 {
-	kopt_entry_t *oe = entry_find(path);
+	kopt_entry_s *oe = entry_find(path);
 	int err = EC_NG;
 
 	*ret = NULL;
@@ -814,10 +814,10 @@ int kopt_getini(const char *path, char **ret)
 	return err;
 }
 
-static void sync_from_nylist(kopt_entry_t *oe)
+static void sync_from_nylist(kopt_entry_s *oe)
 {
 	K_dlist_entry *entry;
-	kopt_watch_t *wch;
+	kopt_watch_s *wch;
 	char *path;
 
 	if (!(oe->attr & OA_WCH))
@@ -826,7 +826,7 @@ static void sync_from_nylist(kopt_entry_t *oe)
 	path = oe->path;
 	entry = __g_optcc->nywch.ahdr.next;
 	while (entry != &__g_optcc->nywch.ahdr) {
-		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
+		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_s, entry);
 		entry = entry->next;
 		if (!strcmp(wch->path, path)) {
 			kdlist_remove_entry(&wch->entry);
@@ -836,7 +836,7 @@ static void sync_from_nylist(kopt_entry_t *oe)
 	}
 	entry = __g_optcc->nywch.bhdr.next;
 	while (entry != &__g_optcc->nywch.bhdr) {
-		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
+		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_s, entry);
 		entry = entry->next;
 		if (!strcmp(wch->path, path)) {
 			kdlist_remove_entry(&wch->entry);
@@ -855,7 +855,7 @@ int kopt_new(const char *path, const char *desc, unsigned int attr,
 		KOPT_SETTER setter, KOPT_GETTER getter, KOPT_DELTER delter,
 		void *ua, void *ub)
 {
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -873,7 +873,7 @@ int kopt_new(const char *path, const char *desc, unsigned int attr,
 		return EC_NOTFOUND;
 	}
 
-	oe = (kopt_entry_t*)kmem_alloz(1, kopt_entry_t);
+	oe = (kopt_entry_s*)kmem_alloz(1, kopt_entry_s);
 
 	oe->ua = ua;
 	oe->ub = ub;
@@ -898,14 +898,14 @@ int kopt_new(const char *path, const char *desc, unsigned int attr,
 	return EC_OK;
 }
 
-static void pushback_nylist(kopt_entry_t *oe)
+static void pushback_nylist(kopt_entry_s *oe)
 {
 	K_dlist_entry *entry;
-	kopt_watch_t *wch;
+	kopt_watch_s *wch;
 
 	entry = oe->awchhdr.next;
 	while (entry != &oe->awchhdr) {
-		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
+		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_s, entry);
 		entry = entry->next;
 
 		kdlist_remove_entry(&wch->entry);
@@ -914,7 +914,7 @@ static void pushback_nylist(kopt_entry_t *oe)
 
 	entry = oe->bwchhdr.next;
 	while (entry != &oe->bwchhdr) {
-		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
+		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_s, entry);
 		entry = entry->next;
 
 		kdlist_remove_entry(&wch->entry);
@@ -922,7 +922,7 @@ static void pushback_nylist(kopt_entry_t *oe)
 	}
 }
 
-static void free_opt_val(kopt_entry_t *oe)
+static void free_opt_val(kopt_entry_s *oe)
 {
 	switch (KOPT_TYPE(oe)) {
 	case 'a':
@@ -946,7 +946,7 @@ static void free_opt_val(kopt_entry_t *oe)
 	}
 }
 
-static int entry_del(kopt_entry_t *oe)
+static int entry_del(kopt_entry_s *oe)
 {
 	kflg_set(oe->attr, OA_IN_DEL);
 
@@ -968,7 +968,7 @@ static int entry_del(kopt_entry_t *oe)
 
 int kopt_del(const char *path)
 {
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -995,7 +995,7 @@ int kopt_del(const char *path)
  */
 int kopt_type(const char *path)
 {
-	kopt_entry_t *oe = entry_find(path);
+	kopt_entry_s *oe = entry_find(path);
 
 	if (oe)
 		return KOPT_TYPE(oe);
@@ -1004,15 +1004,15 @@ int kopt_type(const char *path)
 	return -1;
 }
 
-static void call_watch(int ses, kopt_entry_t *oe,
+static void call_watch(int ses, kopt_entry_s *oe,
 		K_dlist_entry *wchhdr, int awch)
 {
 	K_dlist_entry *entry;
-	kopt_watch_t *ow = NULL;
+	kopt_watch_s *ow = NULL;
 
 	entry = wchhdr->next;
 	while (entry != wchhdr) {
-		ow = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
+		ow = FIELD_TO_STRUCTURE(entry, kopt_watch_s, entry);
 		entry = entry->next;
 
 		if (ow->wch) {
@@ -1104,7 +1104,7 @@ static kinline int parse_ptr(const char *v, void **ret)
 int kopt_setkv(int ses, const char *k, const char *v)
 {
 	int ret = 0, l, iv;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 	char **a;
 	char *d;
 	void *pv;
@@ -1184,7 +1184,7 @@ int kopt_setkv(int ses, const char *k, const char *v)
  * \retval -2 not allowed
  * \retval -.
  */
-static int setint(int ses, kopt_entry_t *oe, void *pa, void *pb, int v_int)
+static int setint(int ses, kopt_entry_s *oe, void *pa, void *pb, int v_int)
 {
 	int ret = 0;
 
@@ -1225,7 +1225,7 @@ static int setint(int ses, kopt_entry_t *oe, void *pa, void *pb, int v_int)
 int kopt_setint_sp(int ses, const char *path, void *pa, void *pb, int v_int)
 {
 	int ret = -1;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -1241,7 +1241,7 @@ int kopt_setint_sp(int ses, const char *path, void *pa, void *pb, int v_int)
 	return ret;
 }
 
-static int getint(kopt_entry_t *oe, void *pa, void *pb, int *v_int)
+static int getint(kopt_entry_s *oe, void *pa, void *pb, int *v_int)
 {
 	int ret = 0;
 
@@ -1271,7 +1271,7 @@ static int getint(kopt_entry_t *oe, void *pa, void *pb, int *v_int)
 int kopt_getint_p(const char *path, void *pa, void *pb, int *v_int)
 {
 	int ret = -1;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -1297,7 +1297,7 @@ int kopt_getint_p(const char *path, void *pa, void *pb, int *v_int)
  * \retval -2 not allowed
  * \retval -.
  */
-static int setptr(int ses, kopt_entry_t *oe, void *pa, void *pb, void *v_ptr)
+static int setptr(int ses, kopt_entry_s *oe, void *pa, void *pb, void *v_ptr)
 {
 	int ret = 0;
 
@@ -1331,7 +1331,7 @@ static int setptr(int ses, kopt_entry_t *oe, void *pa, void *pb, void *v_ptr)
 int kopt_setptr_sp(int ses, const char *path, void *pa, void *pb, void *v_ptr)
 {
 	int ret = -1;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -1347,7 +1347,7 @@ int kopt_setptr_sp(int ses, const char *path, void *pa, void *pb, void *v_ptr)
 	return ret;
 }
 
-static int getptr(kopt_entry_t *oe, void *pa, void *pb, void **v_ptr)
+static int getptr(kopt_entry_s *oe, void *pa, void *pb, void **v_ptr)
 {
 	int ret = 0;
 
@@ -1377,7 +1377,7 @@ static int getptr(kopt_entry_t *oe, void *pa, void *pb, void **v_ptr)
 int kopt_getptr_p(const char *path, void *pa, void *pb, void **v_ptr)
 {
 	int ret = -1;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -1403,7 +1403,7 @@ int kopt_getptr_p(const char *path, void *pa, void *pb, void **v_ptr)
  * \retval -2 not allowed
  * \retval -.
  */
-static int setstr(int ses, kopt_entry_t *oe, void *pa, void *pb, char *v_str)
+static int setstr(int ses, kopt_entry_s *oe, void *pa, void *pb, char *v_str)
 {
 	int ret = 0;
 
@@ -1444,7 +1444,7 @@ static int setstr(int ses, kopt_entry_t *oe, void *pa, void *pb, char *v_str)
 int kopt_setstr_sp(int ses, const char *path, void *pa, void *pb, char *v_str)
 {
 	int ret = -1;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -1460,7 +1460,7 @@ int kopt_setstr_sp(int ses, const char *path, void *pa, void *pb, char *v_str)
 	return ret;
 }
 
-static int getstr(kopt_entry_t *oe, void *pa, void *pb, char **v_str)
+static int getstr(kopt_entry_s *oe, void *pa, void *pb, char **v_str)
 {
 	int ret = 0;
 
@@ -1490,7 +1490,7 @@ static int getstr(kopt_entry_t *oe, void *pa, void *pb, char **v_str)
 int kopt_getstr_p(const char *path, void *pa, void *pb, char **v_str)
 {
 	int ret = -1;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -1506,7 +1506,7 @@ int kopt_getstr_p(const char *path, void *pa, void *pb, char **v_str)
 	return ret;
 }
 
-static int setarr(int ses, kopt_entry_t *oe,
+static int setarr(int ses, kopt_entry_s *oe,
 		void *pa, void *pb, const char **v_arr, int len)
 {
 	int ret = 0;
@@ -1550,7 +1550,7 @@ int kopt_setarr_sp(int ses, const char *path,
 		void *pa, void *pb, const char **v_arr, int len)
 {
 	int ret = -1;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -1571,7 +1571,7 @@ int kopt_getarr_p(const char *path, void *pa, void *pb, void **arr, int *len)
 	return EC_OK;
 }
 
-static int setdat(int ses, kopt_entry_t *oe,
+static int setdat(int ses, kopt_entry_s *oe,
 		void *pa, void *pb, const char *v_dat, int len)
 {
 	int ret = 0;
@@ -1620,7 +1620,7 @@ int kopt_setdat_sp(int ses, const char *path,
 		void *pa, void *pb, const char *v_dat, int len)
 {
 	int ret = -1;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -1636,7 +1636,7 @@ int kopt_setdat_sp(int ses, const char *path,
 	return ret;
 }
 
-static int getdat(kopt_entry_t *oe, void *pa, void *pb, char **v_dat, int *len)
+static int getdat(kopt_entry_s *oe, void *pa, void *pb, char **v_dat, int *len)
 {
 	int ret = 0;
 
@@ -1667,7 +1667,7 @@ static int getdat(kopt_entry_t *oe, void *pa, void *pb, char **v_dat, int *len)
 int kopt_getdat_p(const char *path, void *pa, void *pb, char **v_dat, int *len)
 {
 	int ret = -1;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -1687,13 +1687,13 @@ int kopt_getdat_p(const char *path, void *pa, void *pb, char **v_dat, int *len)
 int kopt_foreach(const char *pattern, KOPT_FOREACH foreach, void *userdata)
 {
 	K_dlist_entry *entry;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
 	entry = __g_optcc->oehdr.next;
 	while (entry != &__g_optcc->oehdr) {
-		oe = FIELD_TO_STRUCTURE(entry, kopt_entry_t, entry);
+		oe = FIELD_TO_STRUCTURE(entry, kopt_entry_s, entry);
 		entry = entry->next;
 
 		/* FIXME: apply pattern */
@@ -1704,7 +1704,7 @@ int kopt_foreach(const char *pattern, KOPT_FOREACH foreach, void *userdata)
 	return EC_OK;
 }
 
-static void queue_watch(kopt_entry_t *oe, kopt_watch_t *ow, int awch)
+static void queue_watch(kopt_entry_s *oe, kopt_watch_s *ow, int awch)
 {
 	K_dlist_entry *hdr;
 
@@ -1734,8 +1734,8 @@ static void queue_watch(kopt_entry_t *oe, kopt_watch_t *ow, int awch)
 void *kopt_wch_new(const char *path, KOPT_WATCH wch,
 		void *ua, void *ub, int awch)
 {
-	kopt_entry_t *oe;
-	kopt_watch_t *ow;
+	kopt_entry_s *oe;
+	kopt_watch_s *ow;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -1747,7 +1747,7 @@ void *kopt_wch_new(const char *path, KOPT_WATCH wch,
 	}
 
 	oe = entry_find(path);
-	ow = (kopt_watch_t*)kmem_alloz(1, kopt_watch_t);
+	ow = (kopt_watch_s*)kmem_alloz(1, kopt_watch_s);
 	ow->path = kstr_dup(path);
 	ow->wch = wch;
 	ow->ua = ua;
@@ -1761,7 +1761,7 @@ void *kopt_wch_new(const char *path, KOPT_WATCH wch,
 
 int kopt_wch_del(void *wch)
 {
-	kopt_watch_t *ow = (kopt_watch_t*)wch;
+	kopt_watch_s *ow = (kopt_watch_s*)wch;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -1801,7 +1801,7 @@ static int og_diag_list(void *opt, void *pa, void *pb)
 static void diag_dump_foreach(void *opt, const char *path, void *userdata)
 {
 	struct strbuf *sb = (struct strbuf*)userdata;
-	kopt_entry_t *oe = (kopt_entry_t*)opt;
+	kopt_entry_s *oe = (kopt_entry_s*)opt;
 	int err, reti;
 	void *retp;
 	char *rets;
@@ -1865,7 +1865,7 @@ static int og_diag_dump(void *opt, void *pa, void *pb)
 static int og_diag_wch_notyet(void *opt, void *pa, void *pb)
 {
 	K_dlist_entry *entry;
-	kopt_watch_t *wch;
+	kopt_watch_s *wch;
 	struct strbuf sb;
 
 	strbuf_init(&sb, 4096);
@@ -1873,7 +1873,7 @@ static int og_diag_wch_notyet(void *opt, void *pa, void *pb)
 	strbuf_addf(&sb, "nywch.ahdr:\n");
 	entry = __g_optcc->nywch.ahdr.next;
 	while (entry != &__g_optcc->nywch.ahdr) {
-		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
+		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_s, entry);
 		entry = entry->next;
 
 		strbuf_addf(&sb, "%s\n", wch->path);
@@ -1882,7 +1882,7 @@ static int og_diag_wch_notyet(void *opt, void *pa, void *pb)
 	strbuf_addf(&sb, "\nnywch.bhdr:\n");
 	entry = __g_optcc->nywch.bhdr.next;
 	while (entry != &__g_optcc->nywch.bhdr) {
-		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
+		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_s, entry);
 		entry = entry->next;
 
 		strbuf_addf(&sb, "%s\n", wch->path);
@@ -1896,7 +1896,7 @@ static int og_diag_wch_notyet(void *opt, void *pa, void *pb)
 
 void *kopt_attach(void *logcc)
 {
-	__g_optcc = (optcc_t*)logcc;
+	__g_optcc = (optcc_s*)logcc;
 
 	return (void*)__g_optcc;
 }
@@ -1910,7 +1910,7 @@ void *kopt_init(int argc, char *argv[])
 	if (__g_optcc)
 		return (void*)__g_optcc;
 
-	__g_optcc = (optcc_t*)kmem_alloz(1, optcc_t);
+	__g_optcc = (optcc_s*)kmem_alloz(1, optcc_s);
 	kdlist_init_head(&__g_optcc->oehdr);
 	kdlist_init_head(&__g_optcc->nywch.bhdr);
 	kdlist_init_head(&__g_optcc->nywch.ahdr);
@@ -1942,11 +1942,11 @@ void *kopt_init(int argc, char *argv[])
 static void delete_watch()
 {
 	K_dlist_entry *entry;
-	kopt_watch_t *ow;
+	kopt_watch_s *ow;
 
 	entry = __g_optcc->nywch.bhdr.next;
 	while (entry != &__g_optcc->nywch.bhdr) {
-		ow = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
+		ow = FIELD_TO_STRUCTURE(entry, kopt_watch_s, entry);
 		entry = entry->next;
 
 		kopt_wch_del((void*)ow);
@@ -1954,7 +1954,7 @@ static void delete_watch()
 
 	entry = __g_optcc->nywch.ahdr.next;
 	while (entry != &__g_optcc->nywch.ahdr) {
-		ow = FIELD_TO_STRUCTURE(entry, kopt_watch_t, entry);
+		ow = FIELD_TO_STRUCTURE(entry, kopt_watch_s, entry);
 		entry = entry->next;
 
 		kopt_wch_del((void*)ow);
@@ -1965,11 +1965,11 @@ static void delete_watch()
 static void delete_entries()
 {
 	K_dlist_entry *entry;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	entry = __g_optcc->oehdr.next;
 	while (entry != &__g_optcc->oehdr) {
-		oe = FIELD_TO_STRUCTURE(entry, kopt_entry_t, entry);
+		oe = FIELD_TO_STRUCTURE(entry, kopt_entry_s, entry);
 		entry = entry->next;
 
 		entry_del(oe);
@@ -2014,7 +2014,7 @@ int kopt_session_start()
 int kopt_session_commit(int ses, int cancel, int *reterr)
 {
 	int ret = -1;
-	kopt_entry_t *oe;
+	kopt_entry_s *oe;
 
 	/* spl_lck_get(__g_optcc->lck); */
 
@@ -2036,7 +2036,7 @@ int kopt_session_commit(int ses, int cancel, int *reterr)
 
 void kopt_session_set_err(void *opt, int error)
 {
-	kopt_entry_t *oe = (kopt_entry_t*)opt;
+	kopt_entry_s *oe = (kopt_entry_s*)opt;
 
 	if (oe->ses && !strcmp("i:/k/opt/session/done", oe->path)) {
 		int curerr = (int)oe->ub;

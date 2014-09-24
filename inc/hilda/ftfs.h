@@ -20,14 +20,14 @@ extern "C" {
  *
  * \param dat Raw data.
  * \param len Raw data length.
- * \param packlen Return the length of whole ftfs_t struct.
+ * \param packlen Return the length of whole ftfs_s struct.
  *
- * \return A new allocated struct of ftfs_t.
+ * \return A new allocated struct of ftfs_s.
  */
 void *ftfs_pack(const char *dat, int len, int *packlen);
 
 /**
- * \brief Peek the raw data form ftfs_t struct.
+ * \brief Peek the raw data form ftfs_s struct.
  *
  * \param fs
  * \param md5sum

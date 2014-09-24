@@ -17,8 +17,8 @@
 
 static char MAGIC[4] = { 'F', 'T', 'F', 'S' };
 
-typedef struct _ftfs_t ftfs_t;
-struct _ftfs_t {
+typedef struct _ftfs_s ftfs_s;
+struct _ftfs_s {
 	char magic[4];                  /** 'F' 'T' 'F' 'S' */
 	char md5sum[32];                /** check sum of length and data */
 	int len;
@@ -32,14 +32,14 @@ struct _ftfs_t {
  *
  * \param dat Raw data.
  * \param len Raw data length.
- * \param packlen Return the length of whole ftfs_t struct.
+ * \param packlen Return the length of whole ftfs_s struct.
  *
- * \return A new allocated struct of ftfs_t.
+ * \return A new allocated struct of ftfs_s.
  */
 void *ftfs_pack(const char *dat, int len, int *packlen)
 {
-	int packsize = sizeof(ftfs_t) + len;
-	ftfs_t *fs = (ftfs_t*)kmem_alloz(packsize, char);
+	int packsize = sizeof(ftfs_s) + len;
+	ftfs_s *fs = (ftfs_s*)kmem_alloz(packsize, char);
 
 	fs->magic[0] = MAGIC[0];
 	fs->magic[1] = MAGIC[1];
@@ -58,7 +58,7 @@ void *ftfs_pack(const char *dat, int len, int *packlen)
 }
 
 /**
- * \brief Peek the raw data form ftfs_t struct.
+ * \brief Peek the raw data form ftfs_s struct.
  *
  * \param fs
  * \param md5sum
@@ -69,7 +69,7 @@ void *ftfs_pack(const char *dat, int len, int *packlen)
  */
 int ftfs_unpack(void *pack, char **md5sum, char **dat, int *len)
 {
-	ftfs_t *fs = (ftfs_t*)pack;
+	ftfs_s *fs = (ftfs_s*)pack;
 	char newhash[32];
 
 	if (!fs)
@@ -108,7 +108,7 @@ int ftfs_unpack(void *pack, char **md5sum, char **dat, int *len)
  */
 int ftfs_rest_length(void *pack, int len)
 {
-	ftfs_t *fs = (ftfs_t*)pack;
+	ftfs_s *fs = (ftfs_s*)pack;
 
 	if (fs->magic[0] != MAGIC[0] || fs->magic[1] != MAGIC[1] ||
 			fs->magic[2] != MAGIC[2] ||
@@ -117,7 +117,7 @@ int ftfs_rest_length(void *pack, int len)
 		return -1;
 	}
 
-	len -= sizeof(ftfs_t);
+	len -= sizeof(ftfs_s);
 	return (len >= fs->len) ? 0 : (fs->len - len);
 }
 
@@ -128,6 +128,6 @@ int ftfs_rest_length(void *pack, int len)
  */
 int ftfs_header_length()
 {
-	return sizeof(ftfs_t);
+	return sizeof(ftfs_s);
 }
 

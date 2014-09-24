@@ -48,8 +48,8 @@
 #include <hilda/kopt-rpc-common.h>
 #include <hilda/kopt-rpc-client.h>
 
-typedef struct _opt_rpc_t kopt_rpc_t;
-struct _opt_rpc_t {
+typedef struct _opt_rpc_s kopt_rpc_s;
+struct _opt_rpc_s {
 	/* connection id */
 	char connhash[33];
 
@@ -76,7 +76,7 @@ struct _opt_rpc_t {
 static int __g_epoll_fd = -1;
 static struct epoll_event __g_epoll_events[__g_epoll_max];
 
-static int connect_and_hey(kopt_rpc_t *or, unsigned short port,
+static int connect_and_hey(kopt_rpc_s *or, unsigned short port,
 		int isopt, int *retsock);
 static void ignore_pipe();
 static void config_socket(int s);
@@ -96,7 +96,7 @@ static void config_socket(int s);
 
 static void *watch_thread_or_client(void *userdata)
 {
-	kopt_rpc_t *or = (kopt_rpc_t*)userdata;
+	kopt_rpc_s *or = (kopt_rpc_s*)userdata;
 	char *buf;
 
 	struct epoll_event ev, *e;
@@ -253,12 +253,12 @@ static int rpc_disconnect(int sockfd, kbool opt)
 	return err;
 }
 
-static void set_errmsg(kopt_rpc_t *or, const char *err)
+static void set_errmsg(kopt_rpc_s *or, const char *err)
 {
 	strcpy(or->errmsg, err ? : "");
 }
 
-static int process_resp(kopt_rpc_t *or, char *resp, char *retbuf, int rblen)
+static int process_resp(kopt_rpc_s *or, char *resp, char *retbuf, int rblen)
 {
 	char *st_start, *st_end;
 	int ret;
@@ -283,7 +283,7 @@ static int process_resp(kopt_rpc_t *or, char *resp, char *retbuf, int rblen)
  */
 int kopt_rpc_watch(void *conn, const char *path, char *ebuf, int eblen)
 {
-	kopt_rpc_t *or = (kopt_rpc_t*)conn;
+	kopt_rpc_s *or = (kopt_rpc_s*)conn;
 	char iodat[2048];
 	int ret;
 
@@ -309,7 +309,7 @@ int kopt_rpc_watch(void *conn, const char *path, char *ebuf, int eblen)
  */
 int kopt_rpc_unwatch(void *conn, const char *path, char *ebuf, int eblen)
 {
-	kopt_rpc_t *or = (kopt_rpc_t*)conn;
+	kopt_rpc_s *or = (kopt_rpc_s*)conn;
 	char iodat[2048];
 	int ret;
 
@@ -335,7 +335,7 @@ int kopt_rpc_unwatch(void *conn, const char *path, char *ebuf, int eblen)
  */
 int kopt_rpc_setini(void *conn, const char *inibuf, char *ebuf, int eblen)
 {
-	kopt_rpc_t *or = (kopt_rpc_t*)conn;
+	kopt_rpc_s *or = (kopt_rpc_s*)conn;
 	char iodat[8192];
 	int ret = -1;
 
@@ -362,7 +362,7 @@ int kopt_rpc_setini(void *conn, const char *inibuf, char *ebuf, int eblen)
 int kopt_rpc_setkv(void *conn, const char *k, const char *v,
 		char *ebuf, int eblen)
 {
-	kopt_rpc_t *or = (kopt_rpc_t*)conn;
+	kopt_rpc_s *or = (kopt_rpc_s*)conn;
 	char buffer[8192];
 	sprintf(buffer, "%s=%s", k, v);
 	return kopt_rpc_setini(or, buffer, ebuf, eblen);
@@ -370,7 +370,7 @@ int kopt_rpc_setkv(void *conn, const char *k, const char *v,
 
 char *kopt_rpc_geterr(void *conn)
 {
-	kopt_rpc_t *or = (kopt_rpc_t*)conn;
+	kopt_rpc_s *or = (kopt_rpc_s*)conn;
 	return or->errmsg;
 }
 
@@ -380,7 +380,7 @@ char *kopt_rpc_geterr(void *conn)
 int kopt_rpc_getini(void *conn, const char *path,
 		char *retbuf, int rblen, char *ebuf, int eblen)
 {
-	kopt_rpc_t *or = (kopt_rpc_t*)conn;
+	kopt_rpc_s *or = (kopt_rpc_s*)conn;
 	char *iodat;
 	int ret = -1;
 
@@ -409,7 +409,7 @@ int kopt_rpc_getint(void *conn, const char *path, int *val)
 {
 	int err;
 	char dat[8192], ebuf[1024];
-	kopt_rpc_t *or = (kopt_rpc_t*)conn;
+	kopt_rpc_s *or = (kopt_rpc_s*)conn;
 
 	err = kopt_rpc_getini(or, path, dat, sizeof(dat), ebuf, sizeof(ebuf));
 	if (err != EC_OK)
@@ -423,7 +423,7 @@ int kopt_rpc_getstr(void *conn, const char *path, char **val)
 {
 	int err;
 	char dat[8192], ebuf[1024];
-	kopt_rpc_t *or = (kopt_rpc_t*)conn;
+	kopt_rpc_s *or = (kopt_rpc_s*)conn;
 
 	err = kopt_rpc_getini(or, path, dat, sizeof(dat), ebuf, sizeof(ebuf));
 	if (err != EC_OK)
@@ -437,7 +437,7 @@ int kopt_rpc_getarr(void *conn, const char *path, void **arr, int *len)
 {
 	int err;
 	char dat[8192], ebuf[1024];
-	kopt_rpc_t *or = (kopt_rpc_t*)conn;
+	kopt_rpc_s *or = (kopt_rpc_s*)conn;
 
 	err = kopt_rpc_getini(or, path, dat, sizeof(dat), ebuf, sizeof(ebuf));
 	if (err != EC_OK)
@@ -451,7 +451,7 @@ int kopt_rpc_getbin(void *conn, const char *path, char **arr, int *len)
 {
 	int err;
 	char dat[8192], ebuf[1024];
-	kopt_rpc_t *or = (kopt_rpc_t*)conn;
+	kopt_rpc_s *or = (kopt_rpc_s*)conn;
 
 	err = kopt_rpc_getini(or, path, dat, sizeof(dat), ebuf, sizeof(ebuf));
 	if (err != EC_OK)
@@ -461,7 +461,7 @@ int kopt_rpc_getbin(void *conn, const char *path, char **arr, int *len)
 	return EC_NG;
 }
 
-static int connect_and_hey(kopt_rpc_t *or, unsigned short port,
+static int connect_and_hey(kopt_rpc_s *or, unsigned short port,
 		int isopt, int *retsock)
 {
 	char respbuf[4096];
@@ -483,14 +483,14 @@ static int connect_and_hey(kopt_rpc_t *or, unsigned short port,
 	return -1;
 }
 
-static int connect_opt(kopt_rpc_t *or)
+static int connect_opt(kopt_rpc_s *or)
 {
 	int err;
 	err = connect_and_hey(or, or->port, 1, &or->kopt_socket);
 	return err;
 }
 
-static int connect_wch(kopt_rpc_t *or)
+static int connect_wch(kopt_rpc_s *or)
 {
 	int err;
 	if (!or->wch_func)
@@ -535,7 +535,7 @@ void *kopt_rpc_connect(const char *server, unsigned short port,
 	char connstr[256];
 	static int callref = 0;
 	pid_t pid = getpid();
-	kopt_rpc_t *or = (kopt_rpc_t*)kmem_alloz(1, kopt_rpc_t);
+	kopt_rpc_s *or = (kopt_rpc_s*)kmem_alloz(1, kopt_rpc_s);
 
 	or->wch_func = wfunc;
 	or->ua = wfunc_ua;
@@ -567,7 +567,7 @@ void *kopt_rpc_connect(const char *server, unsigned short port,
 
 int kopt_rpc_disconnect(void *conn)
 {
-	kopt_rpc_t *or = (kopt_rpc_t*)conn;
+	kopt_rpc_s *or = (kopt_rpc_s*)conn;
 
 	if (!or)
 		return -1;

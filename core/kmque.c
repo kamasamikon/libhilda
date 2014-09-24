@@ -13,13 +13,13 @@
 #include <hilda/xtcool.h>
 #include <hilda/kmque.h>
 
-static int kmque_cleanup(kmque_t *mque);
-static void mentry_do(mentry_t *me);
-static void mentry_done(mentry_t *me);
+static int kmque_cleanup(kmque_s *mque);
+static void mentry_do(mentry_s *me);
+static void mentry_done(mentry_s *me);
 
-kmque_t *kmque_new()
+kmque_s *kmque_new()
 {
-	kmque_t *mque = (kmque_t*)kmem_alloz(1, kmque_t);
+	kmque_s *mque = (kmque_s*)kmem_alloz(1, kmque_s);
 
 	kdlist_init_head(&mque->msg_qhdr);
 	kdlist_init_head(&mque->dpc_qhdr);
@@ -31,7 +31,7 @@ kmque_t *kmque_new()
 	return mque;
 }
 
-int kmque_del(kmque_t *mque)
+int kmque_del(kmque_s *mque)
 {
 	spl_sema_del(mque->msg_new_sem);
 	spl_sema_del(mque->msg_snt_sem);
@@ -41,7 +41,7 @@ int kmque_del(kmque_t *mque)
 	return 0;
 }
 
-void kmque_set_quit(kmque_t *mque)
+void kmque_set_quit(kmque_s *mque)
 {
 	kmque_cleanup(mque);
 
@@ -50,21 +50,21 @@ void kmque_set_quit(kmque_t *mque)
 	/* FIXME: What if when a send waiting? rel(msg_snt_sem)? */
 }
 
-static int kmque_cleanup(kmque_t *mque)
+static int kmque_cleanup(kmque_s *mque)
 {
-	mentry_t *me;
+	mentry_s *me;
 	K_dlist_entry *entry;
 
 	spl_lck_get(mque->qhdr_lck);
 	entry = mque->msg_qhdr.next;
 	while (entry != &mque->msg_qhdr) {
-		me = FIELD_TO_STRUCTURE(entry, mentry_t, entry);
+		me = FIELD_TO_STRUCTURE(entry, mentry_s, entry);
 		entry = entry->next;
 		mentry_done(me);
 	}
 	entry = mque->dpc_qhdr.next;
 	while (entry != &mque->dpc_qhdr) {
-		me = FIELD_TO_STRUCTURE(entry, mentry_t, entry);
+		me = FIELD_TO_STRUCTURE(entry, mentry_s, entry);
 		entry = entry->next;
 		mentry_done(me);
 	}
@@ -73,18 +73,18 @@ static int kmque_cleanup(kmque_t *mque)
 	return 0;
 }
 
-static mentry_t *get_ready_me(kmque_t *mque)
+static mentry_s *get_ready_me(kmque_s *mque)
 {
-	mentry_t *me = NULL;
+	mentry_s *me = NULL;
 	K_dlist_entry *entry;
 	unsigned int now = spl_get_ticks();
 
 	spl_lck_get(mque->qhdr_lck);
 	if (!kdlist_is_empty(&mque->msg_qhdr)) {
 		entry = kdlist_remove_head_entry(&mque->msg_qhdr);
-		me = FIELD_TO_STRUCTURE(entry, mentry_t, entry);
+		me = FIELD_TO_STRUCTURE(entry, mentry_s, entry);
 	} else if (!kdlist_is_empty(&mque->dpc_qhdr)) {
-		me = FIELD_TO_STRUCTURE(mque->dpc_qhdr.next, mentry_t, entry);
+		me = FIELD_TO_STRUCTURE(mque->dpc_qhdr.next, mentry_s, entry);
 		if (me->dpc.due_time < now)
 			kdlist_remove_head_entry(&mque->dpc_qhdr);
 		else
@@ -95,9 +95,9 @@ static mentry_t *get_ready_me(kmque_t *mque)
 	return me;
 }
 
-static int calc_wait_timeout(kmque_t *mque, int timeout)
+static int calc_wait_timeout(kmque_s *mque, int timeout)
 {
-	mentry_t *me;
+	mentry_s *me;
 	unsigned int new_timeout, first_timeout, now = spl_get_ticks();
 
 	if (timeout < 0)
@@ -107,7 +107,7 @@ static int calc_wait_timeout(kmque_t *mque, int timeout)
 
 	spl_lck_get(mque->qhdr_lck);
 	if (!kdlist_is_empty(&mque->dpc_qhdr)) {
-		me = FIELD_TO_STRUCTURE(mque->dpc_qhdr.next, mentry_t, entry);
+		me = FIELD_TO_STRUCTURE(mque->dpc_qhdr.next, mentry_s, entry);
 		if (me->dpc.due_time > now) {
 			first_timeout = me->dpc.due_time - now;
 			if (new_timeout > first_timeout)
@@ -129,9 +129,9 @@ static int calc_wait_timeout(kmque_t *mque, int timeout)
  *
  * \return 0:OK, -1:TIMEOUT, -2:NG, -3:Quit
  */
-int kmque_peek(kmque_t *mque, mentry_t **retme, int timeout)
+int kmque_peek(kmque_s *mque, mentry_s **retme, int timeout)
 {
-	mentry_t *me;
+	mentry_s *me;
 	int new_timeout;
 
 	if (!mque)
@@ -159,9 +159,9 @@ int kmque_peek(kmque_t *mque, mentry_t **retme, int timeout)
 	return 0;
 }
 
-int mentry_send(kmque_t *mque, ME_WORKER worker, void *ua, void *ub)
+int mentry_send(kmque_s *mque, ME_WORKER worker, void *ua, void *ub)
 {
-	mentry_t *me;
+	mentry_s *me;
 	SPL_HANDLE caller_thread;
 
 	if (!mque || mque->quit) {
@@ -179,7 +179,7 @@ int mentry_send(kmque_t *mque, ME_WORKER worker, void *ua, void *ub)
 		if (worker)
 			worker(ua, ub);
 	} else {
-		me = kmem_alloz(1, mentry_t);
+		me = kmem_alloz(1, mentry_s);
 		me->worker = worker;
 		me->ua = ua;
 		me->ub = ub;
@@ -199,17 +199,17 @@ int mentry_send(kmque_t *mque, ME_WORKER worker, void *ua, void *ub)
 	return 0;
 }
 
-int mentry_post(kmque_t *mque, ME_WORKER worker, ME_DESTORYER destoryer,
+int mentry_post(kmque_s *mque, ME_WORKER worker, ME_DESTORYER destoryer,
 		void *ua, void *ub)
 {
-	mentry_t *me;
+	mentry_s *me;
 
 	if (!mque || mque->quit) {
 		kerror("!mque || mque->quit");
 		return -1;
 	}
 
-	me = kmem_alloz(1, mentry_t);
+	me = kmem_alloz(1, mentry_s);
 	me->worker = worker;
 	me->destoryer = destoryer;
 	me->ua = ua;
@@ -228,9 +228,9 @@ int mentry_post(kmque_t *mque, ME_WORKER worker, ME_DESTORYER destoryer,
  * Sort and queue.
  */
 /* FIXME: think about timer overflow */
-static int insert_dpc_entry(kmque_t *mque, mentry_t *me, unsigned int wait)
+static int insert_dpc_entry(kmque_s *mque, mentry_s *me, unsigned int wait)
 {
-	mentry_t *tmp;
+	mentry_s *tmp;
 	K_dlist_entry *entry;
 	unsigned int dpcid, me_due_time = spl_get_ticks() + wait;
 
@@ -243,7 +243,7 @@ static int insert_dpc_entry(kmque_t *mque, mentry_t *me, unsigned int wait)
 
 	entry = mque->dpc_qhdr.next;
 	while (entry != &mque->dpc_qhdr) {
-		tmp = FIELD_TO_STRUCTURE(entry, mentry_t, entry);
+		tmp = FIELD_TO_STRUCTURE(entry, mentry_s, entry);
 
 		if (tmp->dpc.due_time > me_due_time)
 			break;
@@ -259,18 +259,18 @@ static int insert_dpc_entry(kmque_t *mque, mentry_t *me, unsigned int wait)
 	return 0;
 }
 
-int mentry_dpc_add(kmque_t *mque, void (*worker)(void *ua, void *ub),
+int mentry_dpc_add(kmque_s *mque, void (*worker)(void *ua, void *ub),
 		void (*destoryer)(void *ua, void *ub), void *ua, void *ub,
 		unsigned int wait)
 {
-	mentry_t *me;
+	mentry_s *me;
 
 	if (!mque || mque->quit) {
 		kerror("!mque || mque->quit");
 		return 0;
 	}
 
-	me = kmem_alloz(1, mentry_t);
+	me = kmem_alloz(1, mentry_s);
 	me->worker = worker;
 	me->destoryer = destoryer;
 	me->ua = ua;
@@ -283,9 +283,9 @@ int mentry_dpc_add(kmque_t *mque, void (*worker)(void *ua, void *ub),
 	return me->dpc.id;
 }
 
-int mentry_dpc_kill(kmque_t *mque, unsigned int dpcid)
+int mentry_dpc_kill(kmque_s *mque, unsigned int dpcid)
 {
-	mentry_t *me;
+	mentry_s *me;
 	K_dlist_entry *entry;
 	int found = 0;
 
@@ -296,7 +296,7 @@ int mentry_dpc_kill(kmque_t *mque, unsigned int dpcid)
 	spl_lck_get(mque->qhdr_lck);
 	entry = mque->dpc_qhdr.next;
 	while (entry != &mque->dpc_qhdr) {
-		me = FIELD_TO_STRUCTURE(entry, mentry_t, entry);
+		me = FIELD_TO_STRUCTURE(entry, mentry_s, entry);
 		entry = entry->next;
 		if (me->dpc.id != dpcid)
 			continue;
@@ -310,20 +310,20 @@ int mentry_dpc_kill(kmque_t *mque, unsigned int dpcid)
 	return found;
 }
 
-static void mentry_do(mentry_t *me)
+static void mentry_do(mentry_s *me)
 {
 	if (me->worker)
 		me->worker(me->ua, me->ub);
 }
 
-static void mentry_done(mentry_t *me)
+static void mentry_done(mentry_s *me)
 {
 	if (me->destoryer)
 		me->destoryer(me->ua, me->ub);
 	kmem_free(me);
 }
 
-static void mentry_do_all(mentry_t *me)
+static void mentry_do_all(mentry_s *me)
 {
 	kbool is_send = me->is_send;
 
@@ -333,10 +333,10 @@ static void mentry_do_all(mentry_t *me)
 		spl_sema_rel(me->mque->msg_snt_sem);
 }
 
-int kmque_run(kmque_t *mque)
+int kmque_run(kmque_s *mque)
 {
 	int ret;
-	mentry_t *me;
+	mentry_s *me;
 	mque->main_task = spl_thread_current();
 
 	while (1) {
@@ -365,7 +365,7 @@ int kmque_run(kmque_t *mque)
 }
 
 #ifdef TEST_KMQUE
-kmque_t *__g_mque;
+kmque_s *__g_mque;
 
 static void worker(void *ua, void *ub)
 {

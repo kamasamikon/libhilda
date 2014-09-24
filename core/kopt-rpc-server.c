@@ -42,15 +42,15 @@
 #include <hilda/kopt-rpc-server.h>
 #include <hilda/kmque.h>
 
-typedef struct _rpc_client_t rpc_client_t;
-typedef struct _rpc_wch_t rpc_wch_t;
+typedef struct _rpc_client_s rpc_client_s;
+typedef struct _rpc_wch_s rpc_wch_s;
 
-struct _rpc_wch_t {
+struct _rpc_wch_s {
 	char *path;
 	void *wch;
 };
 
-struct _rpc_client_t {
+struct _rpc_client_s {
 	char prompt[128];
 	char connhash[33];
 
@@ -58,7 +58,7 @@ struct _rpc_client_t {
 	int wch_socket;
 
 	struct {
-		rpc_wch_t *arr;
+		rpc_wch_s *arr;
 		int cnt;
 	} opts;			/* only these opt can be accessed */
 };
@@ -69,13 +69,13 @@ struct _rpc_client_t {
 #define CRLF "\r\n"
 #define PROMPT "$ "
 
-static int send_watch_message(rpc_client_t *c, const char *buf);
+static int send_watch_message(rpc_client_s *c, const char *buf);
 static void config_socket(int s);
 static void ignore_pipe();
 static int process_connect(int new_fd);
-static void close_client(rpc_client_t *c);
+static void close_client(rpc_client_s *c);
 
-static rpc_client_t __g_clients[BACKLOG];
+static rpc_client_s __g_clients[BACKLOG];
 
 static int __g_epoll_fd = -1;
 static struct epoll_event __g_epoll_events[__g_epoll_max];
@@ -110,9 +110,9 @@ static char *mk_errline(int ret, char ebuf[])
 	return ebuf;
 }
 
-static rpc_client_t *rpc_client_get(const char *connhash, int fd, int is_opt)
+static rpc_client_s *rpc_client_get(const char *connhash, int fd, int is_opt)
 {
-	rpc_client_t *c = __g_clients;
+	rpc_client_s *c = __g_clients;
 	int i, arr_size = sizeof(__g_clients) / sizeof(__g_clients[0]);
 
 	for (i = 0; i < arr_size; i++)
@@ -143,9 +143,9 @@ static rpc_client_t *rpc_client_get(const char *connhash, int fd, int is_opt)
 	return &c[i];
 }
 
-static rpc_client_t *rpc_client_by_socket(int s_opt)
+static rpc_client_s *rpc_client_by_socket(int s_opt)
 {
-	rpc_client_t *c = __g_clients;
+	rpc_client_s *c = __g_clients;
 	int i, arr_size = sizeof(__g_clients) / sizeof(__g_clients[0]);
 
 	for (i = 0; i < arr_size; i++) {
@@ -159,7 +159,7 @@ static rpc_client_t *rpc_client_by_socket(int s_opt)
 	return NULL;
 }
 
-static int rpc_client_wch_find(rpc_client_t *c, char *path)
+static int rpc_client_wch_find(rpc_client_s *c, char *path)
 {
 	int i;
 	const char *tmp;
@@ -173,7 +173,7 @@ static int rpc_client_wch_find(rpc_client_t *c, char *path)
 	return -1;
 }
 
-static int rpc_client_wch_add(rpc_client_t *c, char *path, void *wch)
+static int rpc_client_wch_add(rpc_client_s *c, char *path, void *wch)
 {
 	int i;
 	const char *tmp;
@@ -193,14 +193,14 @@ static int rpc_client_wch_add(rpc_client_t *c, char *path, void *wch)
 			return 0;
 		}
 
-	ARR_INC(2, c->opts.arr, c->opts.cnt, rpc_wch_t);
+	ARR_INC(2, c->opts.arr, c->opts.cnt, rpc_wch_s);
 	c->opts.arr[i].path = kstr_dup(path);
 	c->opts.arr[i].wch = wch;
 
 	return 0;
 }
 
-static int rpc_client_wch_del(rpc_client_t *c, const char *path)
+static int rpc_client_wch_del(rpc_client_s *c, const char *path)
 {
 	int i;
 	const char *tmp;
@@ -220,7 +220,7 @@ static int rpc_client_wch_del(rpc_client_t *c, const char *path)
 	return -1;
 }
 
-static int rpc_client_wch_clr(rpc_client_t *c)
+static int rpc_client_wch_clr(rpc_client_s *c)
 {
 	int i;
 
@@ -251,8 +251,8 @@ static void rpc_watch(int ses, void *opt, void *wch)
 	strbuf_init(&sb, 4096);
 
 	strbuf_addf(&sb, "wchnotify %s\r\n%s", path, ini);
-	if (send_watch_message((rpc_client_t*)ua, sb.buf))
-		close_client((rpc_client_t*)ua);
+	if (send_watch_message((rpc_client_s*)ua, sb.buf))
+		close_client((rpc_client_s*)ua);
 
 	kmem_free(ini);
 	strbuf_release(&sb);
@@ -263,7 +263,7 @@ static void rpc_watch(int ses, void *opt, void *wch)
  */
 static int do_opt_command(int s, char *buf, int cmdlen)
 {
-	rpc_client_t *c;
+	rpc_client_s *c;
 	char *para, ebuf[256], *errmsg;
 	int ret, errnum;
 
@@ -340,14 +340,14 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 
 static void close_connect(int s)
 {
-	rpc_client_t *c = rpc_client_by_socket(s);
+	rpc_client_s *c = rpc_client_by_socket(s);
 	if (c)
 		close_client(c);
 	else
 		close(s);
 }
 
-static void close_client(rpc_client_t *c)
+static void close_client(rpc_client_s *c)
 {
 	epoll_ctl(__g_epoll_fd, EPOLL_CTL_DEL, c->opt_socket, NULL);
 
@@ -488,7 +488,7 @@ int kopt_rpc_server_final()
 	return 0;
 }
 
-static int send_watch_message(rpc_client_t *c, const char *buf)
+static int send_watch_message(rpc_client_s *c, const char *buf)
 {
 	int ret;
 
@@ -545,7 +545,7 @@ static int process_connect(int new_fd)
 {
 	char buf[1024], *cmd;
 	int ret, try_cnt, ofsarr[80], argc;
-	rpc_client_t *client;
+	rpc_client_s *client;
 
 	try_cnt = 3;
 	while (try_cnt--) {
