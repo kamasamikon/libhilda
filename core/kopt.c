@@ -1894,9 +1894,9 @@ static int og_diag_wch_notyet(void *opt, void *pa, void *pb)
 	return EC_OK;
 }
 
-void *kopt_attach(void *logcc)
+void *kopt_attach(void *optcc)
 {
-	__g_optcc = (optcc_s*)logcc;
+	__g_optcc = (optcc_s*)optcc;
 
 	return (void*)__g_optcc;
 }

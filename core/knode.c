@@ -290,8 +290,8 @@ static int do_dump(knode_s *node, void *ua, void *ub)
 	int i;
 	struct strbuf *sb = (struct strbuf*)ua;
 
-	strbuf_addf(sb, "\r\nT:%08x A:%08x F:%08x write:%p name:%s\r\n",
-			node->type, node->attr, node->flg, node->write,
+	strbuf_addf(sb, "\r\nT:%08x A:%08x F:%08x push:%p name:%s\r\n",
+			node->type, node->attr, node->flg, node->push,
 			node->name);
 
 	for (i = 0; i < node->dstr.cnt; i++)
