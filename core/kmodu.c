@@ -324,7 +324,7 @@ static int manual_layout()
 		dnode = knode_find(dname);
 
 		if (dnode && unode && (dnode != unode) && dnode->link_query)
-			if (kflg_chk_bit(dnode->attr, CNAT_INPUT))
+			if (kflg_chk_bit(dnode->attr, KNAT_INPUT))
 				if (!dnode->link_query(unode, dnode, &link_dat))
 					knode_link_add(unode, dnode, link_dat);
 	}
