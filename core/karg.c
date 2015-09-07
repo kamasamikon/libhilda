@@ -11,59 +11,65 @@
 
 #include <hilda/karg.h>
 
+/*-----------------------------------------------------------------------
+ * karg_xxx
+ */
+#define BLANK(c) ((c) == ' ' || (c) == '\t' || (c) == '\r' || (c) == '\n')
+#define INIT_MAX_ARGC 16
 #define ISNUL(c) ((c) == '\0')
-#define ISBLANK(c) ((c) == ' ' || (c) == '\t')
-#define INITIAL_MAXARGC 16
 
-void karg_free(char **vector)
+int karg_free(int argc, char **argv)
 {
-	char **scan;
+	int i;
 
-	if (vector != NULL) {
-		for (scan = vector; *scan != NULL; scan++)
-			kmem_free_s(*scan);
-		kmem_free(vector);
-	}
+	if (argv == NULL)
+		return -1;
+
+	for (i = 0; i < argc; i++)
+		kmem_free_s(argv[i]);
+	kmem_free(argv);
+
+	return 0;
 }
 
 /* XXX: Normal command line, NUL as end, SP as delimiters */
-char **karg_build(const char *input, int *arg_c, char ***arg_v)
+int karg_build(const char *input, int *arg_c, char ***arg_v)
 {
 	int squote = 0, dquote = 0, bsquote = 0, argc = 0, maxargc = 0;
-	char c, *arg, *copybuf, **argv = NULL, **nargv;
+	char c, *arg, *copybuf, **argv = NULL, **kargv;
 
 	*arg_c = argc;
 	if (input == NULL)
-		return NULL;
+		return -1;
 
-	copybuf = (char *)kmem_alloc(strlen(input) + 1, char);
+	copybuf = kmem_alloc((strlen(input) + 1), char);
 
 	do {
-		while (ISBLANK(*input))
+		while (BLANK(*input))
 			input++;
 
 		if ((maxargc == 0) || (argc >= (maxargc - 1))) {
 			if (argv == NULL)
-				maxargc = INITIAL_MAXARGC;
+				maxargc = INIT_MAX_ARGC;
 			else
 				maxargc *= 2;
 
-			nargv = (char **)kmem_realloc(argv,
-						maxargc * sizeof(char*));
-			if (nargv == NULL) {
+			kargv = (char **)kmem_realloc(argv,
+					maxargc * sizeof(char*));
+			if (kargv == NULL) {
 				if (argv != NULL) {
-					karg_free(argv);
+					kmem_free(argv);
 					argv = NULL;
 				}
 				break;
 			}
-			argv = nargv;
+			argv = kargv;
 			argv[argc] = NULL;
 		}
 
 		arg = copybuf;
 		while ((c = *input) != '\0') {
-			if (ISBLANK(c) && !squote && !dquote && !bsquote)
+			if (BLANK(c) && !squote && !dquote && !bsquote)
 				break;
 
 			if (bsquote) {
@@ -93,16 +99,16 @@ char **karg_build(const char *input, int *arg_c, char ***arg_v)
 		}
 
 		*arg = '\0';
-		argv[argc] = kstr_dup(copybuf);
+		argv[argc] = strdup(copybuf);
 		if (argv[argc] == NULL) {
-			karg_free(argv);
+			kmem_free(argv);
 			argv = NULL;
 			break;
 		}
 		argc++;
 		argv[argc] = NULL;
 
-		while (ISBLANK(*input))
+		while (BLANK(*input))
 			input++;
 	} while (*input != '\0');
 
@@ -111,14 +117,31 @@ char **karg_build(const char *input, int *arg_c, char ***arg_v)
 	*arg_c = argc;
 	*arg_v = argv;
 
-	return argv;
+	return 0;
+}
+
+int karg_find(int argc, char **argv, const char *opt, int fullmatch)
+{
+	int i;
+
+	if (fullmatch) {
+		for (i = 0; i < argc; i++)
+			if (argv[i] && !strcmp(argv[i], opt))
+				return i;
+	} else {
+		int slen = strlen(opt);
+		for (i = 0; i < argc; i++)
+			if (argv[i] && !strncmp(argv[i], opt, slen))
+				return i;
+	}
+	return -1;
 }
 
 /* XXX: NUL as delimiters */
 char **karg_build_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v)
 {
 	int argc = 0, maxargc = 0;
-	char c, *arg, *copybuf, **argv = NULL, **nargv;
+	char c, *arg, *copybuf, **argv = NULL, **kargv;
 	const char *input = ibuf;
 
 	*arg_c = argc;
@@ -138,20 +161,20 @@ char **karg_build_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v)
 
 		if ((maxargc == 0) || (argc >= (maxargc - 1))) {
 			if (argv == NULL)
-				maxargc = INITIAL_MAXARGC;
+				maxargc = 16;
 			else
 				maxargc *= 2;
 
-			nargv = (char **)kmem_realloc(argv,
+			kargv = (char **)kmem_realloc(argv,
 					maxargc * sizeof(char*));
-			if (nargv == NULL) {
+			if (kargv == NULL) {
 				if (argv != NULL) {
-					karg_free(argv);
+					karg_free(argc, argv);
 					argv = NULL;
 				}
 				break;
 			}
-			argv = nargv;
+			argv = kargv;
 			argv[argc] = NULL;
 		}
 
@@ -168,7 +191,7 @@ char **karg_build_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v)
 		*arg = '\0';
 		argv[argc] = kstr_dup(copybuf);
 		if (argv[argc] == NULL) {
-			karg_free(argv);
+			karg_free(argc, argv);
 			argv = NULL;
 			break;
 		}
@@ -190,23 +213,6 @@ char **karg_build_nul(const char *ibuf, int ilen, int *arg_c, char ***arg_v)
 	*arg_v = argv;
 
 	return argv;
-}
-
-int karg_find(int argc, char **argv, const char *opt, int fullmatch)
-{
-	int i;
-
-	if (fullmatch) {
-		for (i = 0; i < argc; i++)
-			if (argv[i] && !strcmp(argv[i], opt))
-				return i;
-	} else {
-		int slen = strlen(opt);
-		for (i = 0; i < argc; i++)
-			if (argv[i] && !strncmp(argv[i], opt, slen))
-				return i;
-	}
-	return -1;
 }
 
 #ifdef KARG_TEST
@@ -250,7 +256,7 @@ int main()
 				printf("\t\"%s\"\n", arg_v[i]);
 		}
 
-		karg_free(argv);
+		karg_free(argc, argv);
 	}
 
 	return 0;
