@@ -56,6 +56,8 @@ extern void strbuf_add(struct strbuf *, const void *, size_t);
 extern void strbuf_addf(struct strbuf *sb, const char *fmt, ...);
 extern void strbuf_vaddf(struct strbuf *sb, const char *fmt, va_list ap);
 
-extern size_t strbuf_fread(struct strbuf *, size_t, FILE *);
+extern size_t strbuf_fread(struct strbuf *sb, size_t size, FILE *fp, int *err);
+extern void strbuf_dump(struct strbuf *sb, const char *banner, char *dat, int len, int width);
+
 
 #endif /* __K_STRBUF_H__ */

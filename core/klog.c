@@ -1,6 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -16,6 +17,18 @@
 #include <hilda/xtcool.h>
 #include <hilda/karg.h>
 #include <hilda/klog.h>
+#include <hilda/strbuf.h>
+
+extern ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+
+static inline void *klog_cc(void);
+static void klog_init_default(void);
+
+static char *get_execpath(int *size);
+static char *get_basename(char *name);
+static char *get_progname();
+
+static unsigned int __dft_mask = KLOG_ALL;
 
 /*-----------------------------------------------------------------------
  * Local definition:
@@ -26,7 +39,7 @@ typedef struct _strarr_s strarr_s;
 struct _strarr_s {
 	int size;
 	int cnt;
-	const char **arr;
+	char **arr;
 };
 
 typedef struct _rule_s rule_s;
@@ -36,10 +49,11 @@ struct _rule_s {
 	/* 0 is know care */
 	/* -1 is all */
 
-	int prog;	/* Program command line */
-	int modu;	/* Module name */
-	int file;	/* File name */
-	int func;	/* Function name */
+	/* XXX: the prog modu file func is return from strarr_add */
+	char *prog;	/* Program command line */
+	char *modu;	/* Module name */
+	char *file;	/* File name */
+	char *func;	/* Function name */
 
 	int line;	/* Line number */
 
@@ -51,8 +65,8 @@ struct _rule_s {
 
 typedef struct _rulearr_s rulearr_s;
 struct _rulearr_s {
-	int size;
-	int cnt;
+	unsigned int size;
+	unsigned int cnt;
 	rule_s *arr;
 };
 
@@ -65,6 +79,8 @@ typedef struct _klogcc_s klogcc_s;
 struct _klogcc_s {
 	/** version is a ref count user change klog arg */
 	int touches;
+
+	pid_t pid;
 
 	SPL_HANDLE mutex;
 
@@ -81,6 +97,17 @@ struct _klogcc_s {
 };
 
 static klogcc_s *__g_klogcc = NULL;
+
+/*-----------------------------------------------------------------------
+ * Control Center
+ */
+static inline void *klog_cc(void)
+{
+	if (unlikely(!__g_klogcc))
+		klog_init_default();
+
+	return (void*)__g_klogcc;
+}
 
 /*-----------------------------------------------------------------------
  * klog-logger
@@ -156,7 +183,7 @@ int klog_del_rlogger(KRLOGGER logger)
 /*-----------------------------------------------------------------------
  * implementation
  */
-static void klog_parse_mask(const char *mask, unsigned int *set, unsigned int *clr);
+static void klog_parse_mask(char *mask, unsigned int *set, unsigned int *clr);
 
 /**
  * \brief Other module call this to use already inited CC
@@ -167,6 +194,34 @@ void *klog_attach(void *logcc)
 {
 	__g_klogcc = (klogcc_s*)logcc;
 	return (void*)__g_klogcc;
+}
+
+static char *get_execpath(int *size)
+{
+	struct strbuf nb;
+	FILE *fp;
+	char buff[256];
+	int err = 0;
+	char *path = NULL;
+
+	sprintf(buff, "/proc/%d/cmdline", getpid());
+	fp = fopen(buff, "rt");
+	if (fp) {
+		strbuf_init(&nb, 0);
+
+		while (strbuf_fread(&nb, 1024, fp, &err) > 0 && !err)
+			;
+		fclose(fp);
+
+		if (size)
+			*size = nb.len;
+		nb.buf[nb.len] = '\0';
+
+		path = strbuf_detach(&nb, NULL);
+	}
+
+	strbuf_release(&nb);
+	return path;
 }
 
 static void klog_init_default()
@@ -184,16 +239,8 @@ static void klog_init_default()
 	karg_build_nul(cl_buf, cl_size, &argc, &argv);
 	kmem_free(cl_buf);
 
-	klog_init(KLOG_DFT, argc, argv);
-	karg_free(argv);
-}
-
-kinline void *klog_cc(void)
-{
-	if (unlikely(!__g_klogcc))
-		klog_init_default();
-
-	return (void*)__g_klogcc;
+	klog_init(argc, argv);
+	karg_free(argc, argv);
 }
 
 void klog_touch(void)
@@ -202,52 +249,103 @@ void klog_touch(void)
 
 	cc->touches++;
 }
-kinline int klog_touches(void)
+inline int klog_touches(void)
 {
 	klogcc_s *cc = (klogcc_s*)klog_cc();
 
 	return cc->touches;
 }
 
-static void load_cfg_file(const char *path)
+static char *get_basename(char *name)
 {
-	char buf[4096];
-	FILE *fp;
+	char *dupname, *bn;
 
-	fp = fopen(path, "rt");
-	if (!fp)
-		return;
+	if (!name)
+		return strdup("");
 
-	while (fgets(buf, sizeof(buf), fp))
-		klog_rule_add(buf);
+	dupname = strdup(name);
+	bn = basename(dupname);
 
-	fclose(fp);
+	bn = bn ? strdup(bn) : strdup("");
+
+	kmem_free_s(dupname);
+
+	return bn;
 }
 
-static void apply_rtcfg(const char *path)
+static char *get_progname()
 {
+	static char prog_name_buff[64];
+	static char *prog_name = NULL;
+
+	char *execpath, *execname;
+
+	if (likely(prog_name))
+		return prog_name;
+
+	execpath = get_execpath(NULL);
+	if (execpath) {
+		execname = get_basename(execpath);
+		strncpy(prog_name_buff, execname, sizeof(prog_name_buff));
+		kmem_free(execpath);
+		kmem_free(execname);
+	} else
+		snprintf(prog_name_buff, sizeof(prog_name_buff) - 1,
+				"PROG-%d", (int)getpid());
+
+	prog_name = prog_name_buff;
+	return prog_name;
+}
+
+static void load_cfg_file(char *path)
+{
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t bytes;
+
+	FILE *fp;
+
+	fp = fopen(path, "rt");
+	if (!fp) {
+		printf("load_cfg_file: fopen '%s' failed, e:%d\n", path, errno);
+		return;
+	}
+
+	while ((bytes = getline(&line, &len, fp)) != -1)
+		klog_rule_add(line);
+
+	fclose(fp);
+	kmem_free_s(line);
+}
+
+static void apply_rtcfg(char *path)
+{
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t bytes;
+
 	static int line_applied = 0;
-	int line = 0;
-	char buf[8092];
+	int line_idx = 0;
 	FILE *fp;
 
 	fp = fopen(path, "rt");
 	if (!fp)
 		return;
 
-	while (fgets(buf, sizeof(buf), fp)) {
-		if (line++ < line_applied)
+	while ((bytes = getline(&line, &len, fp)) != -1) {
+		if (line_idx++ < line_applied)
 			continue;
-		klog_rule_add(buf);
+		klog_rule_add(line);
 		line_applied++;
 	}
 
 	fclose(fp);
+	kmem_free_s(line);
 }
 
 static void* thread_monitor_cfgfile(void *user_data)
 {
-	const char *path = (const char*)user_data;
+	char *path = (char*)user_data;
 	int fd, wd, len, tmp_len;
 	char buffer[2048], *offset = NULL;
 	struct inotify_event *event;
@@ -256,13 +354,17 @@ static void* thread_monitor_cfgfile(void *user_data)
 	if (fd < 0)
 		goto quit;
 
+	FILE *fp = fopen(path, "a+");
+	if (fp)
+		fclose(fp);
+
 	wd = inotify_add_watch(fd, path, IN_MODIFY);
 	if (wd < 0)
 		goto quit;
 
 	while ((len = read(fd, buffer, sizeof(buffer)))) {
 		offset = buffer;
-		event = (struct inotify_event*)buffer;
+		event = (struct inotify_event*)(void*)buffer;
 
 		while (((char*)event - buffer) < len) {
 			if (event->wd == wd) {
@@ -272,7 +374,7 @@ static void* thread_monitor_cfgfile(void *user_data)
 			}
 
 			tmp_len = sizeof(struct inotify_event) + event->len;
-			event = (struct inotify_event*)(offset + tmp_len);
+			event = (struct inotify_event*)(void*)(offset + tmp_len);
 			offset += tmp_len;
 		}
 	}
@@ -364,7 +466,36 @@ static void rule_add_from_mask(unsigned int mask)
 	klog_rule_add(rule);
 }
 
-void *klog_init(unsigned int mask, int argc, char **argv)
+void klog_set_default_mask(unsigned int mask)
+{
+	__dft_mask = mask;
+}
+
+static void klog_cleanup()
+{
+	klogcc_s *cc = (klogcc_s*)klog_cc();
+	int i;
+
+	for (i = 0; i < cc->arr_file_name.cnt; i++)
+		kmem_free_s((void*)cc->arr_file_name.arr[i]);
+	kmem_free_s((void*)cc->arr_file_name.arr);
+
+	for (i = 0; i < cc->arr_modu_name.cnt; i++)
+		kmem_free_s((void*)cc->arr_modu_name.arr[i]);
+	kmem_free_s((void*)cc->arr_modu_name.arr);
+
+	for (i = 0; i < cc->arr_prog_name.cnt; i++)
+		kmem_free_s((void*)cc->arr_prog_name.arr[i]);
+	kmem_free_s((void*)cc->arr_prog_name.arr);
+
+	for (i = 0; i < cc->arr_func_name.cnt; i++)
+		kmem_free_s((void*)cc->arr_func_name.arr[i]);
+	kmem_free_s((void*)cc->arr_func_name.arr);
+
+	kmem_free_s((void*)cc->arr_rule.arr);
+}
+
+void *klog_init(int argc, char **argv)
 {
 	klogcc_s *cc;
 
@@ -375,26 +506,28 @@ void *klog_init(unsigned int mask, int argc, char **argv)
 	__g_klogcc = cc;
 
 	cc->mutex = spl_mutex_create();
+	cc->pid = getpid();
 
 	/* Set default before configure file */
-	if (mask)
-		rule_add_from_mask(mask);
+	if (__dft_mask)
+		rule_add_from_mask(__dft_mask);
 
 	process_cfg(argc, argv);
 
 	klog_touch();
 
+	atexit(klog_cleanup);
+
 	return (void*)__g_klogcc;
 }
 
-int klog_vf(unsigned char type, unsigned int mask,
-		const char *prog, const char *modu,
-		const char *file, const char *func, int ln,
-		const char *fmt, va_list ap)
+int klog_vf(unsigned char type, unsigned int mask, char *prog, char *modu,
+		char *file, char *func, int ln, const char *fmt, va_list ap)
 {
 	klogcc_s *cc = (klogcc_s*)klog_cc();
+	va_list ap_copy0, ap_copy1;
 
-	char buffer[2048], *bufptr = buffer;
+	char buffer[4096], *bufptr = buffer;
 	int i, ret, ofs, bufsize = sizeof(buffer);
 
 	char tmbuf[128];
@@ -404,8 +537,11 @@ int klog_vf(unsigned char type, unsigned int mask,
 	unsigned long tick = 0;
 
 	for (i = 0; i < cc->rlogger_cnt; i++)
-		if (cc->rloggers[i])
-			cc->rloggers[i](type, mask, prog, modu, file, func, ln, fmt, ap);
+		if (cc->rloggers[i]) {
+			va_copy(ap_copy1, ap);
+			cc->rloggers[i](type, mask, prog, modu, file, func, ln, fmt, ap_copy1);
+			va_end(ap_copy1);
+		}
 
 	if (unlikely(!cc->nlogger_cnt))
 		return 0;
@@ -431,7 +567,7 @@ int klog_vf(unsigned char type, unsigned int mask,
 
 	/* ID */
 	if (mask & KLOG_PID)
-		ofs += sprintf(bufptr + ofs, "j:%d|", (int)spl_process_current());
+		ofs += sprintf(bufptr + ofs, "j:%d|", (int)cc->pid);
 	if (mask & KLOG_TID)
 		ofs += sprintf(bufptr + ofs, "x:%x|", (int)spl_thread_current());
 
@@ -454,50 +590,14 @@ int klog_vf(unsigned char type, unsigned int mask,
 	if (likely(ofs))
 		ofs += sprintf(bufptr + ofs, " ");
 
-	ret = vsnprintf(bufptr + ofs, bufsize - ofs, fmt, ap);
-	while (ret > bufsize - ofs - 1) {
+	va_copy(ap_copy0, ap);
+	ret = vsnprintf(bufptr + ofs, bufsize - ofs, fmt, ap_copy0);
+	va_end(ap_copy0);
+	if (ret > bufsize - ofs - 1) {
 		bufsize = ret + ofs + 1;
-		if (bufptr != buffer)
-			kmem_free(bufptr);
-		bufptr = kmem_get(bufsize);
+		bufptr = kmem_alloc(bufsize, char);
 
-		ofs = 0;
-
-		/* Type */
-		if (type)
-			ofs += sprintf(bufptr, "|%c|", type);
-
-		/* Time */
-		if (mask & KLOG_RTM)
-			ofs += sprintf(bufptr + ofs, "s:%lu|", tick);
-		if (mask & KLOG_ATM)
-			ofs += sprintf(bufptr + ofs, "%s.%03d|", tmbuf, (unsigned int)(tick % 1000));
-
-		/* ID */
-		if (mask & KLOG_PID)
-			ofs += sprintf(bufptr + ofs, "j:%d|", (int)spl_process_current());
-		if (mask & KLOG_TID)
-			ofs += sprintf(bufptr + ofs, "x:%x|", (int)spl_thread_current());
-
-		/* Name and LINE */
-		if ((mask & KLOG_PROG) && prog)
-			ofs += sprintf(bufptr + ofs, "P:%s|", prog);
-
-		if ((mask & KLOG_MODU) && modu)
-			ofs += sprintf(bufptr + ofs, "M:%s|", modu);
-
-		if ((mask & KLOG_FILE) && file)
-			ofs += sprintf(bufptr + ofs, "F:%s|", file);
-
-		if ((mask & KLOG_FUNC) && func)
-			ofs += sprintf(bufptr + ofs, "H:%s|", func);
-
-		if (mask & KLOG_LINE)
-			ofs += sprintf(bufptr + ofs, "L:%d|", ln);
-
-		if (ofs)
-			ofs += sprintf(bufptr + ofs, " ");
-
+		memcpy(bufptr, buffer, ofs);
 		ret = vsnprintf(bufptr + ofs, bufsize - ofs, fmt, ap);
 	}
 
@@ -512,10 +612,8 @@ int klog_vf(unsigned char type, unsigned int mask,
 	return ret;
 }
 
-int klog_f(unsigned char type, unsigned int mask,
-		const char *prog, const char *modu,
-		const char *file, const char *func, int ln,
-		const char *fmt, ...)
+int klog_f(unsigned char type, unsigned int mask, char *prog, char *modu,
+		char *file, char *func, int ln, const char *fmt, ...)
 {
 	va_list ap;
 	int ret;
@@ -525,38 +623,9 @@ int klog_f(unsigned char type, unsigned int mask,
 	va_end(ap);
 
 	return ret;
-
 }
 
-char *klog_get_name_part(char *name)
-{
-	char *dup = kstr_dup(name);
-	char *bn = basename(dup);
-
-	bn = bn ? kstr_dup(bn) : kstr_dup("");
-
-	kmem_free_s(dup);
-
-	return bn;
-}
-
-char *klog_get_prog_name()
-{
-	static char *pname = NULL;
-	char *cl;
-
-	if (pname)
-		return pname;
-
-	cl = spl_get_cmdline(NULL);
-	if (cl) {
-		pname = klog_get_name_part(cl);
-		kmem_free(cl);
-	}
-	return pname;
-}
-
-static int strarr_find(strarr_s *sa, const char *str)
+static int strarr_find(strarr_s *sa, char *str)
 {
 	int i;
 
@@ -569,72 +638,79 @@ static int strarr_find(strarr_s *sa, const char *str)
 	return -1;
 }
 
-static int strarr_add(strarr_s *sa, const char *str)
+static char *strarr_add(strarr_s *sa, char *str)
 {
 	int pos = strarr_find(sa, str);
 
 	if (pos != -1)
-		return pos;
+		return sa->arr[pos];
 
 	if (sa->cnt >= sa->size)
-		ARR_INC(256, sa->arr, sa->size, const char*);
+		ARR_INC(256, sa->arr, sa->size, char*);
 
 	sa->arr[sa->cnt] = strdup(str);
 	sa->cnt++;
 
 	/* Return the position been inserted */
-	return sa->cnt - 1;
+	return sa->arr[sa->cnt - 1];
 }
 
-/*
- * XXX: About return strarr_add(xyz, name) + 1;
- *
- * The name index 0 means don't care, it conflict with
- * array index 0, so here add ONE to skip the value zero
- */
-int klog_file_name_add(const char *name)
+char *klog_file_name_add(char *name)
 {
 	klogcc_s *cc = (klogcc_s*)klog_cc();
-	int pos;
+	char *newstr, *newname = get_basename(name);
 
-	spl_mutex_lock(cc->mutex);
-	pos = strarr_add(&cc->arr_file_name, name);
-	spl_mutex_unlock(cc->mutex);
-	return pos;
+	spl_mutex_lock(&cc->mutex);
+	newstr = strarr_add(&cc->arr_file_name, newname);
+	spl_mutex_unlock(&cc->mutex);
+
+	free(newname);
+
+	return newstr;
 }
-int klog_modu_name_add(const char *name)
+char *klog_modu_name_add(char *name)
 {
 	klogcc_s *cc = (klogcc_s*)klog_cc();
-	int pos;
+	char *newstr;
 
-	spl_mutex_lock(cc->mutex);
-	pos = strarr_add(&cc->arr_modu_name, name);
-	spl_mutex_unlock(cc->mutex);
-	return pos;
+	spl_mutex_lock(&cc->mutex);
+	newstr = strarr_add(&cc->arr_modu_name, name);
+	spl_mutex_unlock(&cc->mutex);
+	return newstr;
 }
-int klog_prog_name_add(const char *name)
+char *klog_prog_name_add(char *name)
 {
 	klogcc_s *cc = (klogcc_s*)klog_cc();
-	int pos;
+	char *newstr, *newname, *progname;
 
-	spl_mutex_lock(cc->mutex);
-	pos = strarr_add(&cc->arr_prog_name, name);
-	spl_mutex_unlock(cc->mutex);
-	return pos;
+	if (name)
+		newname = get_basename(name);
+	else {
+		progname = get_progname();
+		newname = get_basename(progname);
+	}
+
+	spl_mutex_lock(&cc->mutex);
+	newstr = strarr_add(&cc->arr_prog_name, newname);
+	spl_mutex_unlock(&cc->mutex);
+
+	free(newname);
+
+	return newstr;
 }
-int klog_func_name_add(const char *name)
+char *klog_func_name_add(char *name)
 {
 	klogcc_s *cc = (klogcc_s*)klog_cc();
-	int pos;
+	char *newstr;
 
-	spl_mutex_lock(cc->mutex);
-	pos = strarr_add(&cc->arr_func_name, name);
-	spl_mutex_unlock(cc->mutex);
-	return pos;
+	spl_mutex_lock(&cc->mutex);
+	newstr = strarr_add(&cc->arr_func_name, name);
+	spl_mutex_unlock(&cc->mutex);
+	return newstr;
 }
 
-static int rulearr_add(rulearr_s *ra, int prog, int modu,
-		int file, int func, int line, int pid,
+static int rulearr_add(rulearr_s *ra, char *prog, char *modu,
+		char *file, char *func, int line, int pid,
 		unsigned int fset, unsigned int fclr)
 {
 	if (unlikely(ra->cnt >= ra->size))
@@ -646,6 +722,7 @@ static int rulearr_add(rulearr_s *ra, int prog, int modu,
 	rule->modu = modu;
 	rule->file = file;
 	rule->func = func;
+
 	rule->line = line;
 	rule->pid = pid;
 
@@ -662,10 +739,10 @@ static int rulearr_add(rulearr_s *ra, int prog, int modu,
  * rule =
  * prog=xxx,modu=xxx,file=xxx,func=xxx,line=xxx,pid=xxx,mask=left
  */
-void klog_rule_add(const char *rule)
+void klog_rule_add(char *rule)
 {
 	klogcc_s *cc = (klogcc_s*)klog_cc();
-	int i_prog, i_modu, i_file, i_func, i_line, i_pid;
+	int i_line, i_pid;
 	char *s_prog, *s_modu, *s_file, *s_func, *s_line, *s_pid, *s_mask;
 	char buf[1024];
 	int i, blen;
@@ -696,25 +773,30 @@ void klog_rule_add(const char *rule)
 			buf[i] = '\0';
 
 	if (!s_prog || !s_prog[6])
-		i_prog = -1;
+		s_prog = NULL;
 	else
-		i_prog = klog_prog_name_add(strdup(s_prog + 6));
+		s_prog = klog_prog_name_add(s_prog + 6);
+
 	if (!s_modu || !s_modu[6])
-		i_modu = -1;
+		s_modu = NULL;
 	else
-		i_modu = klog_modu_name_add(strdup(s_modu + 6));
+		s_modu = klog_modu_name_add(s_modu + 6);
+
 	if (!s_file || !s_file[6])
-		i_file = -1;
+		s_file = NULL;
 	else
-		i_file = klog_file_name_add(strdup(s_file + 6));
+		s_file = klog_file_name_add(s_file + 6);
+
 	if (!s_func || !s_func[6])
-		i_func = -1;
+		s_func = NULL;
 	else
-		i_func = klog_func_name_add(strdup(s_func + 6));
+		s_func = klog_func_name_add(s_func + 6);
+
 	if (!s_line || !s_line[6])
 		i_line = -1;
 	else
 		i_line = atoi(s_line + 6);
+
 	if (!s_pid || !s_pid[5])
 		i_pid = -1;
 	else
@@ -723,22 +805,22 @@ void klog_rule_add(const char *rule)
 	klog_parse_mask(s_mask, &set, &clr);
 
 	if (set || clr) {
-		spl_mutex_lock(cc->mutex);
-		rulearr_add(&cc->arr_rule, i_prog, i_modu, i_file, i_func, i_line, i_pid, set, clr);
-		spl_mutex_unlock(cc->mutex);
+		spl_mutex_lock(&cc->mutex);
+		rulearr_add(&cc->arr_rule, s_prog, s_modu, s_file, s_func, i_line, i_pid, set, clr);
+		spl_mutex_unlock(&cc->mutex);
 
 		klog_touch();
 	}
 }
-void klog_rule_del(int index)
+void klog_rule_del(unsigned int idx)
 {
 	klogcc_s *cc = (klogcc_s*)klog_cc();
 
-	if (index < 0 || index >= cc->arr_rule.cnt)
+	if (idx >= cc->arr_rule.cnt)
 		return;
 
-	memcpy(&cc->arr_rule.arr[index], &cc->arr_rule.arr[index + 1],
-			(cc->arr_rule.cnt - index - 1) * sizeof(rule_s));
+	memcpy(&cc->arr_rule.arr[idx], &cc->arr_rule.arr[idx + 1],
+			(cc->arr_rule.cnt - idx - 1) * sizeof(rule_s));
 	klog_touch();
 }
 void klog_rule_clr()
@@ -751,7 +833,7 @@ void klog_rule_clr()
 
 static unsigned int get_mask(char c)
 {
-	int i;
+	unsigned int i;
 
 	static struct {
 		char code;
@@ -802,7 +884,7 @@ static unsigned int get_mask(char c)
 	return 0;
 }
 
-static void klog_parse_mask(const char *mask, unsigned int *set, unsigned int *clr)
+static void klog_parse_mask(char *mask, unsigned int *set, unsigned int *clr)
 {
 	int i = 0, len = strlen(mask);
 	char c;
@@ -820,21 +902,22 @@ static void klog_parse_mask(const char *mask, unsigned int *set, unsigned int *c
 	}
 }
 
-unsigned int klog_calc_mask(int prog, int modu, int file, int func, int line, int pid)
+unsigned int klog_calc_mask(char *prog, char *modu, char *file, char *func, int line)
 {
 	klogcc_s *cc = (klogcc_s*)klog_cc();
 	unsigned int i, all = 0;
+	int pid = (int)cc->pid;
 
 	for (i = 0; i < cc->arr_rule.cnt; i++) {
 		rule_s *rule = &cc->arr_rule.arr[i];
 
-		if (rule->prog != -1 && rule->prog != prog)
+		if (rule->prog != NULL && rule->prog != prog)
 			continue;
-		if (rule->modu != -1 && rule->modu != modu)
+		if (rule->modu != NULL && rule->modu != modu)
 			continue;
-		if (rule->file != -1 && rule->file != file)
+		if (rule->file != NULL && rule->file != file)
 			continue;
-		if (rule->func != -1 && rule->func != func)
+		if (rule->func != NULL && rule->func != func)
 			continue;
 		if (rule->line != -1 && rule->line != line)
 			continue;

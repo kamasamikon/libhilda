@@ -352,7 +352,7 @@ SPL_HANDLE spl_process_create(int prio, char *const argv[])
 {
 	pid_t pid;
 
-	pid = fork();
+	pid = vfork();
 	if (0 == pid) {
 		/* child process, execute the command */
 		execvp(argv[0], argv);
@@ -467,7 +467,7 @@ char *spl_get_cmdline(int *size)
 	if (fp) {
 		struct strbuf sb = STRBUF_INIT;
 
-		while (strbuf_fread(&sb, 2048, fp) > 0)
+		while (strbuf_fread(&sb, 2048, fp, NULL) > 0)
 			;
 		fclose(fp);
 
