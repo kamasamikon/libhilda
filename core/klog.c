@@ -21,7 +21,7 @@
 
 extern ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 
-static inline void *klog_cc(void);
+static void *klog_cc(void);
 static void klog_init_default(void);
 
 static char *get_execpath(int *size);
@@ -101,7 +101,7 @@ static klogcc_s *__g_klogcc = NULL;
 /*-----------------------------------------------------------------------
  * Control Center
  */
-static inline void *klog_cc(void)
+static void *klog_cc(void)
 {
 	if (unlikely(!__g_klogcc))
 		klog_init_default();
@@ -249,7 +249,7 @@ void klog_touch(void)
 
 	cc->touches++;
 }
-inline int klog_touches(void)
+int klog_touches(void)
 {
 	klogcc_s *cc = (klogcc_s*)klog_cc();
 
@@ -569,7 +569,7 @@ int klog_vf(unsigned char type, unsigned int mask, char *prog, char *modu,
 	if (mask & KLOG_PID)
 		ofs += sprintf(bufptr + ofs, "j:%d|", (int)cc->pid);
 	if (mask & KLOG_TID)
-		ofs += sprintf(bufptr + ofs, "x:%x|", (int)spl_thread_current());
+		ofs += sprintf(bufptr + ofs, "x:%x|", (int)(long)spl_thread_current());
 
 	/* Name and LINE */
 	if ((mask & KLOG_PROG) && prog)

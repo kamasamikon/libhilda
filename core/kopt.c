@@ -69,147 +69,6 @@
  * configuration, which can be accessed by a id, and all the ids
  * currently are public to all the module.
  */
-
-/* XXX */
-/* / : = */
-/* - */
-typedef struct _optcc_s optcc_s;
-typedef struct _opt_watch_s kopt_watch_s;
-typedef struct _opt_entry_s kopt_entry_s;
-
-struct _opt_watch_s {
-	/** queue to bwchhdr/awchhdr */
-	K_dlist_entry entry;
-
-	/** callback when watch hit */
-	KOPT_WATCH wch;
-	/** have chance to free resource */
-	KOPT_WCH_DELTER delter;
-
-	void *ua, *ub;
-
-	/** watch what event */
-	char *path;
-
-	/** diag part */
-	unsigned int wch_cnt;
-};
-
-struct _opt_entry_s {
-	/** _optcc_s::oehdr */
-	K_dlist_entry entry;
-
-	char *path;
-	char *desc;
-
-	KOPT_GETTER getter;
-	KOPT_SETTER setter;
-	/* have chance to free resource */
-	KOPT_DELTER delter;
-
-	void *ua, *ub;
-	void *set_pa, *set_pb;
-	void *get_pa, *get_pb;
-
-	int ses;
-
-	unsigned int attr;
-
-	/* quick access of path[0] */
-	char type;
-
-	struct {
-		/* cur is copy */
-		union {
-			struct {
-				/* maintain other _opt_entry_s */
-				/* kvfmt: [path1,path2,path3] */
-				char **v;
-				int l;
-			} a;
-			struct {
-				/* kvfmt: "aa,bb,cc,34,78" */
-				void *v;
-				int l;
-			} d;
-			struct {
-				/* kvfmt: "232432" or "0x34234" */
-				int v;
-			} i;
-			struct {
-				/* kvfmt: "Anything you like\n\rOrz" */
-				char *v;
-			} s;
-			struct {
-				/* kvfmt: "232432" or "0x34234" */
-				void *v;
-			} p;
-		} cur;
-
-		/* new is ref */
-		union {
-			struct {
-				/* maintain other _opt_entry_s */
-				/* kvfmt: [path1,path2,path3] */
-				char **v;
-				int l;
-			} a;
-			struct {
-				/* kvfmt: "aa,bb,cc,34,78" */
-				void *v;
-				int l;
-			} d;
-			struct {
-				/* kvfmt: "232432" or "0x34234" */
-				int v;
-			} i;
-			struct {
-				/* kvfmt: "Anything you like" */
-				char *v;
-			} s;
-			struct {
-				/* kvfmt: "232432" or "0x34234" */
-				void *v;
-			} p;
-		} new;
-	} v;
-
-	/* watch list */
-	K_dlist_entry bwchhdr;
-	K_dlist_entry awchhdr;
-
-	/** diag part */
-	unsigned int set_called, get_called, awch_called, bwch_called;
-	unsigned int awch_cnt, bwch_cnt;
-};
-
-/* Control Center for OPT */
-struct _optcc_s {
-	/** Opt Entry Header */
-	K_dlist_entry oehdr;
-
-	/** watch that Not Yet connect */
-	struct {
-		K_dlist_entry bhdr;
-		/** before watch header */
-		K_dlist_entry ahdr;
-		/** after watch header */
-	} nywch;
-
-	int sesid_last;     /**< the last used session Id, can not be zero */
-	kbean lck;	    /**< lck to protect oehdr, ahdr, bhdr */
-
-	struct {
-		struct {
-			/* thread id */
-			SPL_HANDLE task;
-			int no;
-			char msg[2048];
-		} arr[4];
-		int curpos;
-	} err;
-};
-
 #define KOPT_TYPE(oe) ((kopt_entry_s*)(oe))->type
 
 #define RET_IF_NOT_INT() do { \
@@ -250,7 +109,7 @@ struct _optcc_s {
 #define RET_IF_RECURSIVE() do { \
 	if (kflg_chk_bit(oe->attr, OA_IN_SET)) { \
 		wlogf("Recursive: %s\n", oe->path); \
-		kassert(!"Recursive set is not allowed"); \
+		kassert(0, "Recursive set is not allowed"); \
 		return EC_RECUR; \
 	} \
 } while (0)
@@ -283,7 +142,7 @@ struct _optcc_s {
 static optcc_s *__g_optcc = NULL;
 
 static int entry_del(kopt_entry_s *oe);
-static kinline kopt_entry_s *entry_find(const char *path);
+static kopt_entry_s *entry_find(const char *path);
 
 static int setint(int ses, kopt_entry_s *oe, void *pa, void *pb, int v_int);
 static int setptr(int ses, kopt_entry_s *oe, void *pa, void *pb, void *v_ptr);
@@ -298,190 +157,6 @@ static int getstr(kopt_entry_s *oe, void *pa, void *pb, char **v_str);
 static int getptr(kopt_entry_s *oe, void *pa, void *pb, void **v_ptr);
 static int getdat(kopt_entry_s *oe, void *pa, void *pb, char **v_dat, int *len);
 
-/*-----------------------------------------------------------------------
- * kinline functions
- */
-
-/* normal access */
-kinline char *kopt_path(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->path;
-}
-kinline char *kopt_desc(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->desc;
-}
-
-kinline void *kopt_ua(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->ua;
-}
-kinline void *kopt_ub(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->ub;
-}
-
-kinline int kopt_get_setpa(void *oe, void **pa)
-{
-	if (kflg_chk_any(((kopt_entry_s*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH | OA_IN_SET)) {
-		*pa = ((kopt_entry_s*)oe)->set_pa;
-		return 0;
-	}
-	return -1;
-}
-kinline int kopt_get_setpb(void *oe, void **pb)
-{
-	if (kflg_chk_any(((kopt_entry_s*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH | OA_IN_SET)) {
-		*pb = ((kopt_entry_s*)oe)->set_pb;
-		return 0;
-	}
-	return -1;
-}
-
-kinline char **kopt_get_cur_arr(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.cur.a.v;
-}
-kinline int kopt_get_cur_arr_len(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.cur.a.l;
-}
-kinline void *kopt_get_cur_dat(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.cur.d.v;
-}
-kinline int kopt_get_cur_dat_len(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.cur.d.l;
-}
-kinline int kopt_get_cur_int(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.cur.i.v;
-}
-kinline char *kopt_get_cur_str(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.cur.s.v;
-}
-kinline void *kopt_get_cur_ptr(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.cur.p.v;
-}
-
-kinline char **kopt_get_new_arr(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.new.a.v;
-}
-kinline int kopt_get_new_arr_len(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.new.a.l;
-}
-kinline void *kopt_get_new_dat(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.new.d.v;
-}
-kinline int kopt_get_new_dat_len(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.new.d.l;
-}
-kinline int kopt_get_new_int(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.new.i.v;
-}
-kinline char *kopt_get_new_str(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.new.s.v;
-}
-kinline void *kopt_get_new_ptr(void *oe)
-{
-	return ((kopt_entry_s*)(oe))->v.new.p.v;
-}
-
-kinline void *kopt_wch_path(void *ow)
-{
-	return ((kopt_watch_s*)(ow))->path;
-}
-
-kinline void *kopt_wch_ua(void *ow)
-{
-	return ((kopt_watch_s*)(ow))->ua;
-}
-
-kinline void *kopt_wch_ub(void *ow)
-{
-	return ((kopt_watch_s*)(ow))->ub;
-}
-
-kinline int kopt_set_cur_arr(void *oe, char **v_arr, int len)
-{
-	kopt_entry_s *e = (kopt_entry_s*)oe;
-
-	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
-		kmem_free_sz(e->v.cur.a.v);
-		if (len < 0)
-			len = 0;
-		if (len > 0) {
-			kmem_free_sz(e->v.cur.a.v);
-			e->v.cur.a.v = (char**)kmem_alloz(len, char*);
-			memcpy(e->v.cur.a.v, v_arr, len * sizeof(char*));
-		}
-		e->v.cur.a.l = len;
-		return EC_OK;
-	}
-	return EC_FORBIDEN;
-}
-
-kinline int kopt_set_cur_dat(void *oe, char *v_dat, int len)
-{
-	kopt_entry_s *e = (kopt_entry_s*)oe;
-
-	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
-		kmem_free_sz(e->v.cur.d.v);
-		if (len < 0)
-			len = 0;
-		if (len > 0) {
-			kmem_free_sz(e->v.cur.d.v);
-			e->v.cur.d.v = (char*)kmem_alloz(len, char);
-			memcpy(e->v.cur.d.v, v_dat, len * sizeof(char));
-		}
-		e->v.cur.d.l = len;
-		return EC_OK;
-	}
-	return EC_FORBIDEN;
-}
-
-kinline int kopt_set_cur_int(void *oe, int v_int)
-{
-	kopt_entry_s *e = (kopt_entry_s*)oe;
-
-	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
-		e->v.cur.i.v = v_int;
-		return EC_OK;
-	}
-	return EC_FORBIDEN;
-}
-
-kinline int kopt_set_cur_str(void *oe, char *v_str)
-{
-	kopt_entry_s *e = (kopt_entry_s*)oe;
-
-	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
-		kmem_free_sz(e->v.cur.s.v);
-		e->v.cur.s.v = kstr_dup(v_str);
-		return EC_OK;
-	}
-	return EC_FORBIDEN;
-}
-
-kinline int kopt_set_cur_ptr(void *oe, void *v_ptr)
-{
-	kopt_entry_s *e = (kopt_entry_s*)oe;
-
-	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
-		e->v.cur.p.v = v_ptr;
-		return EC_OK;
-	}
-	return EC_FORBIDEN;
-}
 
 void kopt_set_err(int no, const char *msg)
 {
@@ -645,7 +320,7 @@ char *kopt_pack_kv(const char **k, const char **v)
 
 /* user data for setxx */
 
-static kinline kopt_entry_s *entry_find(const char *path)
+static kopt_entry_s *entry_find(const char *path)
 {
 	K_dlist_entry *entry;
 	kopt_entry_s *oe;
@@ -778,7 +453,7 @@ int kopt_getini_by_opt(void *opt, char **ret)
 		sprintf(*ret, "%p", v_ptr);
 		break;
 	default:
-		kassert(!"should not be here");
+		kassert(0, "should not be here");
 		break;
 	}
 
@@ -862,7 +537,7 @@ int kopt_new(const char *path, const char *desc, unsigned int attr,
 	if (!KOPT_CHK_TYPE(path)) {
 		/* spl_lck_rel(__g_optcc->lck); */
 		kerror("BadType: %s\n", path);
-		kassert(0 && "opt path should be '[a|i|d|s|b|e|p]:/Xxx'");
+		kassert(0, "opt path should be '[a|i|d|s|b|e|p]:/Xxx'");
 		return EC_BAD_TYPE;
 	}
 
@@ -1077,17 +752,17 @@ static int parse_arr(const char *v, char***a, int *l)
 	return EC_OK;
 }
 
-static kinline int parse_dat(const char *v, char**d, int *l)
+static int parse_dat(const char *v, char**d, int *l)
 {
 	return -1;
 }
 
-static kinline char *parse_str(const char *v)
+static char *parse_str(const char *v)
 {
 	return (char*)v;
 }
 
-static kinline int parse_ptr(const char *v, void **ret)
+static int parse_ptr(const char *v, void **ret)
 {
 	return kstr_toint(v, (int*)ret);
 }
@@ -1121,7 +796,7 @@ int kopt_setkv(int ses, const char *k, const char *v)
 
 	if (!KOPT_CHK_TYPE(k)) {
 		kerror("BadType: %s\n", k);
-		kassert(0 && "opt path should be '[a|i|d|s|b|e|p]:/Xxx'");
+		kassert(0, "opt path should be '[a|i|d|s|b|e|p]:/Xxx'");
 		kopt_set_err(EC_BAD_TYPE, "Bad OPT Type.");
 		/* spl_lck_rel(__g_optcc->lck); */
 		return EC_BAD_TYPE;
@@ -1153,7 +828,7 @@ int kopt_setkv(int ses, const char *k, const char *v)
 	case 'd':
 		/* TODO: do like arr */
 		parse_dat(v, &d, &l);
-		kassert(!"kopt_setkv for type 'd' is not implemented.\n");
+		kassert(0, "kopt_setkv for type 'd' is not implemented.\n");
 		break;
 	case 's':
 		ret = setstr(ses, oe, NULL, NULL, parse_str(v));
@@ -1166,7 +841,7 @@ int kopt_setkv(int ses, const char *k, const char *v)
 			kopt_set_err(EC_BAD_PARAM, "Bad address");
 		break;
 	default:
-		kassert(!"should not be here");
+		kassert(0, "should not be here");
 		ret = EC_NG;
 	}
 
@@ -1742,7 +1417,7 @@ void *kopt_wch_new(const char *path, KOPT_WATCH wch,
 	if (!KOPT_CHK_TYPE(path)) {
 		/* spl_lck_rel(__g_optcc->lck); */
 		kerror("BadType: %s\n", path);
-		kassert(0 && "opt path should be '[a|i|d|s|b|e|p]:/Xxx'");
+		kassert(0, "opt path should be '[a|i|d|s|b|e|p]:/Xxx'");
 		return NULL;
 	}
 
@@ -2024,7 +1699,7 @@ int kopt_session_commit(int ses, int cancel, int *reterr)
 		oe->ub = (void*)0;
 		ret = setint(ses, oe, NULL, NULL, cancel);
 		if (reterr)
-			*reterr = (int)oe->ub;
+			*reterr = (int)(long)oe->ub;
 	} else {
 		kerror("Opt not found: <%s>\n", "i:/k/opt/session/done");
 		kopt_set_err(EC_NG, "Opt not found");
@@ -2039,9 +1714,9 @@ void kopt_session_set_err(void *opt, int error)
 	kopt_entry_s *oe = (kopt_entry_s*)opt;
 
 	if (oe->ses && !strcmp("i:/k/opt/session/done", oe->path)) {
-		int curerr = (int)oe->ub;
+		int curerr = (int)(long)oe->ub;
 		curerr |= error;
-		oe->ub = (void*)curerr;
+		oe->ub = (void*)(long)curerr;
 	}
 }
 

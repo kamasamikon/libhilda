@@ -246,10 +246,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\core\sdlist.c"
-					>
-				</File>
-				<File
 					RelativePath=".\core\xmldoc.c"
 					>
 				</File>

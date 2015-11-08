@@ -17,8 +17,15 @@ typedef long long int int64_t;
 #ifdef __GNUC__
 #define kinline inline
 #define kexport
-#define __int64 long long
 #define VAR_UNUSED __attribute__ ((unused))
+
+#ifndef likely
+#define likely(x)      __builtin_expect(!!(x), 1)
+#endif
+#ifndef unlikely
+#define unlikely(x)    __builtin_expect(!!(x), 0)
+#endif
+
 #endif
 
 #ifdef __cplusplus

@@ -380,7 +380,7 @@ static void *worker_thread_or_server(void *userdata)
 	void *buf;
 	struct epoll_event ev, *e;
 
-	unsigned short port = (unsigned short)(int)userdata;
+	unsigned short port = (unsigned short)(int)(long)userdata;
 
 	int s_listen, new_fd;
 	struct sockaddr_in their_addr;
@@ -479,7 +479,7 @@ int kopt_rpc_server_init(unsigned short port, int argc, char *argv[])
 	klog("port: %d\n", port);
 
 	ignore_pipe();
-	spl_thread_create(worker_thread_or_server, (void*)(int)port, 0);
+	spl_thread_create(worker_thread_or_server, (void*)(long)port, 0);
 	return 0;
 }
 
@@ -609,7 +609,7 @@ static int process_connect(int new_fd)
 				}
 
 				/* send the ACK */
-				sprintf(buf, "%s%d%s", mk_errline(0, buffer), strlen(client->prompt), client->prompt);
+				sprintf(buf, "%s%zd%s", mk_errline(0, buffer), strlen(client->prompt), client->prompt);
 				send(new_fd, buf, strlen(buf) + 1, 0);
 
 				return 0;

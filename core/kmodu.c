@@ -125,7 +125,7 @@ int kmodu_final()
 {
 	kmoducc_s *cc = __g_kmoducc;
 
-	kassert(cc);
+	kassert(cc, "");
 
 	cc->ref--;
 	if (cc->ref <= 0) {

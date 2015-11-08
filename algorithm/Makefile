@@ -7,7 +7,7 @@ SUB_OBJS_crc32 = ./crc32.o
 SUB_OBJS_crc16 = ./crc16.o
 
 LOCAL_INCDIRS = -I ../inc
-LOCAL_OUT_OBJS = $(SUB_OBJS_crc32) $(SUB_OBJS_crc16) $(SUB_OBJS_sdlist)
+LOCAL_OUT_OBJS = $(SUB_OBJS_crc32) $(SUB_OBJS_crc16)
 LOCAL_OUT_LIB = algorithm_lib.a
 
 .PHONY: all clean

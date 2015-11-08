@@ -359,7 +359,7 @@ SPL_HANDLE spl_process_create(int prio, char *const argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	return (SPL_HANDLE)pid;
+	return (SPL_HANDLE)(long)pid;
 }
 int spl_process_set_priority(SPL_HANDLE h, int prio)
 {
@@ -369,7 +369,7 @@ int spl_process_set_priority(SPL_HANDLE h, int prio)
 }
 int spl_process_wait(SPL_HANDLE h)
 {
-	int pid = (int)h, retpid = -1;
+	int pid = (int)(long)h, retpid = -1;
 	int status = 0;
 	do {
 		retpid = waitpid(pid, &status, WUNTRACED | WCONTINUED);
@@ -395,13 +395,13 @@ int spl_process_wait(SPL_HANDLE h)
 }
 int spl_process_kill(SPL_HANDLE h, int signo)
 {
-	int pid = (int)h;
+	int pid = (int)(long)h;
 	return kill(pid, signo);
 }
 
 SPL_HANDLE spl_process_current()
 {
-	return (SPL_HANDLE)getpid();
+	return (SPL_HANDLE)(long)getpid();
 }
 
 /**
@@ -830,7 +830,7 @@ int wlog(const char *msg)
 
 int spl_sock_close(void *s)
 {
-	return close((int)s);
+	return close((int)(long)s);
 }
 int spl_sock_err()
 {

@@ -237,7 +237,7 @@ int hget_recv(SOCKET a_socket, const char *a_host, const char *a_path,
 				"POST %s HTTP/1.1\r\n"
 				"Accept: text/xml\r\n"
 				"Connection: Keep-Alive\r\n"
-				"Content-Length: %d\r\n"
+				"Content-Length: %zd\r\n"
 				"Host: %s\r\n"
 				"Content-Type: text/xml\r\n\r\n" "%s",
 				a_path, a_cmd ? strlen(a_cmd) : 0,
@@ -370,7 +370,7 @@ int hget_recv(SOCKET a_socket, const char *a_host, const char *a_path,
 			pNext += dat_len;
 			cur_len += dat_len;
 		}
-		kassert(cur_len <= dat_len || !"bad cur_len or all_en");
+		kassert(cur_len <= dat_len, "bad cur_len or all_en");
 
 		/*
 		 * Then got the rest data
@@ -401,7 +401,7 @@ int hget_recv(SOCKET a_socket, const char *a_host, const char *a_path,
 					pNext += dat_len - cur_len;
 					cur_len += dat_len - cur_len;
 				}
-				kassert(cur_len <= dat_len || !"bad cur_len or all_en");
+				kassert(cur_len <= dat_len, "bad cur_len or all_en");
 
 				if (cur_len < dat_len)
 					while ((-1 == (ret = recv(a_socket, data, DATA_LEN, 0))) && CAN_CONTI());

@@ -316,7 +316,7 @@ static int og_knode_diag_dump(void *opt, void *pa, void *pb)
 static int os_knode_cmd(int ses, void *opt, void *pa, void *pb)
 {
 	char *name = kopt_get_new_str(opt);
-	char type = (char)(int)kopt_ua(opt);
+	char type = (char)(int)(long)kopt_ua(opt);
 	knode_s *node;
 	int ret;
 
