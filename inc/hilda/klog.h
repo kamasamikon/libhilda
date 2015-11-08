@@ -135,16 +135,17 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, char *prog, char
 #define knotice(fmt, ...)      KLOG_CHK_AND_CALL(KLOG_NOTICE,  'N', KLOG_MODU_NAME, __FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
 #define kinfo(fmt, ...)        KLOG_CHK_AND_CALL(KLOG_INFO,    'I', KLOG_MODU_NAME, __FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
 #define kdebug(fmt, ...)       KLOG_CHK_AND_CALL(KLOG_DEBUG,   'D', KLOG_MODU_NAME, __FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
+#define klog(fmt, ...)         KLOG_CHK_AND_CALL(KLOG_DEBUG,   'D', KLOG_MODU_NAME, __FILE__, __func__, __LINE__, fmt, ##__VA_ARGS__)
 
-#define kassert(_x_) do { \
-	if (!(_x_)) { \
+#define kassert(expr, msg) do { \
+	if (!(expr)) { \
 		KLOG_INNER_VAR_DEF(); \
 		if (__kl_ver_get > __kl_ver_sav) { \
 			__kl_ver_sav = __kl_ver_get; \
 			KLOG_SETUP_NAME(KLOG_MODU_NAME, __FILE__, __func__); \
 		} \
 		klog_f('!', KLOG_ALL, __kl_prog_name, KLOG_MODU_NAME, __kl_file_name, __FUNCTION__, __LINE__, \
-				"\n\tASSERT NG: \"%s\"\n\n", #_x_); \
+				"ASSERT FAILED: %s\n", msg); \
 	} \
 } while (0)
 

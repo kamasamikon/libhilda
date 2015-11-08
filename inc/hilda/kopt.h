@@ -8,37 +8,40 @@ extern "C" {
 #endif
 
 #include <hilda/sysdeps.h>
+#include <hilda/sdlist.h>
+#include <hilda/kstr.h>
+#include <hilda/kflg.h>
 
-kinline char *kopt_path(void *oe);
-kinline char *kopt_desc(void *oe);
+static kinline char *kopt_path(void *oe);
+static kinline char *kopt_desc(void *oe);
 
-kinline void *kopt_ua(void *oe);
-kinline void *kopt_ub(void *oe);
+static kinline void *kopt_ua(void *oe);
+static kinline void *kopt_ub(void *oe);
 
-kinline int kopt_get_setpa(void *oe, void **pa);
-kinline int kopt_get_setpb(void *oe, void **pb);
+static kinline int kopt_get_setpa(void *oe, void **pa);
+static kinline int kopt_get_setpb(void *oe, void **pb);
 
-kinline char **kopt_get_cur_arr(void *oe);
-kinline int kopt_get_cur_arr_len(void *oe);
-kinline void *kopt_get_cur_dat(void *oe);
-kinline int kopt_get_cur_dat_len(void *oe);
-kinline int kopt_get_cur_int(void *oe);
-kinline char *kopt_get_cur_str(void *oe);
-kinline void *kopt_get_cur_ptr(void *oe);
+static kinline char **kopt_get_cur_arr(void *oe);
+static kinline int kopt_get_cur_arr_len(void *oe);
+static kinline void *kopt_get_cur_dat(void *oe);
+static kinline int kopt_get_cur_dat_len(void *oe);
+static kinline int kopt_get_cur_int(void *oe);
+static kinline char *kopt_get_cur_str(void *oe);
+static kinline void *kopt_get_cur_ptr(void *oe);
 
-kinline int kopt_set_cur_arr(void *oe, char **v_arr, int len);
-kinline int kopt_set_cur_dat(void *oe, char *v_dat, int len);
-kinline int kopt_set_cur_int(void *oe, int v_int);
-kinline int kopt_set_cur_str(void *oe, char *v_str);
-kinline int kopt_set_cur_ptr(void *oe, void *v_ptr);
+static kinline int kopt_set_cur_arr(void *oe, char **v_arr, int len);
+static kinline int kopt_set_cur_dat(void *oe, char *v_dat, int len);
+static kinline int kopt_set_cur_int(void *oe, int v_int);
+static kinline int kopt_set_cur_str(void *oe, char *v_str);
+static kinline int kopt_set_cur_ptr(void *oe, void *v_ptr);
 
-kinline char **kopt_get_new_arr(void *oe);
-kinline int kopt_get_new_arr_len(void *oe);
-kinline void *kopt_get_new_dat(void *oe);
-kinline int kopt_get_new_dat_len(void *oe);
-kinline int kopt_get_new_int(void *oe);
-kinline char *kopt_get_new_str(void *oe);
-kinline void *kopt_get_new_ptr(void *oe);
+static kinline char **kopt_get_new_arr(void *oe);
+static kinline int kopt_get_new_arr_len(void *oe);
+static kinline void *kopt_get_new_dat(void *oe);
+static kinline int kopt_get_new_dat_len(void *oe);
+static kinline int kopt_get_new_int(void *oe);
+static kinline char *kopt_get_new_str(void *oe);
+static kinline void *kopt_get_new_ptr(void *oe);
 
 /* bool KOPT_IS_X(const char *path); */
 #define KOPT_IS_A(_PATH_) (('a' == (_PATH_)[0]) && (':' == (_PATH_)[1]))
@@ -57,9 +60,9 @@ kinline void *kopt_get_new_ptr(void *oe);
 #define OS "s:"		/* str: */
 #define OP "p:"		/* ptr: */
 
-kinline void *kopt_wch_ua(void *ow);
-kinline void *kopt_wch_ub(void *ow);
-kinline void *kopt_wch_path(void *ow);
+static kinline void *kopt_wch_ua(void *ow);
+static kinline void *kopt_wch_ub(void *ow);
+static kinline void *kopt_wch_path(void *ow);
 
 #define KOPT_CHK_TYPE(p) ((p) && \
 		((p)[1] == ':') && \
@@ -101,6 +104,332 @@ typedef int (*KOPT_DELTER)(void *opt);
 
 typedef void (*KOPT_WATCH)(int ses, void *opt, void *wch);
 typedef int (*KOPT_WCH_DELTER)(void *wch);
+
+/* XXX */
+/* / : = */
+/* - */
+typedef struct _optcc_s optcc_s;
+typedef struct _opt_watch_s kopt_watch_s;
+typedef struct _opt_entry_s kopt_entry_s;
+
+struct _opt_watch_s {
+	/** queue to bwchhdr/awchhdr */
+	K_dlist_entry entry;
+
+	/** callback when watch hit */
+	KOPT_WATCH wch;
+	/** have chance to free resource */
+	KOPT_WCH_DELTER delter;
+
+	void *ua, *ub;
+
+	/** watch what event */
+	char *path;
+
+	/** diag part */
+	unsigned int wch_cnt;
+};
+
+struct _opt_entry_s {
+	/** _optcc_s::oehdr */
+	K_dlist_entry entry;
+
+	char *path;
+	char *desc;
+
+	KOPT_GETTER getter;
+	KOPT_SETTER setter;
+	/* have chance to free resource */
+	KOPT_DELTER delter;
+
+	void *ua, *ub;
+	void *set_pa, *set_pb;
+	void *get_pa, *get_pb;
+
+	int ses;
+
+	unsigned int attr;
+
+	/* quick access of path[0] */
+	char type;
+
+	struct {
+		/* cur is copy */
+		union {
+			struct {
+				/* maintain other _opt_entry_s */
+				/* kvfmt: [path1,path2,path3] */
+				char **v;
+				int l;
+			} a;
+			struct {
+				/* kvfmt: "aa,bb,cc,34,78" */
+				void *v;
+				int l;
+			} d;
+			struct {
+				/* kvfmt: "232432" or "0x34234" */
+				int v;
+			} i;
+			struct {
+				/* kvfmt: "Anything you like\n\rOrz" */
+				char *v;
+			} s;
+			struct {
+				/* kvfmt: "232432" or "0x34234" */
+				void *v;
+			} p;
+		} cur;
+
+		/* new is ref */
+		union {
+			struct {
+				/* maintain other _opt_entry_s */
+				/* kvfmt: [path1,path2,path3] */
+				char **v;
+				int l;
+			} a;
+			struct {
+				/* kvfmt: "aa,bb,cc,34,78" */
+				void *v;
+				int l;
+			} d;
+			struct {
+				/* kvfmt: "232432" or "0x34234" */
+				int v;
+			} i;
+			struct {
+				/* kvfmt: "Anything you like" */
+				char *v;
+			} s;
+			struct {
+				/* kvfmt: "232432" or "0x34234" */
+				void *v;
+			} p;
+		} new;
+	} v;
+
+	/* watch list */
+	K_dlist_entry bwchhdr;
+	K_dlist_entry awchhdr;
+
+	/** diag part */
+	unsigned int set_called, get_called, awch_called, bwch_called;
+	unsigned int awch_cnt, bwch_cnt;
+};
+
+/* Control Center for OPT */
+struct _optcc_s {
+	/** Opt Entry Header */
+	K_dlist_entry oehdr;
+
+	/** watch that Not Yet connect */
+	struct {
+		K_dlist_entry bhdr;
+		/** before watch header */
+		K_dlist_entry ahdr;
+		/** after watch header */
+	} nywch;
+
+	int sesid_last;     /**< the last used session Id, can not be zero */
+	kbean lck;	    /**< lck to protect oehdr, ahdr, bhdr */
+
+	struct {
+		struct {
+			/* thread id */
+			SPL_HANDLE task;
+			int no;
+			char msg[2048];
+		} arr[4];
+		int curpos;
+	} err;
+};
+
+/*-----------------------------------------------------------------------
+ * kinline functions
+ */
+
+/* normal access */
+static kinline char *kopt_path(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->path;
+}
+static kinline char *kopt_desc(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->desc;
+}
+
+static kinline void *kopt_ua(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->ua;
+}
+static kinline void *kopt_ub(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->ub;
+}
+
+static kinline int kopt_get_setpa(void *oe, void **pa)
+{
+	if (kflg_chk_any(((kopt_entry_s*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH | OA_IN_SET)) {
+		*pa = ((kopt_entry_s*)oe)->set_pa;
+		return 0;
+	}
+	return -1;
+}
+static kinline int kopt_get_setpb(void *oe, void **pb)
+{
+	if (kflg_chk_any(((kopt_entry_s*)oe)->attr, OA_IN_AWCH | OA_IN_BWCH | OA_IN_SET)) {
+		*pb = ((kopt_entry_s*)oe)->set_pb;
+		return 0;
+	}
+	return -1;
+}
+
+static kinline char **kopt_get_cur_arr(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.cur.a.v;
+}
+static kinline int kopt_get_cur_arr_len(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.cur.a.l;
+}
+static kinline void *kopt_get_cur_dat(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.cur.d.v;
+}
+static kinline int kopt_get_cur_dat_len(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.cur.d.l;
+}
+static kinline int kopt_get_cur_int(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.cur.i.v;
+}
+static kinline char *kopt_get_cur_str(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.cur.s.v;
+}
+static kinline void *kopt_get_cur_ptr(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.cur.p.v;
+}
+
+static kinline char **kopt_get_new_arr(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.new.a.v;
+}
+static kinline int kopt_get_new_arr_len(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.new.a.l;
+}
+static kinline void *kopt_get_new_dat(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.new.d.v;
+}
+static kinline int kopt_get_new_dat_len(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.new.d.l;
+}
+static kinline int kopt_get_new_int(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.new.i.v;
+}
+static kinline char *kopt_get_new_str(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.new.s.v;
+}
+static kinline void *kopt_get_new_ptr(void *oe)
+{
+	return ((kopt_entry_s*)(oe))->v.new.p.v;
+}
+
+static kinline void *kopt_wch_path(void *ow)
+{
+	return ((kopt_watch_s*)(ow))->path;
+}
+
+static kinline void *kopt_wch_ua(void *ow)
+{
+	return ((kopt_watch_s*)(ow))->ua;
+}
+
+static kinline void *kopt_wch_ub(void *ow)
+{
+	return ((kopt_watch_s*)(ow))->ub;
+}
+
+static kinline int kopt_set_cur_arr(void *oe, char **v_arr, int len)
+{
+	kopt_entry_s *e = (kopt_entry_s*)oe;
+
+	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
+		kmem_free_sz(e->v.cur.a.v);
+		if (len < 0)
+			len = 0;
+		if (len > 0) {
+			kmem_free_sz(e->v.cur.a.v);
+			e->v.cur.a.v = (char**)kmem_alloz(len, char*);
+			memcpy(e->v.cur.a.v, v_arr, len * sizeof(char*));
+		}
+		e->v.cur.a.l = len;
+		return EC_OK;
+	}
+	return EC_FORBIDEN;
+}
+
+static kinline int kopt_set_cur_dat(void *oe, char *v_dat, int len)
+{
+	kopt_entry_s *e = (kopt_entry_s*)oe;
+
+	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
+		kmem_free_sz(e->v.cur.d.v);
+		if (len < 0)
+			len = 0;
+		if (len > 0) {
+			kmem_free_sz(e->v.cur.d.v);
+			e->v.cur.d.v = (char*)kmem_alloz(len, char);
+			memcpy(e->v.cur.d.v, v_dat, len * sizeof(char));
+		}
+		e->v.cur.d.l = len;
+		return EC_OK;
+	}
+	return EC_FORBIDEN;
+}
+
+static kinline int kopt_set_cur_int(void *oe, int v_int)
+{
+	kopt_entry_s *e = (kopt_entry_s*)oe;
+
+	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
+		e->v.cur.i.v = v_int;
+		return EC_OK;
+	}
+	return EC_FORBIDEN;
+}
+
+static kinline int kopt_set_cur_str(void *oe, char *v_str)
+{
+	kopt_entry_s *e = (kopt_entry_s*)oe;
+
+	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
+		kmem_free_sz(e->v.cur.s.v);
+		e->v.cur.s.v = kstr_dup(v_str);
+		return EC_OK;
+	}
+	return EC_FORBIDEN;
+}
+
+static kinline int kopt_set_cur_ptr(void *oe, void *v_ptr)
+{
+	kopt_entry_s *e = (kopt_entry_s*)oe;
+
+	if (e->attr & (OA_IN_SET | OA_IN_GET)) {
+		e->v.cur.p.v = v_ptr;
+		return EC_OK;
+	}
+	return EC_FORBIDEN;
+}
+
 
 int kopt_make_kv(const char *buffer, int blen, char ***okv, int *ocnt);
 void kopt_free_kv(char **kv, int cnt);

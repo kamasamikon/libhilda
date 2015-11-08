@@ -9,7 +9,6 @@ SUB_OBJS_hilda_core = \
 				 $(HI_PRJ_ROOT)/core/kopt.o \
 				 $(HI_PRJ_ROOT)/core/kopt-rpc-common.o \
 				 $(HI_PRJ_ROOT)/core/kopt-rpc-server.o \
-				 $(HI_PRJ_ROOT)/core/sdlist.o \
 				 $(HI_PRJ_ROOT)/core/kmisc.o \
 				 $(HI_PRJ_ROOT)/core/strbuf.o \
 				 $(HI_PRJ_ROOT)/core/kmque.o \
@@ -19,7 +18,6 @@ SUB_OBJS_hilda_all = \
 				 $(HI_PRJ_ROOT)/algorithm/md5sum.o \
 				 $(HI_PRJ_ROOT)/core/knode.o \
 				 $(HI_PRJ_ROOT)/core/ftfs.o \
-				 $(HI_PRJ_ROOT)/core/hget.o \
 				 $(HI_PRJ_ROOT)/core/karg.o \
 				 $(HI_PRJ_ROOT)/core/kcfg.o \
 				 $(HI_PRJ_ROOT)/core/klog.o \
@@ -33,7 +31,6 @@ SUB_OBJS_hilda_all = \
 				 $(HI_PRJ_ROOT)/core/kopt-rpc-common.o \
 				 $(HI_PRJ_ROOT)/core/kopt-rpc-server.o \
 				 $(HI_PRJ_ROOT)/core/pflock.o \
-				 $(HI_PRJ_ROOT)/core/sdlist.o \
 				 $(HI_PRJ_ROOT)/core/trace.o \
 				 $(HI_PRJ_ROOT)/core/kmisc.o \
 				 $(HI_PRJ_ROOT)/core/strbuf.o \
@@ -41,7 +38,8 @@ SUB_OBJS_hilda_all = \
 
 ifeq ($(HILDA_PLATFORM),x86)
 SUB_OBJS_hilda = $(SUB_OBJS_hilda_all)
-SUB_OBJS_hilda += $(HI_PRJ_ROOT)/core/xmldoc.o
+# SUB_OBJS_hilda += $(HI_PRJ_ROOT)/core/xmldoc.o
+# $(HI_PRJ_ROOT)/core/hget.o \
 else
 SUB_OBJS_hilda = $(SUB_OBJS_hilda_core)
 endif

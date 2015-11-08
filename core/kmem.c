@@ -234,7 +234,7 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 			else
 				p += sprintf(p, ".");
 		p += sprintf(p, "|\n");
-		klogs(pbuf);
+		klogs("%s", pbuf);
 
 		offset += line;
 		dat += width;
