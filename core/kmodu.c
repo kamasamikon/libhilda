@@ -13,7 +13,7 @@
 #include <hilda/knode.h>
 #include <hilda/sdlist.h>
 #include <hilda/xtcool.h>
-#include <hilda/strbuf.h>
+#include <hilda/kbuf.h>
 
 #include <hilda/kmodu.h>
 
@@ -47,23 +47,23 @@ static int og_kmodu_diag_dump(void *opt, void *pa, void *pb)
 	kmoducc_s *cc = (kmoducc_s*)kopt_ua(opt);
 	kmodu_s *mod;
 	K_dlist_entry *entry;
-	struct strbuf sb;
+	kbuf_s kb;
 
-	strbuf_init(&sb, 4096);
+	kbuf_init(&kb, 4096);
 
 	entry = cc->modhdr.next;
 	while (entry != &cc->modhdr) {
 		mod = FIELD_TO_STRUCTURE(entry, kmodu_s, entry);
 		entry = entry->next;
 
-		strbuf_addf(&sb, "\r\n---->\r\n  path:%s\r\n  name:%s\r\n  "
+		kbuf_addf(&kb, "\r\n---->\r\n  path:%s\r\n  name:%s\r\n  "
 				"version:%08x\r\n  type:%d\r\n  handle:%p\r\n  "
 				"hey:%p\r\n  bye:%p\r\n<----\r\n\r\n",
 				mod->path, mod->name, mod->version, mod->type,
 				mod->handle, mod->hey, mod->bye);
 	}
-	kopt_set_cur_str(opt, sb.buf);
-	strbuf_release(&sb);
+	kopt_set_cur_str(opt, kb.buf);
+	kbuf_release(&kb);
 
 	return EC_OK;
 }

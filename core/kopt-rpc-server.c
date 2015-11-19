@@ -36,7 +36,7 @@
 #include <hilda/kopt.h>
 
 #include <hilda/xtcool.h>
-#include <hilda/strbuf.h>
+#include <hilda/kbuf.h>
 
 #include <hilda/kopt-rpc-common.h>
 #include <hilda/kopt-rpc-server.h>
@@ -240,7 +240,7 @@ static void rpc_watch(int ses, void *opt, void *wch)
 {
 	void *ua = kopt_wch_ua(wch);
 	char *ini;
-	struct strbuf sb;
+	kbuf_s kb;
 	char *path = kopt_path(opt);
 
 	klog("path:%s\n", path);
@@ -248,14 +248,14 @@ static void rpc_watch(int ses, void *opt, void *wch)
 	if (kopt_getini_by_opt(opt, &ini))
 		return;
 
-	strbuf_init(&sb, 4096);
+	kbuf_init(&kb, 4096);
 
-	strbuf_addf(&sb, "wchnotify %s\r\n%s", path, ini);
-	if (send_watch_message((rpc_client_s*)ua, sb.buf))
+	kbuf_addf(&kb, "wchnotify %s\r\n%s", path, ini);
+	if (send_watch_message((rpc_client_s*)ua, kb.buf))
 		close_client((rpc_client_s*)ua);
 
 	kmem_free(ini);
-	strbuf_release(&sb);
+	kbuf_release(&kb);
 }
 
 /*-----------------------------------------------------------------------

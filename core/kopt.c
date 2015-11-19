@@ -14,7 +14,7 @@
 #include <hilda/sdlist.h>
 
 #include <hilda/xtcool.h>
-#include <hilda/strbuf.h>
+#include <hilda/kbuf.h>
 
 #include <hilda/kopt.h>
 
@@ -1455,27 +1455,27 @@ int kopt_wch_del(void *wch)
 
 static void diag_list_foreach(void *opt, const char *path, void *userdata)
 {
-	struct strbuf *sb = (struct strbuf*)userdata;
+	kbuf_s *kb = (kbuf_s*)userdata;
 
-	strbuf_addf(sb, "%s\r\n", path);
+	kbuf_addf(kb, "%s\r\n", path);
 }
 
 static int og_diag_list(void *opt, void *pa, void *pb)
 {
-	struct strbuf sb;
+	kbuf_s kb;
 
-	strbuf_init(&sb, 4096);
+	kbuf_init(&kb, 4096);
 
-	kopt_foreach(NULL, diag_list_foreach, (void*)&sb);
-	kopt_set_cur_str(opt, sb.buf);
-	strbuf_release(&sb);
+	kopt_foreach(NULL, diag_list_foreach, (void*)&kb);
+	kopt_set_cur_str(opt, kb.buf);
+	kbuf_release(&kb);
 
 	return EC_OK;
 }
 
 static void diag_dump_foreach(void *opt, const char *path, void *userdata)
 {
-	struct strbuf *sb = (struct strbuf*)userdata;
+	kbuf_s *kb = (kbuf_s*)userdata;
 	kopt_entry_s *oe = (kopt_entry_s*)opt;
 	int err, reti;
 	void *retp;
@@ -1484,7 +1484,7 @@ static void diag_dump_foreach(void *opt, const char *path, void *userdata)
 	if (!strcmp("s:/k/opt/diag/dump", path))
 		return;
 
-	strbuf_addf(sb, "%1d:%1d:%1d %4d:%4d:%4d:%4d %2d:%2d %-30s\t",
+	kbuf_addf(kb, "%1d:%1d:%1d %4d:%4d:%4d:%4d %2d:%2d %-30s\t",
 			!!oe->setter, !!oe->getter, !!oe->delter,
 			oe->set_called, oe->get_called,
 			oe->awch_called, oe->bwch_called,
@@ -1492,47 +1492,47 @@ static void diag_dump_foreach(void *opt, const char *path, void *userdata)
 
 	switch (KOPT_TYPE(oe)) {
 	case 'a':
-		strbuf_addf(sb, "a:%p, l:%d", oe->v.cur.a.v, oe->v.cur.a.l);
+		kbuf_addf(kb, "a:%p, l:%d", oe->v.cur.a.v, oe->v.cur.a.l);
 		break;
 	case 'b':
 	case 'e':
 	case 'i':
 		reti = 0;
 		err = getint(oe, NULL, NULL, &reti);
-		strbuf_addf(sb, "%d", err ? -1 : reti);
+		kbuf_addf(kb, "%d", err ? -1 : reti);
 		break;
 	case 'd':
-		strbuf_addf(sb, "a:%p, l:%d", oe->v.cur.a.v, oe->v.cur.a.l);
+		kbuf_addf(kb, "a:%p, l:%d", oe->v.cur.a.v, oe->v.cur.a.l);
 		break;
 	case 's':
 		rets = NULL;
 		err = getstr(oe, NULL, NULL, &rets);
 		if (err)
-			strbuf_addf(sb, "(err)");
+			kbuf_addf(kb, "(err)");
 		else if (!rets)
-			strbuf_addf(sb, "(null)");
+			kbuf_addf(kb, "(null)");
 		else
-			strbuf_addf(sb, "\"%s\"", rets);
+			kbuf_addf(kb, "\"%s\"", rets);
 		break;
 	case 'p':
 		retp = 0;
 		err = getptr(oe, NULL, NULL, &retp);
-		strbuf_addf(sb, "%p", err ? NULL : retp);
+		kbuf_addf(kb, "%p", err ? NULL : retp);
 		break;
 	}
-	strbuf_addf(sb, "\r\n");
+	kbuf_addf(kb, "\r\n");
 }
 
 static int og_diag_dump(void *opt, void *pa, void *pb)
 {
-	struct strbuf sb;
+	kbuf_s kb;
 
-	strbuf_init(&sb, 1024 * 128);
-	strbuf_addf(&sb, "\r\nS:G:D   SC:  GC: AWC: BWC AC:BC PATH ...\r\n");
+	kbuf_init(&kb, 1024 * 128);
+	kbuf_addf(&kb, "\r\nS:G:D   SC:  GC: AWC: BWC AC:BC PATH ...\r\n");
 
-	kopt_foreach(NULL, diag_dump_foreach, (void*)&sb);
-	kopt_set_cur_str(opt, sb.buf);
-	strbuf_release(&sb);
+	kopt_foreach(NULL, diag_dump_foreach, (void*)&kb);
+	kopt_set_cur_str(opt, kb.buf);
+	kbuf_release(&kb);
 
 	return EC_OK;
 }
@@ -1541,30 +1541,30 @@ static int og_diag_wch_notyet(void *opt, void *pa, void *pb)
 {
 	K_dlist_entry *entry;
 	kopt_watch_s *wch;
-	struct strbuf sb;
+	kbuf_s kb;
 
-	strbuf_init(&sb, 4096);
+	kbuf_init(&kb, 4096);
 
-	strbuf_addf(&sb, "nywch.ahdr:\n");
+	kbuf_addf(&kb, "nywch.ahdr:\n");
 	entry = __g_optcc->nywch.ahdr.next;
 	while (entry != &__g_optcc->nywch.ahdr) {
 		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_s, entry);
 		entry = entry->next;
 
-		strbuf_addf(&sb, "%s\n", wch->path);
+		kbuf_addf(&kb, "%s\n", wch->path);
 	}
 
-	strbuf_addf(&sb, "\nnywch.bhdr:\n");
+	kbuf_addf(&kb, "\nnywch.bhdr:\n");
 	entry = __g_optcc->nywch.bhdr.next;
 	while (entry != &__g_optcc->nywch.bhdr) {
 		wch = FIELD_TO_STRUCTURE(entry, kopt_watch_s, entry);
 		entry = entry->next;
 
-		strbuf_addf(&sb, "%s\n", wch->path);
+		kbuf_addf(&kb, "%s\n", wch->path);
 	}
 
-	kopt_set_cur_str(opt, sb.buf);
-	strbuf_release(&sb);
+	kopt_set_cur_str(opt, kb.buf);
+	kbuf_release(&kb);
 
 	return EC_OK;
 }

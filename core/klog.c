@@ -17,7 +17,7 @@
 #include <hilda/xtcool.h>
 #include <hilda/karg.h>
 #include <hilda/klog.h>
-#include <hilda/strbuf.h>
+#include <hilda/kbuf.h>
 
 extern ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 
@@ -198,7 +198,7 @@ void *klog_attach(void *logcc)
 
 static char *get_execpath(int *size)
 {
-	struct strbuf nb;
+	kbuf_s kb;
 	FILE *fp;
 	char buff[256];
 	int err = 0;
@@ -207,20 +207,20 @@ static char *get_execpath(int *size)
 	sprintf(buff, "/proc/%d/cmdline", getpid());
 	fp = fopen(buff, "rt");
 	if (fp) {
-		strbuf_init(&nb, 0);
+		kbuf_init(&kb, 0);
 
-		while (strbuf_fread(&nb, 1024, fp, &err) > 0 && !err)
+		while (kbuf_fread(&kb, 1024, fp, &err) > 0 && !err)
 			;
 		fclose(fp);
 
 		if (size)
-			*size = nb.len;
-		nb.buf[nb.len] = '\0';
+			*size = kb.len;
+		kb.buf[kb.len] = '\0';
 
-		path = strbuf_detach(&nb, NULL);
+		path = kbuf_detach(&kb, NULL);
 	}
 
-	strbuf_release(&nb);
+	kbuf_release(&kb);
 	return path;
 }
 

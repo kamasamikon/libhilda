@@ -10,7 +10,7 @@ SUB_OBJS_hilda_core = \
 				 $(HI_PRJ_ROOT)/core/kopt-rpc-common.o \
 				 $(HI_PRJ_ROOT)/core/kopt-rpc-server.o \
 				 $(HI_PRJ_ROOT)/core/kmisc.o \
-				 $(HI_PRJ_ROOT)/core/strbuf.o \
+				 $(HI_PRJ_ROOT)/core/kbuf.o \
 				 $(HI_PRJ_ROOT)/core/kmque.o \
 				 $(HI_PRJ_ROOT)/xtcool/linux.o 
 
@@ -33,7 +33,7 @@ SUB_OBJS_hilda_all = \
 				 $(HI_PRJ_ROOT)/core/pflock.o \
 				 $(HI_PRJ_ROOT)/core/trace.o \
 				 $(HI_PRJ_ROOT)/core/kmisc.o \
-				 $(HI_PRJ_ROOT)/core/strbuf.o \
+				 $(HI_PRJ_ROOT)/core/kbuf.o \
 				 $(HI_PRJ_ROOT)/xtcool/linux.o 
 
 ifeq ($(HILDA_PLATFORM),x86)

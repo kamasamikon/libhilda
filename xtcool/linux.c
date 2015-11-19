@@ -14,7 +14,7 @@
 
 #include <hilda/kmem.h>
 #include <hilda/kstr.h>
-#include <hilda/strbuf.h>
+#include <hilda/kbuf.h>
 
 #include <hilda/xtcool.h>
 
@@ -465,17 +465,18 @@ char *spl_get_cmdline(int *size)
 	sprintf(path, "/proc/%d/cmdline", getpid());
 	fp = fopen(path, "rt");
 	if (fp) {
-		struct strbuf sb = STRBUF_INIT;
+		kbuf_s kb;
+		kbuf_init(&kb, 2048);
 
-		while (strbuf_fread(&sb, 2048, fp, NULL) > 0)
+		while (kbuf_fread(&kb, 2048, fp, NULL) > 0)
 			;
 		fclose(fp);
 
 		if (size)
-			*size = sb.len;
-		sb.buf[sb.len] = '\0';
+			*size = kb.len;
+		kb.buf[kb.len] = '\0';
 
-		return (char*)sb.buf;
+		return (char*)kb.buf;
 	}
 	return NULL;
 }

@@ -11,7 +11,7 @@
 #include <hilda/kopt.h>
 
 #include <hilda/xtcool.h>
-#include <hilda/strbuf.h>
+#include <hilda/kbuf.h>
 
 #include <hilda/knode.h>
 #include <hilda/helper.h>
@@ -288,14 +288,14 @@ int knode_foreach(KNODE_FOREACH foreach, void *ua, void *ub)
 static int do_dump(knode_s *node, void *ua, void *ub)
 {
 	int i;
-	struct strbuf *sb = (struct strbuf*)ua;
+	kbuf_s *kb = (kbuf_s*)ua;
 
-	strbuf_addf(sb, "\r\nT:%08x A:%08x F:%08x push:%p name:%s\r\n",
+	kbuf_addf(kb, "\r\nT:%08x A:%08x F:%08x push:%p name:%s\r\n",
 			node->type, node->attr, node->flg, node->push,
 			node->name);
 
 	for (i = 0; i < node->dstr.cnt; i++)
-		strbuf_addf(sb, "\t%02d: %s\r\n", i,
+		kbuf_addf(kb, "\t%02d: %s\r\n", i,
 				node->dstr.arr[i].node->name);
 
 	return 0;
@@ -303,12 +303,12 @@ static int do_dump(knode_s *node, void *ua, void *ub)
 
 static int og_knode_diag_dump(void *opt, void *pa, void *pb)
 {
-	struct strbuf sb;
+	kbuf_s kb;
 
-	strbuf_init(&sb, 4096);
-	knode_foreach(do_dump, (void*)&sb, NULL);
-	kopt_set_cur_str(opt, sb.buf);
-	strbuf_release(&sb);
+	kbuf_init(&kb, 4096);
+	knode_foreach(do_dump, (void*)&kb, NULL);
+	kopt_set_cur_str(opt, kb.buf);
+	kbuf_release(&kb);
 
 	return EC_OK;
 }
