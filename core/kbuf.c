@@ -5,6 +5,7 @@
 #include <stdarg.h>
 
 #include <hilda/kbuf.h>
+#include <hilda/kmem.h>
 
 static char kbuf_slopbuf[1];
 
@@ -34,7 +35,7 @@ void kbuf_init(kbuf_s *kb, size_t hint)
 void kbuf_release(kbuf_s *kb)
 {
 	if (kb->alloc) {
-		free(kb->buf);
+		kmem_free(kb->buf);
 		kbuf_init(kb, 0);
 	}
 }
@@ -141,7 +142,7 @@ void kbuf_dump(kbuf_s *kb, const char *banner, char *dat, int len, int width)
 	/* 6 => "%04x  "; 3 => "%02x ", 1 => "%c", 2 => " |", 2 => "|\n" */
 	blen = 6 + (3 + 1) * width + 2 + 2;
 	if ((size_t)blen > sizeof(cache))
-		pbuf = (char*)malloc(blen * sizeof(char));
+		pbuf = (char*)kmem_alloc(blen, char);
 	else
 		pbuf = cache;
 
@@ -176,6 +177,6 @@ void kbuf_dump(kbuf_s *kb, const char *banner, char *dat, int len, int width)
 	}
 
 	if (pbuf != cache)
-		free(pbuf);
+		kmem_free(pbuf);
 }
 
