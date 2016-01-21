@@ -660,9 +660,9 @@ char *klog_file_name_add(char *name)
 	klogcc_s *cc = (klogcc_s*)klog_cc();
 	char *newstr, *newname = get_basename(name);
 
-	spl_mutex_lock(&cc->mutex);
+	spl_mutex_lock(cc->mutex);
 	newstr = strarr_add(&cc->arr_file_name, newname);
-	spl_mutex_unlock(&cc->mutex);
+	spl_mutex_unlock(cc->mutex);
 
 	free(newname);
 
@@ -673,9 +673,9 @@ char *klog_modu_name_add(char *name)
 	klogcc_s *cc = (klogcc_s*)klog_cc();
 	char *newstr;
 
-	spl_mutex_lock(&cc->mutex);
+	spl_mutex_lock(cc->mutex);
 	newstr = strarr_add(&cc->arr_modu_name, name);
-	spl_mutex_unlock(&cc->mutex);
+	spl_mutex_unlock(cc->mutex);
 	return newstr;
 }
 char *klog_prog_name_add(char *name)
@@ -690,9 +690,9 @@ char *klog_prog_name_add(char *name)
 		newname = get_basename(progname);
 	}
 
-	spl_mutex_lock(&cc->mutex);
+	spl_mutex_lock(cc->mutex);
 	newstr = strarr_add(&cc->arr_prog_name, newname);
-	spl_mutex_unlock(&cc->mutex);
+	spl_mutex_unlock(cc->mutex);
 
 	free(newname);
 
@@ -703,9 +703,9 @@ char *klog_func_name_add(char *name)
 	klogcc_s *cc = (klogcc_s*)klog_cc();
 	char *newstr;
 
-	spl_mutex_lock(&cc->mutex);
+	spl_mutex_lock(cc->mutex);
 	newstr = strarr_add(&cc->arr_func_name, name);
-	spl_mutex_unlock(&cc->mutex);
+	spl_mutex_unlock(cc->mutex);
 	return newstr;
 }
 
@@ -805,9 +805,9 @@ void klog_rule_add(char *rule)
 	klog_parse_mask(s_mask, &set, &clr);
 
 	if (set || clr) {
-		spl_mutex_lock(&cc->mutex);
+		spl_mutex_lock(cc->mutex);
 		rulearr_add(&cc->arr_rule, s_prog, s_modu, s_file, s_func, i_line, i_pid, set, clr);
-		spl_mutex_unlock(&cc->mutex);
+		spl_mutex_unlock(cc->mutex);
 
 		klog_touch();
 	}
