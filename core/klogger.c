@@ -5,13 +5,16 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 
 #include <hilda/helper.h>
 #include <hilda/xtcool.h>
 #include <hilda/klog.h>
 #include <hilda/klogger.h>
 
-/*
+/*-----------------------------------------------------------------------
  * Log to stdout
  */
 static void builtin_logger_stdout(char *content, int len)
@@ -28,7 +31,7 @@ void klog_del_stdout_logger()
 }
 
 
-/*
+/*-----------------------------------------------------------------------
  * Log to stderr
  */
 static void builtin_logger_stderr(char *content, int len)
@@ -45,8 +48,7 @@ void klog_del_stderr_logger()
 }
 
 
-
-/*
+/*-----------------------------------------------------------------------
  * Log to file
  */
 #include <pwd.h>
@@ -114,8 +116,8 @@ static void set_file_path()
 	time_t now = time(NULL);
 	struct tm tm;
 	if (NULL == localtime_r(&now, &tm)) {
-		fprintf("ERR: localtime_r: %d\n", errno);
-		memset(tm, 0, sizeof(tm));
+		fprintf(stderr, "ERR: localtime_r: %d\n", errno);
+		memset(&tm, 0, sizeof(tm));
 	}
 
 try:
@@ -248,12 +250,103 @@ void klog_add_file_logger(const char *pathfmt, unsigned int size,
 	__fi.maxsize = size;
 	__fi.maxtime = time;
 	__fi.save_at = when;
+
+	klog_add_logger(builtin_logger_file);
+}
+void klog_del_file_logger()
+{
+	klog_del_logger(builtin_logger_file);
 }
 
 
-/*
- * Log to file
+/*-----------------------------------------------------------------------
+ * Log to network
  */
-void klog_add_network_logger(const char *addr, unsigned short port);
-void klog_del_network_logger(void);
+static int __sock = -1;
+
+static char __addr[128];
+static unsigned short __port;
+
+static void config_socket(int s)
+{
+	int yes = 1;
+	struct linger lin;
+
+	lin.l_onoff = 0;
+	lin.l_linger = 0;
+	setsockopt(s, SOL_SOCKET, SO_LINGER, (const char *) &lin, sizeof(lin));
+	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+}
+
+static int connect_to_serv(const char *server, unsigned short port, int *retfd)
+{
+	int sockfd;
+	struct hostent *he;
+	struct sockaddr_in their_addr;
+
+	fprintf(stderr, "connect_to_serv: server:<%s>, port:%d\n", server, port);
+
+	if ((he = gethostbyname(server)) == NULL) {
+		fprintf(stderr, "connect_to_serv: gethostbyname error: %s.\n", strerror(errno));
+		return -1;
+	}
+	if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
+		fprintf(stderr, "connect_to_serv: socket error: %s.\n", strerror(errno));
+		return -1;
+	}
+
+	memset((char*)&their_addr, 0, sizeof(their_addr));
+	their_addr.sin_family = he->h_addrtype;
+	memcpy((char*)&their_addr.sin_addr, he->h_addr, he->h_length);
+	their_addr.sin_port = htons(port);
+
+	if (connect(sockfd, (struct sockaddr *)&their_addr,
+				sizeof their_addr) == -1) {
+		fprintf(stderr, "connect_to_serv: connect error: %s.\n", strerror(errno));
+		close(sockfd);
+		return -1;
+	}
+
+	config_socket(sockfd);
+
+	*retfd = sockfd;
+	fprintf(stderr, "connect_to_serv: retfd: %d\n", sockfd);
+	return 0;
+}
+
+static void builtin_logger_network(char *content, int len)
+{
+	if (__sock == -1)
+		connect_to_serv(__addr, __port, &__sock);
+	if (__sock == -1)
+		return;
+
+	if (len != send(__sock, content, len, 0)) {
+		if (__sock != -1)
+			close(__sock);
+		__sock = -1;
+	} else if (content[len - 1] != '\n')
+		send(__sock, "\n", 1, 0);
+}
+
+void klog_add_network_logger(const char *addr, unsigned short port)
+{
+	strncpy(__addr, addr, sizeof(__addr));
+	__port = port;
+
+	if (__sock != -1)
+		close(__sock);
+	__sock = -1;
+
+	klog_add_logger(builtin_logger_network);
+}
+
+void klog_del_network_logger(void)
+{
+	klog_del_logger(builtin_logger_network);
+
+	if (__sock != -1)
+		close(__sock);
+	__sock = -1;
+}
 
