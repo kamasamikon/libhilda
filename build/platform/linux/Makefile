@@ -4,6 +4,7 @@ export HI_PRJ_ROOT = ../../..
 SUB_OBJS_hilda_core = \
 				 $(HI_PRJ_ROOT)/core/karg.o \
 				 $(HI_PRJ_ROOT)/core/klog.o \
+				 $(HI_PRJ_ROOT)/core/klogger.o \
 				 $(HI_PRJ_ROOT)/core/kmem.o \
 				 $(HI_PRJ_ROOT)/core/kstr.o \
 				 $(HI_PRJ_ROOT)/core/kopt.o \
@@ -21,6 +22,7 @@ SUB_OBJS_hilda_all = \
 				 $(HI_PRJ_ROOT)/core/karg.o \
 				 $(HI_PRJ_ROOT)/core/kcfg.o \
 				 $(HI_PRJ_ROOT)/core/klog.o \
+				 $(HI_PRJ_ROOT)/core/klogger.o \
 				 $(HI_PRJ_ROOT)/core/kmem.o \
 				 $(HI_PRJ_ROOT)/core/kmodu.o \
 				 $(HI_PRJ_ROOT)/core/kmque.o \
