@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+#include <string.h>
+
 #include <hilda/sysdeps.h>
 #include <hilda/sdlist.h>
 #include <hilda/kstr.h>

@@ -218,9 +218,9 @@ static char *get_execpath(int *size)
 		kb.buf[kb.len] = '\0';
 
 		path = kbuf_detach(&kb, NULL);
+		kbuf_release(&kb);
 	}
 
-	kbuf_release(&kb);
 	return path;
 }
 
