@@ -251,6 +251,11 @@ void klog_add_file_logger(const char *pathfmt, unsigned int size,
 	__fi.maxtime = time;
 	__fi.save_at = when;
 
+	if (__fi.fp) {
+		fclose(__fi.fp);
+		__fi.fp = NULL;
+	}
+
 	klog_add_logger(builtin_logger_file);
 }
 void klog_del_file_logger()
