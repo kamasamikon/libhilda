@@ -184,7 +184,6 @@ try:
 	}
 
 	strcpy(__fi.path, buf);
-	printf("PATH: '%s'\n", buf);
 }
 
 static void next_file(int append)
@@ -193,6 +192,7 @@ static void next_file(int append)
 
 	if (__fi.fp)
 		fclose(__fi.fp);
+
 	__fi.fp = fopen(__fi.path, append ? "a" : "w");
 	if (!__fi.fp) {
 		fprintf(stderr, "fopen error: path:'%s', errno:%d\n", __fi.path, errno);
@@ -201,9 +201,11 @@ static void next_file(int append)
 
 	__fi.savetime = time(NULL);
 
-	fseek(__fi.fp, 0, SEEK_END);
-	__fi.filesize = ftell(__fi.fp);
-	fseek(__fi.fp, 0, SEEK_SET);
+	if (__fi.maxsize > 0) {
+		fseek(__fi.fp, 0, SEEK_END);
+		__fi.filesize = ftell(__fi.fp);
+		fseek(__fi.fp, 0, SEEK_SET);
+	}
 }
 
 static void builtin_logger_file(char *content, int len)
@@ -214,22 +216,19 @@ static void builtin_logger_file(char *content, int len)
 		next_file(1);
 
 	if (__fi.maxsize > 0) {
-		if (__fi.filesize + len > __fi.maxsize) {
+		if (__fi.filesize + len> __fi.maxsize)
 			next = 1;
-		}
 	}
 	if (__fi.maxtime > 0) {
-		if (__fi.savetime + __fi.maxtime < time(NULL)) {
+		if (__fi.savetime + __fi.maxtime < time(NULL))
 			next = 1;
-		}
 	}
 	if (__fi.save_at > 0) {
 		time_t now = time(NULL);
 		time_t beg = now - (now % __fi.save_at);
 
-		if (beg > __fi.savetime) {
+		if (beg > __fi.savetime)
 			next = 1;
-		}
 	}
 
 	if (next || !__fi.fp)
@@ -240,6 +239,9 @@ static void builtin_logger_file(char *content, int len)
 
 	fwrite(content, sizeof(char), len, __fi.fp);
 	fflush(__fi.fp);
+
+	if (__fi.maxsize > 0)
+		__fi.filesize += len;
 }
 void klog_add_file_logger(const char *pathfmt, unsigned int size,
 		unsigned int time, unsigned int when)
