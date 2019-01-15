@@ -1,0 +1,31 @@
+# => -DPLATFORM_7231
+BKM_PLATFORM := 7231
+
+# NTV Project Root directory
+PRJ_ROOT = /home/auv/Perforce/nemotv/NTV_OS/NemoTV5/RELEASE/5.1.1/CUST/laystv/Build12
+
+# Will Add the $PATH
+GCC_PATH += $(PRJ_ROOT)/toolchains/stbgcc-4.5.3-2.4/bin
+
+SYSROOT_DIR = $(PRJ_ROOT)/ntvtgt/sam7231_uclibc_bc/bld_sh_hdi/staging
+PKG_CONFIG = $(PRJ_ROOT)/ntvtgt/sam7231_uclibc_bc/bld_sh_hdi/host/usr/bin/pkg-config
+
+INCDIR += -I $(PRJ_ROOT)/toolchains/stbgcc-4.5.3-2.4/mipsel-linux-uclibc/include
+INCDIR += -I `echo $$HILDA_INC`
+
+LIBS += -lpthread -lrt -ldl 
+LIBS += -L `echo $$HILDA_LIB/7231` -lhilda
+
+DEFINES += -D_REENTRANT
+
+CFLAGS += -fno-strict-aliasing
+
+PKG_CONFIG_PATH="$(SYSROOT_DIR)/usr/lib/pkgconfig:$(SYSROOT_DIR)/$(NEMNTV_INSTALL_DIR)/lib/pkgconfig:$(SYSROOT_DIR)/usr/share/pkgconfig" 
+
+CROSS_COMPILE := mipsel-linux-uclibc-
+CC := $(CROSS_COMPILE)gcc
+AR := $(CROSS_COMPILE)ar
+LD := $(CROSS_COMPILE)ld
+RM = rm
+OS = linux
+

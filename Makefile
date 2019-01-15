@@ -2,57 +2,34 @@
 
 export BKM_PRJ_ROOT := $(CURDIR)
 export BKM_PLATFORM := 'x86.default'
-export BKM_BUILD := 'test'
+export BKM_BUILD := 'alpine'
 
 
 -include Makefile.defs
 .PHONY: all clean install uninstall info renew
 
 #########################################################################
-## core
+## alpine
 #
-.PHONY: core.all
-all: core.all
-core.all:
-	make -C /home/auv/eoe/woself/libhilda/SRCS/core all
+.PHONY: alpine.all
+all: alpine.all
+alpine.all:
+	make -C /home/auv/eoe/woself/libhilda/SRCS/alpine all
 
-.PHONY: core.clean
-clean: core.clean
-core.clean:
-	make -C /home/auv/eoe/woself/libhilda/SRCS/core clean
+.PHONY: alpine.clean
+clean: alpine.clean
+alpine.clean:
+	make -C /home/auv/eoe/woself/libhilda/SRCS/alpine clean
 
-.PHONY: core.install
-install: core.install
-core.install:
-	make -C /home/auv/eoe/woself/libhilda/SRCS/core install
+.PHONY: alpine.install
+install: alpine.install
+alpine.install:
+	make -C /home/auv/eoe/woself/libhilda/SRCS/alpine install
 
-.PHONY: core.uninstall
-uninstall: core.uninstall
-core.uninstall:
-	make -C /home/auv/eoe/woself/libhilda/SRCS/core uninstall
-
-#########################################################################
-## test
-#
-.PHONY: test.all
-all: test.all
-test.all:
-	make -C /home/auv/eoe/woself/libhilda/SRCS/test all
-
-.PHONY: test.clean
-clean: test.clean
-test.clean:
-	make -C /home/auv/eoe/woself/libhilda/SRCS/test clean
-
-.PHONY: test.install
-install: test.install
-test.install:
-	make -C /home/auv/eoe/woself/libhilda/SRCS/test install
-
-.PHONY: test.uninstall
-uninstall: test.uninstall
-test.uninstall:
-	make -C /home/auv/eoe/woself/libhilda/SRCS/test uninstall
+.PHONY: alpine.uninstall
+uninstall: alpine.uninstall
+alpine.uninstall:
+	make -C /home/auv/eoe/woself/libhilda/SRCS/alpine uninstall
 
 #########################################################################
 ## Information
@@ -61,13 +38,13 @@ info:
 	@echo '    ALL PLATFORMS : 7231.default x86.default'
 	@echo ' CURRENT PLATFORM : x86.default'
 	@echo ''
-	@echo '       ALL BUILDS : core test'
-	@echo '    CURRENT BUILD : test'
-	@echo '             SRCS : core test'
+	@echo '       ALL BUILDS : core test alpine'
+	@echo '    CURRENT BUILD : alpine'
+	@echo '             SRCS : alpine'
 
 #########################################################################
 ## re-generate this Makefile
 #
 renew:
-	@python kfg -b 'test' -p 'x86.default'
+	@python kfg -b 'alpine' -p 'x86.default'
 	@python kfg -d
