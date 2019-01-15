@@ -5,10 +5,10 @@ $(LOCAL_OUT_LIB): $(LOCAL_OUT_OBJS) $(LOCAL_LIBS)
 	$(AR) crus $@ $(LOCAL_OUT_OBJS)
 
 $(LOCAL_SHARE_LIB): $(LOCAL_OUT_OBJS) $(LOCAL_LIBS)
-	$(CC) -shared -fPIC $^ -o $@ $(LDFLAGS)
+	$(CC) -shared -D_FORTIFY_SOURCE=0 -fPIC $^ -o $@ $(LDFLAGS)
 
 %.o: %.c
-	$(CC) $(CFLAGS) $(LOCAL_CFLAGS) -fPIC $(LOCAL_INCDIRS) -c $< -o $@
+	$(CC) $(CFLAGS) $(LOCAL_CFLAGS) -D_FORTIFY_SOURCE=0 -fPIC $(LOCAL_INCDIRS) -c $< -o $@
 
 BUILD_SUB_DIRS: 
 	@$(foreach dir, $(MAKEDIRS),                         \
