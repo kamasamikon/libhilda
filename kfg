@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -169,7 +169,7 @@ def output_makefile():
     buff += "\t@python kfg -b '%s' -p '%s'\n" % (BUILD_CUR, PLATFORM_CUR)
     buff += "\t@python kfg -d"
 
-    print buff
+    print(buff)
 
     makefile = open(os.path.join(PWD, "Makefile"), "w")
     makefile.write(buff)
@@ -177,19 +177,19 @@ def output_makefile():
 
 def dump_setting(platform = False, build = False):
     if platform:
-        print "    ALL PLATFORMS : %s" % " ".join(PLATFORM_ALL)
-        print " CURRENT PLATFORM : %s" % PLATFORM_CUR
+        print("    ALL PLATFORMS : %s" % " ".join(PLATFORM_ALL))
+        print(" CURRENT PLATFORM : %s" % PLATFORM_CUR)
 
     if platform and build:
-        print ""
+        print("")
 
     if build:
-        print "       ALL BUILDS : %s" % " ".join(BUILD_ALL)
-        print "    CURRENT BUILD : %s" % BUILD_CUR
-        print "             SRCS : %s" % " ".join(SRCS)
+        print("       ALL BUILDS : %s" % " ".join(BUILD_ALL))
+        print("    CURRENT BUILD : %s" % BUILD_CUR)
+        print("             SRCS : %s" % " ".join(SRCS))
 
 def help():
-    print "usage: -h -d -p platform -b build"
+    print("usage: -h -d -p platform -b build")
 
 def ensure_essential_dir():
     path = os.path.join(PWD, DIR_PLATFORMS)
@@ -210,7 +210,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 1:
         help()
-        print "----"
+        print("----")
         dump_setting(True, True)
         sys.exit(0)
 
@@ -218,7 +218,7 @@ if __name__ == "__main__":
         opts, args = getopt.getopt(sys.argv[1:], "hsdp:b:", [])
     except getopt.GetoptError as err:
         help()
-        print "----"
+        print("----")
         dump_setting(True, True)
         sys.exit(0)
 
@@ -243,7 +243,7 @@ if __name__ == "__main__":
                     os.symlink(a, PATH_PLATFORM_CUR)
                     update_settings()
             else:
-                print "Platform (%s) not in PLATFORM_ALL %s" % (a, PLATFORM_ALL)
+                print("Platform (%s) not in PLATFORM_ALL %s" % (a, PLATFORM_ALL))
                 sys.exit(0)
 
         elif o == '-b':
@@ -254,19 +254,19 @@ if __name__ == "__main__":
                     os.symlink(a, PATH_BUILD_CUR)
                     update_settings()
             else:
-                print "Build (%s) not in BUILD_ALL %s" % (a, BUILD_ALL)
+                print("Build (%s) not in BUILD_ALL %s" % (a, BUILD_ALL))
                 sys.exit(0)
         else:
             help()
-            print "----"
+            print("----")
             dump_setting(True, True)
             sys.exit(0)
 
     if PLATFORM_CUR and not PLATFORM_CUR in PLATFORM_ALL:
-        print "PLATFORM_CUR (%s) not in PLATFORM_ALL %s" % (PLATFORM_CUR, PLATFORM_ALL)
+        print("PLATFORM_CUR (%s) not in PLATFORM_ALL %s" % (PLATFORM_CUR, PLATFORM_ALL))
 
     if BUILD_CUR and not BUILD_CUR in BUILD_ALL:
-        print "BUILD_CUR (%s) not in BUILD_ALL %s" % (BUILD_CUR, BUILD_ALL)
+        print("BUILD_CUR (%s) not in BUILD_ALL %s" % (BUILD_CUR, BUILD_ALL))
 
     if PLATFORM_CUR and BUILD_ALL:
         link_dot_buildenv()
