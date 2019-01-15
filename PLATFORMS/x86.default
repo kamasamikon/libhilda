@@ -1,5 +1,3 @@
-# => -DPLATFORM_X86
-HILDA_PLATFORM := x86
 # yes => -g3, no => -O3
 HILDA_DEBUG := yes
 
@@ -17,7 +15,7 @@ CFLAGS += -fno-strict-aliasing -Wall
 LDFLAGS +=
 
 CROSS_COMPILE := 
-CC := ccache $(CROSS_COMPILE)gcc
+CC := $(CROSS_COMPILE)gcc
 AR := $(CROSS_COMPILE)ar
 LD := $(CROSS_COMPILE)ld
 RM = rm

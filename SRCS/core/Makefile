@@ -1,4 +1,4 @@
-export HI_PRJ_ROOT = ../../..
+export HI_PRJ_ROOT = ../..
 -include $(HI_PRJ_ROOT)/Makefile.defs
 
 SUB_OBJS_hilda_core = \
@@ -38,13 +38,7 @@ SUB_OBJS_hilda_all = \
 				 $(HI_PRJ_ROOT)/core/kbuf.o \
 				 $(HI_PRJ_ROOT)/xtcool/linux.o 
 
-ifeq ($(HILDA_PLATFORM),x86)
 SUB_OBJS_hilda = $(SUB_OBJS_hilda_all)
-# SUB_OBJS_hilda += $(HI_PRJ_ROOT)/core/xmldoc.o
-# $(HI_PRJ_ROOT)/core/hget.o \
-else
-SUB_OBJS_hilda = $(SUB_OBJS_hilda_core)
-endif
 
 LOCAL_INCDIRS = -I $(HI_PRJ_ROOT)/inc
 LOCAL_OUT_OBJS = $(SUB_OBJS_hilda)
