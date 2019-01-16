@@ -342,26 +342,28 @@ static kopt_entry_s *entry_find(const char *path)
 
 int kopt_setfile(const char *path)
 {
+	kbuf_s kb;
 	FILE *fp;
-	int len, bufsize = 32 * 1024;
-	char *buf = NULL;
+	int err = 0;
 
 	fp = fopen(path, "rt");
 	if (!fp)
 		return -1;
 
-	buf = (char*)kmem_alloz(bufsize, char);
-	len = fread(buf, sizeof(char), bufsize, fp);
+	kbuf_init(&kb, 0);
+	while (kbuf_fread(&kb, 1024, fp, &err) > 0 && !err)
+		;
 	fclose(fp);
 
-	if (len > 0)
-		kopt_setbat(buf, 0);
+	kb.buf[kb.len] = '\0';
+	if (kb.len)
+		kopt_setbat(kbuf_detach(&kb, NULL), 0, 1);
 
-	kmem_free_s(buf);
+	kbuf_release(&kb);
 	return 0;
 }
 
-int kopt_setbat(const char *inibuf, int errbrk)
+int kopt_setbat(const char *inibuf, int errbrk, int add)
 {
 	int i, cnt = 0, kopt_ret = EC_NG, sid, ses_ret, reterr = 0;
 	char **kv = NULL, *k, *v;
@@ -374,6 +376,9 @@ int kopt_setbat(const char *inibuf, int errbrk)
 	for (i = 0; i < cnt; i++) {
 		k = kv[(i << 1) + 0];
 		v = kv[(i << 1) + 1];
+
+		if (add && !entry_find(k))
+			kopt_add_s(k, OA_DFT, NULL, NULL);
 
 		kopt_ret = kopt_setkv(sid, k, v);
 		if (kopt_ret == EC_SKIP)

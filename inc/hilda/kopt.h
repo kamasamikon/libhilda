@@ -459,7 +459,7 @@ int kopt_load_argv(int argc, char *argv[]);
 int kopt_setkv(int ses, const char *k, const char *v);
 
 int kopt_setfile(const char *path);
-int kopt_setbat(const char *inibuf, int errbrk);
+int kopt_setbat(const char *inibuf, int errbrk, int add);
 
 int kopt_getini_by_opt(void *opt, char **ret);
 int kopt_getini(const char *path, char **ret);

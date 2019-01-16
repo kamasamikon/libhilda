@@ -1,4 +1,4 @@
--include $(HI_PRJ_ROOT)/.configure
+-include $(HI_PRJ_ROOT)/.buildenv
 
 ifeq ($(HILDA_DEBUG),yes)
 	CFLAGS += -g3

@@ -144,7 +144,7 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, char *prog, char
 			__kl_ver_sav = __kl_ver_get; \
 			KLOG_SETUP_NAME(KLOG_MODU_NAME, __FILE__, __func__); \
 		} \
-		klog_f('!', KLOG_ALL, __kl_prog_name, KLOG_MODU_NAME, __kl_file_name, __FUNCTION__, __LINE__, \
+		klog_f('!', KLOG_ALL, __kl_prog_name, KLOG_MODU_NAME, __kl_file_name, (char*)__FUNCTION__, __LINE__, \
 				"ASSERT FAILED: %s\n", msg); \
 	} \
 } while (0)

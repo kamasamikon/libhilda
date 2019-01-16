@@ -499,7 +499,7 @@ kbool kvfs_exist(const char *a_path)
 static int follow_link(const char *basedir, const char *name, struct dirent *ret_dirp)
 {
 	struct stat buf;
-	char fullpath[1024];
+	char fullpath[1024 * 4];
 
 	sprintf(fullpath, "%s/%s", basedir, name);
 	if (stat(fullpath, &buf))

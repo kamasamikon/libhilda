@@ -341,7 +341,7 @@ static int do_opt_command(int s, char *buf, int cmdlen)
 		sprintf(buf, "%s%s", mk_errline(ret, ebuf), c->prompt);
 	} else if (!strncmp("os ", buf, 3)) {
 		para = buf + 3;
-		ret = kopt_setbat(para, 1);
+		ret = kopt_setbat(para, 1, 0);
 		if (ret && !kopt_get_err(&errnum, &errmsg))
 			sprintf(buf, "%x %s%s%s", errnum, errmsg, CRLF, c->prompt);
 		else

@@ -24,6 +24,9 @@ static int os_login(int ses, void *opt, void *pa, void *pb)
 
 int main(int argc, char *argv[])
 {
+	char *s = "";
+	int i = 0;
+
 	klog_init(argc, argv);
 	klog_add_logger(logger_stdout);
 
@@ -47,6 +50,12 @@ int main(int argc, char *argv[])
 	for (;;) {
 		klog("xxxxxxxxx\n");
 		kerror("Error ...... \n");
+
+		kopt_getstr("s:/a/b/c", &s);
+		klog("SSSS: %s\n", s);
+
+		kopt_getint("i:/a/b/c", &i);
+		klog("IIII: %d\n", i);
 
 		sleep(1);
 	}
