@@ -6,7 +6,7 @@ GCC_PATH +=
 
 INCDIR += -I /usr/include
 
-LIBS += -L /usr/lib -lpthread -lrt -ldl -lexpat 
+LIBS += -L /usr/lib -lpthread -lrt -ldl
  
 # DEFINES += -DAAA -DBBB
 DEFINES += -D_REENTRANT 

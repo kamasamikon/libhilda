@@ -13,13 +13,11 @@ SUB_OBJS_hilda_all = \
 				 $(HI_PRJ_ROOT)/core/kmodu.o \
 				 $(HI_PRJ_ROOT)/core/kmque.o \
 				 $(HI_PRJ_ROOT)/core/kstr.o \
-				 $(HI_PRJ_ROOT)/core/netif.o \
 				 $(HI_PRJ_ROOT)/core/kopt.o \
 				 $(HI_PRJ_ROOT)/core/kopt-rpc-client.o \
 				 $(HI_PRJ_ROOT)/core/kopt-rpc-common.o \
 				 $(HI_PRJ_ROOT)/core/kopt-rpc-server.o \
 				 $(HI_PRJ_ROOT)/core/pflock.o \
-				 $(HI_PRJ_ROOT)/core/trace.o \
 				 $(HI_PRJ_ROOT)/core/kmisc.o \
 				 $(HI_PRJ_ROOT)/core/kbuf.o \
 				 $(HI_PRJ_ROOT)/xtcool/linux.o 
