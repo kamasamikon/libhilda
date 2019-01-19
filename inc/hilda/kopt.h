@@ -442,14 +442,17 @@ int kopt_get_err(int *no, char **msg);
 
 /* _s => short */
 #define kopt_add_s(p, a, s, g) \
-	kopt_new((p), NULL, (a), (s), (g), NULL, NULL, NULL)
+	kopt_new((p), NULL, (a), (s), (g), NULL, NULL, NULL, 1)
 
 #define kopt_add(p, d, a, set, get, del, ua, ub) \
-	kopt_new((p), (d), (a), (set), (get), (del), (void*)(ua), (void*)(ub))
+	kopt_new((p), (d), (a), (set), (get), (del), (void*)(ua), (void*)(ub), 1)
 
 int kopt_new(const char *path, const char *desc, unsigned int attr,
 		KOPT_SETTER setter, KOPT_GETTER getter, KOPT_DELTER delter,
-		void *ua, void *ub);
+		void *ua, void *ub, int overwrite);
+int kopt_mod(const char *path, const char **desc, unsigned int *attr,
+		KOPT_SETTER *setter, KOPT_GETTER *getter, KOPT_DELTER *delter,
+		void **ua, void **ub);
 int kopt_del(const char *path);
 
 int kopt_type(const char *path);

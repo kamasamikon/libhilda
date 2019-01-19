@@ -533,7 +533,7 @@ static void sync_from_nylist(kopt_entry_s *oe)
  */
 int kopt_new(const char *path, const char *desc, unsigned int attr,
 		KOPT_SETTER setter, KOPT_GETTER getter, KOPT_DELTER delter,
-		void *ua, void *ub)
+		void *ua, void *ub, int overwrite)
 {
 	kopt_entry_s *oe;
 
@@ -548,35 +548,88 @@ int kopt_new(const char *path, const char *desc, unsigned int attr,
 
 	oe = entry_find(path);
 	if (oe) {
-		kerror("!!!Duplicate opt added (%s), abort adding\n", path);
+		if (!overwrite) {
+			kerror("!!!Duplicate opt added (%s), abort\n", path);
+			/* spl_lck_rel(__g_optcc->lck); */
+			return EC_NOTFOUND;
+		}
+
+		oe->ua = ua;
+		oe->ub = ub;
+
+		kmem_free_sz(oe->desc);
+		oe->desc = kstr_dup(desc);
+
+		oe->attr = attr & OA_MSK;
+		oe->setter = setter;
+		oe->getter = getter;
+		oe->delter = delter;
+	} else {
+		oe = (kopt_entry_s*)kmem_alloz(1, kopt_entry_s);
+
+		oe->ua = ua;
+		oe->ub = ub;
+
+		oe->path = kstr_dup(path);
+		oe->desc = kstr_dup(desc);
+
+		oe->type = path[0];
+		oe->attr = attr & OA_MSK;
+
+		oe->setter = setter;
+		oe->getter = getter;
+		oe->delter = delter;
+
+		kdlist_init_head(&oe->entry);
+		kdlist_insert_tail_entry(&__g_optcc->oehdr, &oe->entry);
+
+		kdlist_init_head(&oe->awchhdr);
+		kdlist_init_head(&oe->bwchhdr);
+
+		/* process the NY watches */
+		sync_from_nylist(oe);
 		/* spl_lck_rel(__g_optcc->lck); */
-		return EC_NOTFOUND;
 	}
-
-	oe = (kopt_entry_s*)kmem_alloz(1, kopt_entry_s);
-
-	oe->ua = ua;
-	oe->ub = ub;
-	oe->path = kstr_dup(path);
-	oe->desc = kstr_dup(desc);
-	oe->type = path[0];
-	oe->attr = attr & OA_MSK;
-	oe->setter = setter;
-	oe->getter = getter;
-	oe->delter = delter;
-
-	kdlist_init_head(&oe->entry);
-	kdlist_insert_tail_entry(&__g_optcc->oehdr, &oe->entry);
-
-	kdlist_init_head(&oe->awchhdr);
-	kdlist_init_head(&oe->bwchhdr);
-
-	/* process the NY watches */
-	sync_from_nylist(oe);
-	/* spl_lck_rel(__g_optcc->lck); */
 
 	return EC_OK;
 }
+
+int kopt_mod(const char *path, const char **desc, unsigned int *attr,
+		KOPT_SETTER *setter, KOPT_GETTER *getter, KOPT_DELTER *delter,
+		void **ua, void **ub)
+{
+	kopt_entry_s *oe;
+
+	/* spl_lck_get(__g_optcc->lck); */
+
+
+	oe = entry_find(path);
+	if (!oe)
+		return EC_NOTFOUND;
+
+	if (desc) {
+		kmem_free_sz(oe->desc);
+		oe->desc = kstr_dup(*desc);
+	}
+	if (attr)
+		oe->attr = *attr & OA_MSK;
+
+	if (setter)
+		oe->setter = *setter;
+	if (getter)
+		oe->getter = *getter;
+	if (delter)
+		oe->delter = *delter;
+
+	if (ua)
+		oe->ua = *ua;
+
+	if (ub)
+		oe->ub = *ub;
+
+	return EC_OK;
+}
+
 
 static void pushback_nylist(kopt_entry_s *oe)
 {
