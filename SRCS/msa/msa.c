@@ -4,6 +4,7 @@
 
 #include <hilda/ktypes.h>
 #include <hilda/hget.h>
+#include <hilda/kbuf.h>
 
 #include <hilda/klog.h>
 #include <hilda/kopt.h>
@@ -58,6 +59,7 @@ int main(int argc, char *argv[])
 {
 	char *s = "";
 	int i = 0;
+	kbuf_s b;
 
 	klog_init(argc, argv);
 	klog_add_logger(logger_stdout);
@@ -91,8 +93,10 @@ int main(int argc, char *argv[])
 
 	// start MSA
 	//
+	kbuf_init(&b, 1024);
+	kbuf_addf(&b, "ls");
 
-	spl_process_create();
+	spl_process_create(0, b.buf);
 
 	for (;;) {
 		klog("xxxxxxxxx\n");
@@ -105,9 +109,11 @@ int main(int argc, char *argv[])
 		klog("IIII: %d\n", i);
 
 		/* requests.post */
+		/*
 		hget(const char *a_url, const char *a_proxy, kbool a_get,
 		const char *a_cmd, char **a_datbuf, int *a_datlen,
 		char **a_hdrbuf, int *a_hdrlen, SOCKET *a_socket);
+		*/
 
 
 		sleep(1);

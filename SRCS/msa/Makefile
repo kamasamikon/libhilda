@@ -1,6 +1,6 @@
 
 all:
-	gcc test.c  -I ../../inc -L . -lhilda -lrt -ldl 
+	gcc msa.c  -g3 -I ../../inc -L . -lhilda -lrt -ldl  -o msa
 
 clean:
-	rm a.out
+	rm msa
