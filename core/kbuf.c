@@ -115,8 +115,7 @@ void kbuf_vaddf(kbuf_s *kb, const char *fmt, va_list ap)
 size_t kbuf_fread(kbuf_s *kb, size_t size, FILE *fp, int *err)
 {
 	size_t bytes;
-
-	*err = 0;
+	int error = 0;
 
 	kbuf_grow(kb, size);
 
@@ -125,9 +124,11 @@ size_t kbuf_fread(kbuf_s *kb, size_t size, FILE *fp, int *err)
 		kbuf_setlen(kb, kb->len + bytes);
 	if (bytes < size) {
 		if (ferror(fp))
-			*err = 1;
+			error = 1;
 	}
 
+	if (err)
+		*err = error;
 	return bytes;
 }
 

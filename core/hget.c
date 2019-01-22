@@ -202,7 +202,7 @@ int hget_connect(int a_prot, const char *a_user, const char *a_pass,
 }
 
 int hget_recv(SOCKET a_socket, const char *a_host, const char *a_path,
-		const char *a_proxy, kbool a_get, const char *a_cmd,
+		const char *a_headers, const char *a_method, const char *a_payload,
 		char **a_datbuf, int *a_datlen,
 		char **a_hdrbuf, int *a_hdrlen)
 {
@@ -226,22 +226,20 @@ int hget_recv(SOCKET a_socket, const char *a_host, const char *a_path,
 	 * "\r\n"
 	 * "<Msg><Cmd>GetServiceList</Cmd></Msg>"
 	 */
-	if (a_get)
-		sprintf(header,
-				"GET %s HTTP/1.1\r\n"
-				"Connection: Keep-Alive\r\n"
-				"Host: %s\r\n"
-				"Connection: Close\r\n\r\n", a_path, a_host);
-	else
-		sprintf(header,
-				"POST %s HTTP/1.1\r\n"
-				"Accept: text/xml\r\n"
-				"Connection: Keep-Alive\r\n"
-				"Content-Length: %zd\r\n"
-				"Host: %s\r\n"
-				"Content-Type: text/xml\r\n\r\n" "%s",
-				a_path, a_cmd ? strlen(a_cmd) : 0,
-				a_host, a_cmd ? (char*)a_cmd : "");
+	sprintf(header,
+			"%s %s HTTP/1.1\r\n"
+			"Accept: text/xml\r\n"
+			"Connection: Keep-Alive\r\n"
+			"Content-Length: %zd\r\n"
+			"Host: %s\r\n"
+			"%s"
+			"\r\n\r\n" "%s",
+			a_method,
+			a_path,
+			a_payload ? strlen(a_payload) : 0,
+			a_host,
+			a_headers ? a_headers : "",
+			a_payload ? (char*)a_payload : "");
 
 	klog("(%d): start send\n", a_socket);
 
@@ -386,7 +384,7 @@ int hget_recv(SOCKET a_socket, const char *a_host, const char *a_path,
 				kerror("(%d): recv failed: socket closed.\n", a_socket);
 
 			klog("(%d): dat_len:%d, cur_len:%d, recv_cnt:%d, ret:%d, err:%d\n",
-						a_socket, dat_len, cur_len, resp_code++, ret, socket_last_error());
+					a_socket, dat_len, cur_len, resp_code++, ret, socket_last_error());
 
 			while (ret > 0) {
 
@@ -411,7 +409,7 @@ int hget_recv(SOCKET a_socket, const char *a_host, const char *a_path,
 				}
 
 				klog("(%d): dat_len:%d, cur_len:%d, recv_cnt:%d, ret:%d, err:%d\n",
-							a_socket, dat_len, cur_len, resp_code++, ret, socket_last_error());
+						a_socket, dat_len, cur_len, resp_code++, ret, socket_last_error());
 			}
 		}
 
@@ -421,15 +419,15 @@ int hget_recv(SOCKET a_socket, const char *a_host, const char *a_path,
 
 done:
 	if (PGEC_SUCCESS != rc)
-		kerror("(%d): ng : skt(%d), host(%s), path(%s), get(%d), cmd(%s)\n", a_socket, a_socket, a_host,
-					a_path, a_get, a_cmd);
+		kerror("(%d): ng : skt(%d), host(%s), path(%s), method(%s), cmd(%s)\n", a_socket, a_socket, a_host,
+				a_path, a_method, a_payload);
 
 	klog("(%d): pkg_len:%d, rcv_len:%d, return : %d\n", a_socket, rc, pkg_len, cur_len);
 	return rc;
 }
 
-int hget(const char *a_url, const char *a_proxy, kbool a_get,
-		const char *a_cmd, char **a_datbuf, int *a_datlen,
+int hget(const char *a_url, const char *a_headers, const char *a_method,
+		const char *a_payload, char **a_datbuf, int *a_datlen,
 		char **a_hdrbuf, int *a_hdrlen, int *a_socket)
 {
 	char user[32] = { 0 }, pass[32] = { 0 }, host[1024] = { 0 }, path[1024] = { 0 };
@@ -441,7 +439,7 @@ int hget(const char *a_url, const char *a_proxy, kbool a_get,
 	hget_parseurl(a_url, &prot, user, pass, host, path, &port);
 
 	if (PGEC_SUCCESS == (ret = hget_connect(prot, user, pass, host, path, port, s))) {
-		ret = hget_recv(*s, host, path, a_proxy, a_get, a_cmd, a_datbuf, a_datlen, a_hdrbuf, a_hdrlen);
+		ret = hget_recv(*s, host, path, a_headers, a_method, a_payload, a_datbuf, a_datlen, a_hdrbuf, a_hdrlen);
 		hget_free_socket(*s);
 	}
 	return ret;

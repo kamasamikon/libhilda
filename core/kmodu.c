@@ -229,9 +229,11 @@ int kmodu_load()
 {
 	kmoducc_s *cc = __g_kmoducc;
 	kbean fd;
-	char path[1024], ps = kvfs_path_sep();
+	char ps = kvfs_path_sep();
 	KVFS_FINDDATA fdat;
 	int err;
+
+	kbuf_s path;
 
 	kopt_setint_p("e:/k/modu/load/start", cc->path.root, NULL, 1);
 
@@ -246,10 +248,14 @@ int kmodu_load()
 			continue;
 		if (!kflg_chk_bit(fdat.attrib, KVFS_A_DIR))
 			continue;
-		sprintf(path, "%s%c%s", cc->path.root, ps, fdat.name);
-		kopt_setint_p("e:/k/modu/load/mod/start", path, NULL, 1);
-		err = module_load(cc, path);
-		kopt_setint_p("e:/k/modu/load/mod/done", path, err, 1);
+
+		kbuf_init(&path, 4096);
+		kbuf_addf(&path, "%s%c%s", cc->path.root, ps, fdat.name);
+
+		kopt_setint_p("e:/k/modu/load/mod/start", path.buf, NULL, 1);
+		err = module_load(cc, path.buf);
+		kopt_setint_p("e:/k/modu/load/mod/done", path.buf, err, 1);
+		kbuf_release(&path);
 	} while (-1 != kvfs_findnext(fd, &fdat));
 	kvfs_findclose(fd);
 

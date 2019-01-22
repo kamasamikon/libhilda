@@ -602,7 +602,6 @@ int kopt_mod(const char *path, const char **desc, unsigned int *attr,
 
 	/* spl_lck_get(__g_optcc->lck); */
 
-
 	oe = entry_find(path);
 	if (!oe)
 		return EC_NOTFOUND;

@@ -1,6 +1,6 @@
 
 all:
-	gcc msa.c  -g3 -I ../../inc -L . -lhilda -lrt -ldl  -o msa
+	gcc msa.c  -g3 -I ../../inc -L ../core/ -lhilda -lrt -ldl  -o msa
 
 clean:
 	rm msa

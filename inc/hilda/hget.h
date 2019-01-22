@@ -35,9 +35,8 @@ extern "C" {
  * @brief Get data by HTTP GET or HTTP POST
  *
  * @param[in] a_url URL from which get data.
- * @param[in] a_proxy Proxy URL
- * @param[in] a_get GET or POST method
- * @param[in] a_cmd A data as command.
+ * @param[in] a_method GET or POST method
+ * @param[in] a_payload A data as command.
  * @param[in] a_datbuf Buffer to save returned data, allocated in this function, caller should free it.
  * @param[in] a_datlen Buffer length of a_retbuf.
  * @param[in] a_hdrbuf IN:*a_hdrbuf: buffer provider by caller, if (*a_hdrbuf == zero) (*a_hdrbuf = kmem_alloc).
@@ -47,8 +46,8 @@ extern "C" {
  *
  * @return 0 for success, -1 for error.
  */
-int hget(const char *a_url, const char *a_proxy, kbool a_get,
-		const char *a_cmd, char **a_datbuf, int *a_datlen,
+int hget(const char *a_url, const char *a_headers, const char *a_method,
+		const char *a_payload, char **a_datbuf, int *a_datlen,
 		char **a_hdrbuf, int *a_hdrlen, SOCKET *a_socket);
 
 int hget_parseurl(const char *a_url, kuint *a_prot, char a_user[],
@@ -59,8 +58,8 @@ int hget_connect(int a_prot, const char *a_user,
 		const char *a_path, kushort a_port, SOCKET *a_socket);
 
 int hget_recv(SOCKET a_socket, const char *a_host,
-		const char *a_path, const char *a_proxy, kbool a_get,
-		const char *a_cmd, char **a_datbuf, int *a_datlen, char **a_hdrbuf, int *a_hdrlen);
+		const char *a_path, const char *a_headers, const char *a_method,
+		const char *a_payload, char **a_datbuf, int *a_datlen, char **a_hdrbuf, int *a_hdrlen);
 
 /**
  * @brief close socket

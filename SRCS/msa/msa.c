@@ -47,74 +47,100 @@ static int og_createAt(void *opt, void *pa, void *pb)
 
 	if (v[0] == '\0') {
 		time_t t = time(0);
-		strftime(v, sizeof(v), "%Y/%m/%d %H:%M:%S",localtime(&t) );
+		strftime(v, sizeof(v), "%Y/%m/%d %H:%M:%S", localtime(&t));
 	}
 
 	kopt_set_cur_str(opt, v);
 	return EC_OK;
 }
 
+static char* optstr(const char *path, const char *dft, int duptan)
+{
+	char *s;
+
+	if (kopt_getstr(path, &s))
+		s = dft;
+
+	return duptan ? kstr_dup(s) : s;
+}
+
+static int optint(const char *path, int dft)
+{
+	int i;
+
+	if (kopt_getint(path, &i))
+		i = dft;
+
+	return i;
+}
 
 int main(int argc, char *argv[])
 {
 	char *s = "";
 	int i = 0;
-	kbuf_s b;
+	char *args[8];
+	char *path;
+
+	kchar _datbuf[4096] = { 0 }, *datbuf = _datbuf, *hdrbuf = NULL;
+	kint datlen = sizeof(_datbuf), hdrlen = 0;
+	kchar url[2048], *tmp;
 
 	klog_init(argc, argv);
 	klog_add_logger(logger_stdout);
-
 	kopt_init(argc, argv);
+
+	sprintf(url, "http://127.0.0.1:9100/services");
+	if (hget(url, knil, "POST", NULL, &datbuf, &datlen,
+				&hdrbuf, &hdrlen, NULL))
+		return -1;
+
 
 	kopt_setfile("./msa.cfg");
 
-	kopt_add_s("b:/xx/sss", OA_GET, og_hostname, NULL);
+	int wsPort = optint("i:/msa/ws/port", 9200);
 
-	// # bottle
-	// ("WS_PORT", "i:/msa/ws/port", 9200),
-	// ("WS_DEBUG", "b:/msa/ws/debug", True),
+	char *msbUrl = optstr("s:/msa/msb/url", "http://219.142.69.234:9080", 1);
 
-	// # MSB Info
-	// ("MSB_URL", "s:/msa/msb/url", "http://219.142.69.234:9080"),
+	char *projName = optstr("s:/msa/build/dirname", "FIXME", 1);
+	char *buildTime = optstr("s:/msa/build/time", "FIXME", 1);
+	char *buildVersion = optstr("s:/msa/build/version", "FIXME", 1);
 
-	// # Project
-	// ("PROJ_NAME", "s:/msa/build/dirname", "FIXME"),
-	// ("BUILD_TIME", "s:/msa/build/time", "FIXME"),
-	// ("BUILD_VERSION", "s:/msa/build/version", "FIXME"),
-	// ("BUILD_UPDATED", "b:/msa/build/updated", 1),
+	int updated = optint("i:/msa/build/updated", 1);
+
 
 	// # MS Info
-	// ("MS_DIR", "s:/msa/ms/dir", "/root/ms/"),
-	// ("MS_NAME", "s:/msa/ms/name", "demo"),
-	// ("MS_VER", "s:/msa/ms/version", "v1"),
-	// ("MS_PORT", "i:/msa/ms/port", 8020),
-	// ("MS_DESC", "s:/msa/ms/desc", "N/A"),
+	char *msDir = optstr("s:/msa/ms/dir", "/root/ms/", 1);
+	char *msName = optstr("s:/msa/ms/name", "demo", 1);
+	char *msVer = optstr("s:/msa/ms/version", "v1", 1);
+	char *msDesc = optstr("s:/msa/ms/desc", "N/A", 1);
+
+	int msPort = optint("i:/msa/ms/port", 8020);
 
 
 	// start MSA
 	//
-	kbuf_init(&b, 1024);
-	kbuf_addf(&b, "ls");
 
-	spl_process_create(0, b.buf);
+	args[0] = "ls";
+	args[1] = NULL;
+	spl_process_create(1, args);
+	klog("\n");
 
 	for (;;) {
 		klog("xxxxxxxxx\n");
 		kerror("Error ...... \n");
 
-		kopt_getstr("s:/a/b/c", &s);
-		klog("SSSS: %s\n", s);
+		if (!kopt_getstr("s:/a/b/c", &s))
+			klog("SSSS: %s\n", s);
 
-		kopt_getint("i:/a/b/c", &i);
-		klog("IIII: %d\n", i);
+		if (!kopt_getint("i:/a/b/c", &i))
+			klog("IIII: %d\n", i);
 
 		/* requests.post */
 		/*
-		hget(const char *a_url, const char *a_proxy, kbool a_get,
-		const char *a_cmd, char **a_datbuf, int *a_datlen,
-		char **a_hdrbuf, int *a_hdrlen, SOCKET *a_socket);
-		*/
-
+		   hget(const char *a_url, const char *a_proxy, kbool a_get,
+		   const char *a_cmd, char **a_datbuf, int *a_datlen,
+		   char **a_hdrbuf, int *a_hdrlen, SOCKET *a_socket);
+		   */
 
 		sleep(1);
 	}
