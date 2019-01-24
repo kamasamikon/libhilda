@@ -18,7 +18,7 @@ static void logger_stdout(char *content, int len)
 static int og_hostname(void *opt, void *pa, void *pb)
 {
 	static char v[1024] = {0};
-	static char *cmd = "cmd";
+	static char *cmd = "hostname";
 
 	if (v[0] == '\0')
 		if (!popen_read(cmd, v, sizeof(v)))
@@ -59,7 +59,7 @@ static char* optstr(const char *path, const char *dft, int duptan)
 	char *s;
 
 	if (kopt_getstr(path, &s))
-		s = dft;
+		s = (char*)dft;
 
 	return duptan ? kstr_dup(s) : s;
 }
@@ -74,6 +74,18 @@ static int optint(const char *path, int dft)
 	return i;
 }
 
+static char *serviceTempl = " \
+{ \
+	\"ipAddr\": \"%s\", \
+	\"port\": \"%d\", \
+	\"hostName\": \"%s\", \
+	\"projName\": \"%s\", \
+	\"serviceName\": \"%s\", \
+	\"version\": \"%s\", \
+	\"desc\": \"%s\", \
+	\"createdAt\": \"%s\" \
+}";
+
 int main(int argc, char *argv[])
 {
 	char *s = "";
@@ -85,17 +97,19 @@ int main(int argc, char *argv[])
 	kint datlen = sizeof(_datbuf), hdrlen = 0;
 	kchar url[2048], *tmp;
 
+	kbuf_s j;
+
 	klog_init(argc, argv);
 	klog_add_logger(logger_stdout);
 	kopt_init(argc, argv);
 
-	sprintf(url, "http://127.0.0.1:9100/services");
-	if (hget(url, knil, "POST", NULL, &datbuf, &datlen,
-				&hdrbuf, &hdrlen, NULL))
-		return -1;
-
+	kbuf_init(&j, 2048);
 
 	kopt_setfile("./msa.cfg");
+
+	kopt_add_s("s:/msa/ipAddr", OA_DFT, NULL, og_ipaddress);
+	kopt_add_s("s:/msa/hostName", OA_DFT, NULL, og_hostname);
+	kopt_add_s("s:/msa/createdAt", OA_DFT, NULL, og_createAt);
 
 	int wsPort = optint("i:/msa/ws/port", 9200);
 
@@ -115,6 +129,19 @@ int main(int argc, char *argv[])
 	char *msDesc = optstr("s:/msa/ms/desc", "N/A", 1);
 
 	int msPort = optint("i:/msa/ms/port", 8020);
+
+	char *ipAddr = optstr("s:/msa/ipAddr", "", 1);
+	char *hostName = optstr("s:/msa/hostName", "", 1);
+	char *createdAt = optstr("s:/msa/createdAt", "", 1);
+
+	kbuf_addf(&j, serviceTempl, ipAddr, msPort, hostName, projName, msName, msVer, msDesc, createdAt);
+
+	klog(j.buf);
+
+	sprintf(url, "http://127.0.0.1:9100/services");
+	if (hget(url, knil, "POST", j.buf, &datbuf, &datlen,
+				&hdrbuf, &hdrlen, NULL))
+		return -1;
 
 
 	// start MSA
