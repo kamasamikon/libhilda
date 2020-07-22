@@ -36,4 +36,8 @@ LDFLAGS += -Wl,-Map,hilda.map
 
 all: BUILD_SUB_DIRS $(LOCAL_OUT_LIB) $(LOCAL_SHARE_LIB)
 
+install:
+	pwd
+	install ./libhilda.so /lib/libhilda.so
+
 -include $(HI_PRJ_ROOT)/Makefile.rules
