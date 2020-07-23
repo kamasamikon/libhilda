@@ -550,8 +550,38 @@ int klog_vf(unsigned char type, unsigned int mask, char *prog, char *modu,
 	ofs = 0;
 
 	/* Type */
-	if (likely(type))
-		ofs += sprintf(bufptr, "|%c|", type);
+	if (likely(type)) {
+
+		switch (type) {
+		case 'F':
+			ofs += sprintf(bufptr, "|\033[0;31m%c\033[0m|", type);
+			break;
+		case 'A':
+			ofs += sprintf(bufptr, "|\033[0;31m%c\033[0m|", type);
+			break;
+		case 'C':
+			ofs += sprintf(bufptr, "|\033[0;31m%c\033[0m|", type);
+			break;
+		case 'E':
+			ofs += sprintf(bufptr, "|\033[0;31m%c\033[0m|", type);
+			break;
+		case 'W':
+			ofs += sprintf(bufptr, "|\033[0;33m%c\033[0m|", type);
+			break;
+		case 'I':
+			ofs += sprintf(bufptr, "|\033[0;35m%c\033[0m|", type);
+			break;
+		case 'N':
+			ofs += sprintf(bufptr, "|\033[0;36m%c\033[0m|", type);
+			break;
+		case 'D':
+			ofs += sprintf(bufptr, "|\033[0;36m%c\033[0m|", type);
+			break;
+		default:
+			ofs += sprintf(bufptr, "|%c|", type);
+			break;
+		}
+	}
 
 	/* Time */
 	if (mask & KLOG_RTM)
