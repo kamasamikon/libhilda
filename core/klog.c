@@ -243,6 +243,19 @@ static void klog_init_default()
 	karg_free(argc, argv);
 }
 
+char *klog_info(void) {
+	static char buf[2048];
+	int ofs = 0;
+
+	klogcc_s *cc = (klogcc_s*)klog_cc();
+
+	ofs += sprintf(&buf[ofs], "cc: %p", cc);
+	ofs += sprintf(&buf[ofs], "nlogger_cnt: %p", cc->nlogger_cnt);
+	ofs += sprintf(&buf[ofs], "rlogger_cnt: %p", cc->rlogger_cnt);
+
+	return (char*)buf;
+}
+
 void klog_touch(void)
 {
 	klogcc_s *cc = (klogcc_s*)klog_cc();

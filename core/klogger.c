@@ -238,6 +238,9 @@ static void builtin_logger_file(char *content, int len)
 		return;
 
 	fwrite(content, sizeof(char), len, __fi.fp);
+	if (content[len] != '\n') {
+		fwrite("\n", sizeof(char), 1, __fi.fp);
+	}
 	fflush(__fi.fp);
 
 	if (__fi.maxsize > 0)

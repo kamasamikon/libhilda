@@ -154,6 +154,8 @@ typedef void (*KRLOGGER)(unsigned char type, unsigned int mask, char *prog, char
  */
 int klog_touches(void);
 
+char *klog_info(void);
+
 char *klog_file_name_add(char *name);
 char *klog_modu_name_add(char *name);
 char *klog_prog_name_add(char *name);
