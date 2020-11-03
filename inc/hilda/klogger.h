@@ -1,7 +1,7 @@
 /* vim:set noet ts=8 sw=8 sts=8 ff=unix: */
 
-#ifndef __K_LOG_H__
-#define __K_LOG_H__
+#ifndef __N_LIB_LOG_H__
+#define __N_LIB_LOG_H__
 
 #ifdef __cplusplus
 extern "C" {
