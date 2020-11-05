@@ -3,10 +3,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <memory.h>
+
 #include <hilda/kmem.h>
 #include <hilda/klog.h>
 #include <hilda/xtcool.h>
 #include <hilda/klog.h>
+#include <hilda/kbuf.h>
 
 #ifdef MEM_STAT
 static kuint __g_mempeak = 0;
@@ -200,6 +202,8 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 	int i, line, offset = 0, blen;
 	char cache[2048], *pbuf, *p;
 
+	kbuf_s kb;
+
 	if (width <= 0)
 		width = 16;
 
@@ -210,8 +214,10 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 	else
 		pbuf = cache;
 
-	klogs("\n%s\n", banner);
-	klogs("Data:%p, Length:%d\n", dat, len);
+	kbuf_init(&kb, (blen + 2) * (len / width + 1) + 1024 + strlen(banner));
+
+	kbuf_addf(&kb, "\n%s\n", banner);
+	kbuf_addf(&kb, "Data:%p, Length:%d\n", dat, len);
 
 	while (offset < len) {
 		p = pbuf;
@@ -234,11 +240,14 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 			else
 				p += sprintf(p, ".");
 		p += sprintf(p, "|\n");
-		klogs("%s", pbuf);
+		kbuf_addf(&kb, "%s", pbuf);
 
 		offset += line;
 		dat += width;
 	}
+
+	klogs("%s", kb.buf);
+	kbuf_release(&kb);
 
 	if (pbuf != cache)
 		kmem_free(pbuf);
