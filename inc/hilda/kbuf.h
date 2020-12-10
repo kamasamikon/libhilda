@@ -15,19 +15,6 @@ struct _kbuf_s {
 	char *buf;
 };
 
-#define alloc_nr(x) (((x) + 16) * 3 / 2)
-
-#define MEM_INC(x, nr, alloc) \
-	do { \
-		if ((nr) > alloc) { \
-			if (alloc_nr(alloc) < (nr)) \
-				alloc = (nr); \
-			else \
-				alloc = alloc_nr(alloc); \
-			x = realloc((x), alloc * sizeof(*(x))); \
-		} \
-	} while (0)
-
 void kbuf_setlen(kbuf_s *kb, size_t len);
 
 void kbuf_init(kbuf_s *kb, size_t hint);
@@ -38,7 +25,11 @@ void kbuf_attach(kbuf_s *kb, void *buf, size_t len, size_t alloc);
 
 void kbuf_grow(kbuf_s *kb, size_t extra);
 
+void kbuf_addat(kbuf_s *kb, size_t offset, const void *data, size_t len);
 void kbuf_add(kbuf_s *kb, const void *data, size_t len);
+void kbuf_add8(kbuf_s *kb, unsigned char data);
+void kbuf_add16(kbuf_s *kb, unsigned short data);
+void kbuf_add32(kbuf_s *kb, unsigned int data);
 void kbuf_addf(kbuf_s *kb, const char *fmt, ...);
 void kbuf_vaddf(kbuf_s *kb, const char *fmt, va_list ap);
 

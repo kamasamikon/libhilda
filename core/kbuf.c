@@ -5,7 +5,20 @@
 #include <stdarg.h>
 
 #include <hilda/kbuf.h>
-#include <hilda/kmem.h>
+
+#define alloc_nr(x) (((x) + 16) * 3 / 2)
+
+#define MEM_INC(x, nr, alloc) \
+	do { \
+		if ((nr) > alloc) { \
+			if (alloc_nr(alloc) < (nr)) \
+				alloc = (nr); \
+			else \
+				alloc = alloc_nr(alloc); \
+			x = realloc((x), alloc * sizeof(*(x))); \
+		} \
+	} while (0)
+
 
 static char kbuf_slopbuf[1];
 
@@ -35,7 +48,7 @@ void kbuf_init(kbuf_s *kb, size_t hint)
 void kbuf_release(kbuf_s *kb)
 {
 	if (kb->alloc) {
-		kmem_free(kb->buf);
+		free(kb->buf);
 		kbuf_init(kb, 0);
 	}
 }
@@ -71,11 +84,36 @@ void kbuf_grow(kbuf_s *kb, size_t extra)
 		kb->buf[0] = '\0';
 }
 
+void kbuf_addat(kbuf_s *kb, size_t offset, const void *data, size_t len)
+{
+	size_t newlen = offset + len;
+	if (newlen > kb->alloc) {
+		kbuf_grow(kb, newlen - kb->alloc);
+	}
+	memcpy(kb->buf + offset, data, len);
+	kbuf_setlen(kb, newlen);
+}
+
 void kbuf_add(kbuf_s *kb, const void *data, size_t len)
 {
 	kbuf_grow(kb, len);
 	memcpy(kb->buf + kb->len, data, len);
 	kbuf_setlen(kb, kb->len + len);
+}
+
+void kbuf_add8(kbuf_s *kb, unsigned char data)
+{
+	kbuf_add(kb, &data, 1);
+}
+
+void kbuf_add16(kbuf_s *kb, unsigned short data)
+{
+	kbuf_add(kb, &data, 2);
+}
+
+void kbuf_add32(kbuf_s *kb, unsigned int data)
+{
+	kbuf_add(kb, &data, 4);
 }
 
 void kbuf_addf(kbuf_s *kb, const char *fmt, ...)
@@ -143,7 +181,7 @@ void kbuf_dump(kbuf_s *kb, const char *banner, char *dat, int len, int width)
 	/* 6 => "%04x  "; 3 => "%02x ", 1 => "%c", 2 => " |", 2 => "|\n" */
 	blen = 6 + (3 + 1) * width + 2 + 2;
 	if ((size_t)blen > sizeof(cache))
-		pbuf = (char*)kmem_alloc(blen, char);
+		pbuf = (char*)malloc(blen);
 	else
 		pbuf = cache;
 
@@ -178,6 +216,6 @@ void kbuf_dump(kbuf_s *kb, const char *banner, char *dat, int len, int width)
 	}
 
 	if (pbuf != cache)
-		kmem_free(pbuf);
+		free(pbuf);
 }
 
