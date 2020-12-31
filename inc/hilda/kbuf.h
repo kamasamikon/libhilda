@@ -30,6 +30,7 @@ void kbuf_add(kbuf_s *kb, const void *data, size_t len);
 void kbuf_add8(kbuf_s *kb, unsigned char data);
 void kbuf_add16(kbuf_s *kb, unsigned short data);
 void kbuf_add32(kbuf_s *kb, unsigned int data);
+void kbuf_adds(kbuf_s *kb, const char *str);
 void kbuf_addf(kbuf_s *kb, const char *fmt, ...);
 void kbuf_vaddf(kbuf_s *kb, const char *fmt, va_list ap);
 

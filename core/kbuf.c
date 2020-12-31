@@ -86,12 +86,15 @@ void kbuf_grow(kbuf_s *kb, size_t extra)
 
 void kbuf_addat(kbuf_s *kb, size_t offset, const void *data, size_t len)
 {
-	size_t newlen = offset + len;
-	if (newlen > kb->alloc) {
-		kbuf_grow(kb, newlen - kb->alloc);
+	size_t endpos = offset + len;
+
+	if (endpos > kb->alloc) {
+		kbuf_grow(kb, endpos - kb->alloc);
 	}
 	memcpy(kb->buf + offset, data, len);
-	kbuf_setlen(kb, newlen);
+	if (endpos > kb->len) {
+		kbuf_setlen(kb, endpos);
+	}
 }
 
 void kbuf_add(kbuf_s *kb, const void *data, size_t len)
@@ -114,6 +117,11 @@ void kbuf_add16(kbuf_s *kb, unsigned short data)
 void kbuf_add32(kbuf_s *kb, unsigned int data)
 {
 	kbuf_add(kb, &data, 4);
+}
+
+void kbuf_adds(kbuf_s *kb, const char *str)
+{
+	kbuf_add(kb, str, strlen(str));
 }
 
 void kbuf_addf(kbuf_s *kb, const char *fmt, ...)
