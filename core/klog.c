@@ -9,11 +9,11 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/inotify.h>
+#include <execinfo.h>
 
 #include <hilda/helper.h>
 #include <hilda/kmem.h>
 #include <hilda/kflg.h>
-#include <hilda/kstr.h>
 #include <hilda/xtcool.h>
 #include <hilda/karg.h>
 #include <hilda/klog.h>
@@ -235,7 +235,7 @@ static void klog_init_default()
 	argc = 0;
 	argv = NULL;
 
-	cl_buf = spl_get_cmdline(&cl_size);
+	cl_buf = get_execpath(&cl_size);
 	karg_build_nul(cl_buf, cl_size, &argc, &argv);
 	kmem_free(cl_buf);
 
@@ -250,8 +250,8 @@ char *klog_info(void) {
 	klogcc_s *cc = (klogcc_s*)klog_cc();
 
 	ofs += sprintf(&buf[ofs], "cc: %p", cc);
-	ofs += sprintf(&buf[ofs], "nlogger_cnt: %p", cc->nlogger_cnt);
-	ofs += sprintf(&buf[ofs], "rlogger_cnt: %p", cc->rlogger_cnt);
+	ofs += sprintf(&buf[ofs], "nlogger_cnt: %d", cc->nlogger_cnt);
+	ofs += sprintf(&buf[ofs], "rlogger_cnt: %d", cc->rlogger_cnt);
 
 	return (char*)buf;
 }
@@ -970,5 +970,34 @@ unsigned int klog_calc_mask(char *prog, char *modu, char *file, char *func, int 
 	}
 
 	return all;
+}
+
+void klog_bt(const char *fmt, ...)
+{
+	va_list ap;
+	int j, nptrs;
+	void *buffer[200];
+	char **strings;
+
+	kbuf_s kb;
+	kbuf_init(&kb, 0);
+
+	nptrs = backtrace(buffer, 200);
+	strings = backtrace_symbols(buffer, nptrs);
+	if (strings == NULL) {
+		return;
+	}
+
+	va_start(ap, fmt);
+	kbuf_vaddf(&kb, fmt, ap);
+	va_end(ap);
+
+	for (j = 1; j < nptrs; j++)
+		kbuf_addf(&kb, "%2d: %s\n", j, strings[j]);
+
+	klog_f(0, 0, NULL, NULL, NULL, NULL, 0, "%s", kb.buf);
+
+	kbuf_release(&kb);
+	free(strings);
 }
 

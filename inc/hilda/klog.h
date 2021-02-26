@@ -163,6 +163,7 @@ char *klog_func_name_add(char *name);
 
 unsigned int klog_calc_mask(char *prog, char *modu, char *file, char *func, int line);
 
+void klog_bt(const char *fmt, ...);
 int klog_f(unsigned char type, unsigned int mask, char *prog, char *modu, char *file, char *func, int ln, const char *fmt, ...) __attribute__ ((format (printf, 8, 9)));
 int klog_vf(unsigned char type, unsigned int mask, char *prog, char *modu, char *file, char *func, int ln, const char *fmt, va_list ap);
 

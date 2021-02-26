@@ -146,7 +146,7 @@ try:
 				APPEND("%02d", tm.tm_min);
 				break;
 			case 'M':
-				APPEND("%02d", tm.tm_sec);
+				APPEND("%03d", tm.tm_sec);
 				break;
 			case 'P':
 				APPEND("%d", getpid());
@@ -238,7 +238,7 @@ static void builtin_logger_file(char *content, int len)
 		return;
 
 	fwrite(content, sizeof(char), len, __fi.fp);
-	if (content[len] != '\n') {
+	if (len > 0 && content[len-1] != '\n') {
 		fwrite("\n", sizeof(char), 1, __fi.fp);
 	}
 	fflush(__fi.fp);

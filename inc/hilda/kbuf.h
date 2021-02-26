@@ -15,6 +15,8 @@ struct _kbuf_s {
 	char *buf;
 };
 
+#define KBNULL { .alloc = 0, .len = 0, .buf = NULL }
+
 void kbuf_setlen(kbuf_s *kb, size_t len);
 
 void kbuf_init(kbuf_s *kb, size_t hint);
