@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 #include <hilda/kbuf.h>
 
@@ -19,6 +20,15 @@
 		} \
 	} while (0)
 
+
+#define SWAP_16(n) (((((uint16_t)n) & 0xff) << 8) | ((((uint16_t)n) >> 8) & 0xff))
+
+#define SWAP_32(n) ( \
+        (((uint32_t)n) >> 24) | \
+		((((uint32_t)n) & 0x00ff0000) >> 8)  | \
+		((((uint32_t)n) & 0x0000ff00) << 8)  | \
+		(((uint32_t)n) << 24) \
+        )
 
 static char kbuf_slopbuf[1];
 
@@ -109,13 +119,19 @@ void kbuf_add8(kbuf_s *kb, unsigned char data)
 	kbuf_add(kb, &data, 1);
 }
 
-void kbuf_add16(kbuf_s *kb, unsigned short data)
+void kbuf_add16(kbuf_s *kb, unsigned short data, int swap)
 {
+	if (swap) {
+		data = SWAP_16(data);
+	}
 	kbuf_add(kb, &data, 2);
 }
 
-void kbuf_add32(kbuf_s *kb, unsigned int data)
+void kbuf_add32(kbuf_s *kb, unsigned int data, int swap)
 {
+	if (swap) {
+		data = SWAP_32(data);
+	}
 	kbuf_add(kb, &data, 4);
 }
 
@@ -205,17 +221,40 @@ void kbuf_dump(kbuf_s *kb, const char *banner, char *dat, int len, int width)
 		if (line > width)
 			line = width;
 
-		for (i = 0; i < line; i++)
-			p += sprintf(p, "%02x ", (unsigned char)dat[i]);
-		for (; i < width; i++)
+		for (i = 0; i < line; i++) {
+			unsigned char c = (unsigned char)dat[i];
+
+			if (i % 2 == 0) {
+				p += sprintf(p, "%02X ", c);
+			} else {
+				p += sprintf(p, "\033[0;33m%02X\033[0m ", c);
+			}
+			if (i % 4 == 3) {
+				p += sprintf(p, "  ");
+			}
+		}
+		for (; i < width; i++) {
 			p += sprintf(p, "   ");
+			if (i % 4 == 3) {
+				p += sprintf(p, "  ");
+			}
+		}
 
 		p += sprintf(p, " |");
-		for (i = 0; i < line; i++)
+		for (i = 0; i < line; i++) {
+			unsigned char c;
+
 			if ((unsigned char)dat[i] >= 0x20 && (unsigned char)dat[i] < 0x7f)
-				p += sprintf(p, "%c",  (unsigned char)dat[i]);
+				c = (unsigned char)dat[i];
 			else
-				p += sprintf(p, ".");
+				c = (unsigned char)'.';
+
+			if (i % 2 == 0) {
+				p += sprintf(p, "%c", c);
+			} else {
+				p += sprintf(p, "\033[0;33m%c\033[0m", c);
+			}
+		}
 		p += sprintf(p, "|\n");
 		kbuf_addf(kb, "%s", pbuf);
 
