@@ -230,13 +230,13 @@ void kbuf_dump(kbuf_s *kb, const char *banner, char *dat, int len, int width)
 				p += sprintf(p, "\033[0;33m%02X\033[0m ", c);
 			}
 			if (i % 4 == 3) {
-				p += sprintf(p, "  ");
+				p += sprintf(p, " ");
 			}
 		}
 		for (; i < width; i++) {
-			p += sprintf(p, "   ");
+			p += sprintf(p, "  ");
 			if (i % 4 == 3) {
-				p += sprintf(p, "  ");
+				p += sprintf(p, " ");
 			}
 		}
 
