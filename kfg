@@ -139,6 +139,16 @@ def output_makefile():
 
     buff += ".PHONY: all clean install uninstall info renew\n\n"
 
+    buff += "#########################################################################\n"
+    buff += "## %s\n" % "inc/hilda"
+    buff += "#\n"
+
+    hdr = "hdr"
+    for pat in [ "install", "uninstall"]:
+        buff += ".PHONY: %s.%s\n" % (hdr, pat)
+        buff += "%s.%s:\n" % (hdr, pat)
+        buff += "\tmake -C %s %s\n\n" % (os.path.join(PWD, "inc"), pat)
+
     for src in SRCS:
         buff += "#########################################################################\n"
         buff += "## %s\n" % src
