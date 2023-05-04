@@ -216,13 +216,13 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 
 	kbuf_init(&kb, (blen + 2) * (len / width + 1) + 1024 + strlen(banner));
 
-	kbuf_addf(&kb, "\n%s\n", banner);
-	kbuf_addf(&kb, "Data:%p, Length:%d\n", dat, len);
+	kbuf_addf(&kb, "\n\x1b[91;40m%s\x1b[0m\n", banner);
+	kbuf_addf(&kb, "\x1b[1;32;40mData:%p, Length:%d\x1b[0m\n", dat, len);
 
 	while (offset < len) {
 		p = pbuf;
 
-		p += sprintf(p, "%04x  ", offset);
+		p += sprintf(p, "\x1b[1;31;40m%04x  \x1b[0m", offset);
 		line = len - offset;
 
 		if (line > width)
@@ -233,13 +233,13 @@ void kmem_dump(const char *banner, char *dat, int len, int width)
 		for (; i < width; i++)
 			p += sprintf(p, "   ");
 
-		p += sprintf(p, " |");
+		p += sprintf(p, " \x1b[1;33;40m|");
 		for (i = 0; i < line; i++)
 			if ((kuchar)dat[i] >= 0x20 && (kuchar)dat[i] < 0x7f)
 				p += sprintf(p, "%c",  (kuchar)dat[i]);
 			else
 				p += sprintf(p, ".");
-		p += sprintf(p, "|\n");
+		p += sprintf(p, "|\x1b[0m\n");
 		kbuf_addf(&kb, "%s", pbuf);
 
 		offset += line;
